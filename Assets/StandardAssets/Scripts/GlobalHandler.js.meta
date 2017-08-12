@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: e89008ab4cc19344f89723acf6895e3a
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - basePlayer1: {fileID: 100002, guid: 94c708469ede0ed49a2deda8b2eac3fe, type: 2}
+  - basePlayer2: {fileID: 100002, guid: d3b42f47a94e4e541aefed95a39396f4, type: 2}
+  - basePlayer3: {fileID: 100002, guid: 82a4d41674527b6478fc6d249a24afcd, type: 2}
+  - basePlayer4: {fileID: 100002, guid: 25dcaf46499d5a34b86175823a9a06c4, type: 2}
+  - tempPlayer1: {fileID: 100002, guid: 94c708469ede0ed49a2deda8b2eac3fe, type: 2}
+  - tempPlayer2: {fileID: 100002, guid: d3b42f47a94e4e541aefed95a39396f4, type: 2}
+  - tempPlayer3: {fileID: 100002, guid: 82a4d41674527b6478fc6d249a24afcd, type: 2}
+  - tempPlayer4: {fileID: 100002, guid: 25dcaf46499d5a34b86175823a9a06c4, type: 2}
+  - p1Wins: {fileID: 100000, guid: 8a61969fc8f604744b68da35a236abef, type: 2}
+  - p2Wins: {fileID: 100000, guid: cbc87054fdca4a24ca8dcb81ae7077d8, type: 2}
+  - p3Wins: {fileID: 100000, guid: 8317c12ac6dd4014d94d1a89a9572d17, type: 2}
+  - p4Wins: {fileID: 100000, guid: 8e6c3091dd79fef42a299fbf3f15c684, type: 2}
+  - AI: {fileID: 100000, guid: 9a481e2fb6eafa849aa7969b1e8da4b3, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 

@@ -1,0 +1,333 @@
+fileFormatVersion: 2
+guid: 15cbed75692538b4196a81e3928d82c0
+TextureImporter:
+  fileIDToRecycleName:
+    21300000: lightning sprite sheet_0
+    21300002: lightning sprite sheet_1
+    21300004: lightning sprite sheet_2
+    21300006: lightning sprite sheet_3
+    21300008: lightning sprite sheet_4
+    21300010: lightning sprite sheet_5
+    21300012: lightning sprite sheet_6
+    21300014: lightning sprite sheet_7
+    21300016: lightning sprite sheet_8
+    21300018: lightning sprite sheet_9
+    21300020: lightning sprite sheet_10
+    21300022: lightning sprite sheet_11
+    21300024: lightning sprite sheet_12
+    21300026: lightning sprite sheet_13
+    21300028: lightning sprite sheet_14
+    21300030: lightning sprite sheet_15
+    21300032: lightning sprite sheet_16
+    21300034: lightning sprite sheet_17
+    21300036: lightning sprite sheet_18
+    21300038: lightning sprite sheet_19
+    21300040: lightning sprite sheet_20
+    21300042: lightning sprite sheet_21
+    21300044: lightning sprite sheet_22
+    21300046: lightning sprite sheet_23
+    21300048: lightning sprite sheet_24
+    21300050: lightning sprite sheet_25
+  serializedVersion: 2
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    linearTexture: 0
+    correctGamma: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: .25
+    normalMapFilter: 0
+  isReadable: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 0
+  seamlessCubemap: 0
+  textureFormat: -1
+  maxTextureSize: 1024
+  textureSettings:
+    filterMode: -1
+    aniso: 1
+    mipBias: -1
+    wrapMode: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: .5, y: .5}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spritePixelsToUnits: 100
+  alphaIsTransparency: 1
+  textureType: 8
+  buildTargetSettings: []
+  spriteSheet:
+    sprites:
+    - name: lightning sprite sheet_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 3892
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_1
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 3892
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_2
+      rect:
+        serializedVersion: 2
+        x: 1988
+        y: 3892
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_3
+      rect:
+        serializedVersion: 2
+        x: 2982
+        y: 3892
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_4
+      rect:
+        serializedVersion: 2
+        x: 3976
+        y: 3892
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_5
+      rect:
+        serializedVersion: 2
+        x: 4970
+        y: 3892
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2919
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_7
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 2919
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_8
+      rect:
+        serializedVersion: 2
+        x: 1988
+        y: 2919
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_9
+      rect:
+        serializedVersion: 2
+        x: 2982
+        y: 2919
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_10
+      rect:
+        serializedVersion: 2
+        x: 3976
+        y: 2919
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_11
+      rect:
+        serializedVersion: 2
+        x: 4970
+        y: 2919
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1946
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_13
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 1946
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_14
+      rect:
+        serializedVersion: 2
+        x: 1988
+        y: 1946
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_15
+      rect:
+        serializedVersion: 2
+        x: 2982
+        y: 1946
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_16
+      rect:
+        serializedVersion: 2
+        x: 3976
+        y: 1946
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_17
+      rect:
+        serializedVersion: 2
+        x: 4970
+        y: 1946
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_18
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 973
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_19
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 973
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_20
+      rect:
+        serializedVersion: 2
+        x: 1988
+        y: 973
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_21
+      rect:
+        serializedVersion: 2
+        x: 2982
+        y: 973
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_22
+      rect:
+        serializedVersion: 2
+        x: 3976
+        y: 973
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_23
+      rect:
+        serializedVersion: 2
+        x: 4970
+        y: 973
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_24
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: lightning sprite sheet_25
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 0
+        width: 994
+        height: 973
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+  spritePackingTag: 
+  userData: 
