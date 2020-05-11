@@ -27,8 +27,8 @@ GameObject:
   - component: {fileID: 21200000}
   - component: {fileID: 6100002}
   - component: {fileID: 5000000}
-  - component: {fileID: 114861010237846766}
-  - component: {fileID: 114121934097602706}
+  - component: {fileID: 114194718441335608}
+  - component: {fileID: 114062506270985236}
   m_Layer: 0
   m_Name: Player2
   m_TagString: Player
@@ -190,7 +190,25 @@ Prefab:
   m_SourcePrefab: {fileID: 0}
   m_RootGameObject: {fileID: 100002}
   m_IsPrefabAsset: 1
---- !u!114 &114121934097602706
+--- !u!114 &114062506270985236
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9733b289fd3590c4b9a06575fac8564c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  baseSpeed: 4
+  activeSpeed: 4
+  targeterLoad: {fileID: 0}
+  cantmove: 0
+  targeterRange: 6
+  slowPercentage: 0
+  speedPercentage: 0
+--- !u!114 &114194718441335608
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -216,21 +234,3 @@ MonoBehaviour:
   burnDuration: 0
   burnDamage: 0
   stunDuration: 0
---- !u!114 &114861010237846766
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 100002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9733b289fd3590c4b9a06575fac8564c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  baseSpeed: 4
-  activeSpeed: 4
-  targeterLoad: {fileID: 0}
-  cantmove: 0
-  targeterRange: 6
-  slowPercentage: 0
-  speedPercentage: 0

@@ -27,9 +27,9 @@ GameObject:
   - component: {fileID: 21200000}
   - component: {fileID: 6100002}
   - component: {fileID: 5000000}
-  - component: {fileID: 114085280685039944}
-  - component: {fileID: 114941369043129746}
-  - component: {fileID: 114577393766319798}
+  - component: {fileID: 114173864864201658}
+  - component: {fileID: 114539251326399028}
+  - component: {fileID: 114094932541513584}
   m_Layer: 0
   m_Name: Player1
   m_TagString: Player
@@ -191,25 +191,7 @@ Prefab:
   m_SourcePrefab: {fileID: 0}
   m_RootGameObject: {fileID: 100002}
   m_IsPrefabAsset: 1
---- !u!114 &114085280685039944
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 100002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9733b289fd3590c4b9a06575fac8564c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  baseSpeed: 4
-  activeSpeed: 4
-  targeterLoad: {fileID: 0}
-  cantmove: 0
-  targeterRange: 6
-  slowPercentage: 0
-  speedPercentage: 0
---- !u!114 &114577393766319798
+--- !u!114 &114094932541513584
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -228,7 +210,7 @@ MonoBehaviour:
   flameThrower: 0
   rechargeFlame: 0
   lastTick: 0
---- !u!114 &114941369043129746
+--- !u!114 &114173864864201658
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -254,3 +236,21 @@ MonoBehaviour:
   burnDuration: 0
   burnDamage: 0
   stunDuration: 0
+--- !u!114 &114539251326399028
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9733b289fd3590c4b9a06575fac8564c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  baseSpeed: 4
+  activeSpeed: 4
+  targeterLoad: {fileID: 0}
+  cantmove: 0
+  targeterRange: 6
+  slowPercentage: 0
+  speedPercentage: 0

@@ -27,8 +27,8 @@ GameObject:
   - component: {fileID: 21200000}
   - component: {fileID: 6100002}
   - component: {fileID: 5000000}
-  - component: {fileID: 114785169983637904}
-  - component: {fileID: 114518143067331098}
+  - component: {fileID: 114726719253236106}
+  - component: {fileID: 114322912260974700}
   m_Layer: 0
   m_Name: Player3
   m_TagString: Player
@@ -190,7 +190,7 @@ Prefab:
   m_SourcePrefab: {fileID: 0}
   m_RootGameObject: {fileID: 100002}
   m_IsPrefabAsset: 1
---- !u!114 &114518143067331098
+--- !u!114 &114322912260974700
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -216,7 +216,7 @@ MonoBehaviour:
   burnDuration: 0
   burnDamage: 0
   stunDuration: 0
---- !u!114 &114785169983637904
+--- !u!114 &114726719253236106
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}

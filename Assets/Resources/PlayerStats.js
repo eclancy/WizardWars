@@ -23,6 +23,7 @@ var burnDuration = 0;
 var burnDamage = 0;
 
 var stunDuration = 0f;
+var GUIEnabled: boolean;
 
 
 function Awake(){
@@ -130,19 +131,20 @@ function ApplyDamage (damage : int) {
 
  
 function OnGUI(){
+	if(GUIEnabled == true) {
+	//Debug.Log('rendering');
+		var size : Vector2 = new Vector2(60, 20);
 	
-	var size : Vector2 = new Vector2(60, 20);
-	
-	var screenPos : Vector3 = Camera.main.WorldToScreenPoint (transform.position);
- 	screenPos.y = Screen.height - screenPos.y - 75;
+		var screenPos : Vector3 = Camera.main.WorldToScreenPoint (transform.position);
+ 		screenPos.y = Screen.height - screenPos.y - 75;
 
- 	screenPos.x -= size.x/2 - 3;
+ 		screenPos.x -= size.x/2 - 3;
  	 	
- 	if(gameObject.transform.root.name == "AI(Clone)" ){
- 		screenPos.y -= Screen.height/50;
- 		screenPos.x -= 2;
+ 		if(gameObject.transform.root.name == "AI(Clone)" ){
+ 			screenPos.y -= Screen.height/50;
+ 			screenPos.x -= 2;
+ 		}
  	}
- 	
     // draw the background:
     GUI.BeginGroup (new Rect (screenPos.x, screenPos.y, size.x, size.y));
     

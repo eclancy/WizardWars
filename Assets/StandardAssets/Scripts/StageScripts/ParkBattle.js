@@ -77,6 +77,7 @@ function Awake(){
 		p5.transform.localScale.y = .3;
 		GlobalHandlerScript.AIAlive = true;
 		GlobalHandlerScript.playersAlive += 1;
+		p5.GetComponent(PlayerStats).GUIEnabled = true;
 	}
 }
 

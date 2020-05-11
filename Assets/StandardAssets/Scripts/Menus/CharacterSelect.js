@@ -41,6 +41,7 @@ function Awake(){
   GlobalHandlerObject = GameObject.Find("GlobalHandler");
   GlobalHandlerScript = GlobalHandlerObject.GetComponent("GlobalHandler");
   startToPlay = GameObject.Find("StartToBattle");
+  disableGUI();
 }
 
 function Update(){
@@ -50,6 +51,7 @@ function Update(){
 	//else display something in each player's box telling them to press start to join
 	if(GlobalHandlerScript.player1Joined == true ){
 		p1join.GetComponent(SpriteRenderer).enabled = false;
+
 	}
 	else{
 		p1join.GetComponent(SpriteRenderer).enabled = true;
@@ -140,64 +142,64 @@ function Update(){
 				removePreviousScripts(GlobalHandlerScript.tempPlayer1);
 
 				if(oneselected.name == "FireWizard"){
-					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(FireWizard) as MonoScript;
+					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(FireWizard) as MonoBehaviour;
 				}
 				if(oneselected.name == "FrostWizard"){
-					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(FrostWizard) as MonoScript;
+					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(FrostWizard) as MonoBehaviour;
 				}
 				if(oneselected.name == "EarthWizard"){
-					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(EarthWizard) as MonoScript;
+					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(EarthWizard) as MonoBehaviour;
 				}
 				if(oneselected.name == "ElectricityWizard"){
-					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(ElectricityWizard) as MonoScript;
+					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(ElectricityWizard) as MonoBehaviour;
 				}
 			}
 			if(twoselected){
 				removePreviousScripts(GlobalHandlerScript.tempPlayer2);
 
 				if(twoselected.name == "FireWizard"){
-					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(FireWizard) as MonoScript;
+					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(FireWizard) as MonoBehaviour;
 				}
 				if(twoselected.name == "FrostWizard"){
-					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(FrostWizard) as MonoScript;
+					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(FrostWizard) as MonoBehaviour;
 				}
 				if(twoselected.name == "EarthWizard"){
-					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(EarthWizard) as MonoScript;
+					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(EarthWizard) as MonoBehaviour;
 				}
 				if(twoselected.name === "ElectricityWizard"){
-					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(ElectricityWizard) as MonoScript;
+					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(ElectricityWizard) as MonoBehaviour;
 				}
 			}
 			if(threeselected){
 				removePreviousScripts(GlobalHandlerScript.tempPlayer3);
 
 				if(threeselected.name == "FireWizard"){
-					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(FireWizard) as MonoScript;
+					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(FireWizard) as MonoBehaviour;
 				}
 				if(threeselected.name == "FrostWizard"){
-					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(FrostWizard) as MonoScript;
+					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(FrostWizard) as MonoBehaviour;
 				}
 				if(threeselected.name == "EarthWizard"){
-					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(EarthWizard) as MonoScript;
+					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(EarthWizard) as MonoBehaviour;
 				}
 				if(threeselected.name === "ElectricityWizard"){
-					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(ElectricityWizard) as MonoScript;
+					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(ElectricityWizard) as MonoBehaviour;
 				}
 			}
 			if(fourselected){
 				removePreviousScripts(GlobalHandlerScript.tempPlayer3);
 
 				if(fourselected.name == "FirWizard"){
-					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(FireWizard) as MonoScript;
+					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(FireWizard) as MonoBehaviour;
 				}
 				if(fourselected.name == "FrostWizard"){
-					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(FrostWizard) as MonoScript;
+					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(FrostWizard) as MonoBehaviour;
 				}
 				if(fourselected.name == "EarthWizard"){
-					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(EarthWizard) as MonoScript;
+					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(EarthWizard) as MonoBehaviour;
 				}
 				if(fourselected.name == "ElectricityWizard"){
-					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(ElectricityWizard) as MonoScript;
+					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(ElectricityWizard) as MonoBehaviour;
 				}
 			}
 			oneselected = null;
@@ -205,6 +207,12 @@ function Update(){
 			threeselected = null;
 			fourselected = null;
 			
+			GlobalHandlerScript.tempPlayer1.GetComponent(PlayerStats).GUIEnabled = true;
+			GlobalHandlerScript.tempPlayer2.GetComponent(PlayerStats).GUIEnabled = true;
+			GlobalHandlerScript.tempPlayer3.GetComponent(PlayerStats).GUIEnabled = true;
+			GlobalHandlerScript.tempPlayer4.GetComponent(PlayerStats).GUIEnabled = true;
+
+			enableGUI();
 			Application.LoadLevel("Stage Select");
 			
 		}
@@ -382,6 +390,8 @@ function FindCharacter( cursor ) {
 }
 
 function removePreviousScripts(player){
+
+
 	if (player.GetComponent(FireWizard)){
 			DestroyImmediate(player.GetComponent(FireWizard), true);
 	}
@@ -394,4 +404,20 @@ function removePreviousScripts(player){
 	if (player.GetComponent(FrostWizard)){
 			DestroyImmediate(player.GetComponent(FrostWizard), true);
 	}
+}
+
+function disableGUI(){
+	GlobalHandlerScript.tempPlayer1.GetComponent(PlayerStats).GUIEnabled = false;
+	GlobalHandlerScript.tempPlayer2.GetComponent(PlayerStats).GUIEnabled = false;
+	GlobalHandlerScript.tempPlayer3.GetComponent(PlayerStats).GUIEnabled = false;
+	GlobalHandlerScript.tempPlayer4.GetComponent(PlayerStats).GUIEnabled = false;
+
+}
+
+function enableGUI(){
+	GlobalHandlerScript.tempPlayer1.GetComponent(PlayerStats).GUIEnabled = true;
+	GlobalHandlerScript.tempPlayer2.GetComponent(PlayerStats).GUIEnabled = true;
+	GlobalHandlerScript.tempPlayer3.GetComponent(PlayerStats).GUIEnabled = true;
+	GlobalHandlerScript.tempPlayer4.GetComponent(PlayerStats).GUIEnabled = true;
+
 }
