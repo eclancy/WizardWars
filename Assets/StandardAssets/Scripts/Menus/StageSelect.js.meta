@@ -1,8 +1,21 @@
 fileFormatVersion: 2
 guid: f2d893a0ae333064fb740297681730a7
 MonoImporter:
+  externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - currentStage: {instanceID: 0}
+  - highlighter: {instanceID: 0}
+  - Stage1: {instanceID: 0}
+  - Stage2: {instanceID: 0}
+  - Stage3: {instanceID: 0}
+  - Stage4: {instanceID: 0}
+  - p1CursorObject: {fileID: 100000, guid: b192afb56cbc9fc47b92c1c3288f866e, type: 2}
+  - p2CursorObject: {fileID: 100000, guid: 88cb4bc023b2d984aa299df14adbe139, type: 2}
+  - p3CursorObject: {fileID: 100000, guid: 7c613d599b46c8840a002701e2c5e48d, type: 2}
+  - p4CursorObject: {fileID: 100000, guid: 9e616159d0a23cf43a8c2731262edcdd, type: 2}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 

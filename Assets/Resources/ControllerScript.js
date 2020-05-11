@@ -209,12 +209,12 @@ function LateUpdate() {
  			
  			//basic attack
  			if( Input.GetAxis(Triggers) > .5 ){
- 			    SendMessage("basicAttack", args);
+ 			    gameObject.SendMessage("basicAttack", args);
  			}
  			
  			//second
  			 if( Input.GetAxis(Triggers) < -.5 ){
- 			 	SendMessage("secondAttack", args);
+ 			 	gameObject.SendMessage("secondAttack", args);
  			}
  			
  			//third
@@ -222,12 +222,12 @@ function LateUpdate() {
  				args.Push(RB);
  				args.Push(R_XAxis);
  				args.Push(R_YAxis);
- 			    SendMessage("thirdAttack", args);
+ 			    gameObject.SendMessage("thirdAttack", args);
  			}
  			
  			//ultimate
  			if( Input.GetButtonDown(LB) ){
- 			    SendMessage("ultimateAttack", args);
+ 			    gameObject.SendMessage("ultimateAttack", args);
  			}
 		}
 		//reset the crowd control checks

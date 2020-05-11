@@ -26,15 +26,11 @@ function Awake(){
   	startCountDown();
 
   	if ( GlobalHandlerScript.player1Joined == true ){
-  
-		//instantiate player
-		p1 = Instantiate(GlobalHandlerScript.tempPlayer1);
-		p1.transform.position.x = -7;
-		p1.transform.position.y = 4;
+
+		p1 = Instantiate(GlobalHandlerScript.tempPlayer1);	//instantiate player
+		
 		p1.transform.localScale.x = .15;
 		p1.transform.localScale.y = .15;
-		p1 = p1.AddComponent(ControllerScript) as MonoScript;
-		p1 = p1.AddComponent(PlayerStats) as MonoScript;
 		GlobalHandlerScript.player1Alive = true;
 		GlobalHandlerScript.playersAlive += 1;
 	}
@@ -44,10 +40,6 @@ function Awake(){
 		p2 = Instantiate(GlobalHandlerScript.tempPlayer2);
 		p2.transform.position.x = 7;
 		p2.transform.position.y = 4;
-		p2.transform.localScale.x = .15;
-		p2.transform.localScale.y = .15;
-		p2 = p2.AddComponent(ControllerScript) as MonoScript;
-		p2 = p2.AddComponent(PlayerStats) as MonoScript;
 		GlobalHandlerScript.player2Alive = true;
 		GlobalHandlerScript.playersAlive += 1;
 	}
@@ -59,8 +51,6 @@ function Awake(){
 		p3.transform.position.y = -4;
 		p3.transform.localScale.x = .15;
 		p3.transform.localScale.y = .15;
-		p3 = p3.AddComponent(ControllerScript) as MonoScript;
-		p3 = p3.AddComponent(PlayerStats) as MonoScript;
 		GlobalHandlerScript.player3Alive = true;
 		GlobalHandlerScript.playersAlive += 1;
 	}
@@ -72,8 +62,6 @@ function Awake(){
 		p4.transform.position.y = -4;
 		p4.transform.localScale.x = .15;
 		p4.transform.localScale.y = .15;
-		p4 = p4.AddComponent(ControllerScript) as MonoScript;
-		p4 = p4.AddComponent(PlayerStats) as MonoScript;
 		GlobalHandlerScript.player4Alive = true;
 		GlobalHandlerScript.playersAlive += 1;
 	}
@@ -90,7 +78,6 @@ function Awake(){
 		GlobalHandlerScript.AIAlive = true;
 		GlobalHandlerScript.playersAlive += 1;
 	}
-  	
 }
 
 function startCountDown(){

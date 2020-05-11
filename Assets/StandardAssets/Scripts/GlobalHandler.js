@@ -143,8 +143,8 @@ function left( player ){
 		player1Alive = false;
 		basePlayer1.GetComponent(SpriteRenderer).sprite = null;
 		tempPlayer1 = basePlayer1;
-		removeScripts(tempPlayer1);
-		removeScripts(basePlayer1);
+		//removeScripts(tempPlayer1);
+		//removeScripts(basePlayer1);
 		
 	}
 	if( player == "Player2" ){
@@ -153,8 +153,8 @@ function left( player ){
 		player2Alive = false;
 		basePlayer2.GetComponent(SpriteRenderer).sprite = null;
 		tempPlayer2 = basePlayer2;
-		removeScripts(tempPlayer2);
-		removeScripts(basePlayer2);
+		//removeScripts(tempPlayer2);
+		//removeScripts(basePlayer2);
 	}
 	if( player == "Player3" ){
 		player3Joined = false;
@@ -162,8 +162,8 @@ function left( player ){
 		player3Alive = false;
 		basePlayer3.GetComponent(SpriteRenderer).sprite = null;
 		tempPlayer3 = basePlayer3;
-		removeScripts(tempPlayer3);
-		removeScripts(basePlayer3);
+		//removeScripts(tempPlayer3);
+		//removeScripts(basePlayer3);
 	}
 	if( player == "Player4" ){
 		player4Joined = false;
@@ -171,8 +171,8 @@ function left( player ){
 		player4Alive = false;
 		basePlayer4.GetComponent(SpriteRenderer).sprite = null;
 		tempPlayer4 = basePlayer4;
-		removeScripts(tempPlayer4);
-		removeScripts(basePlayer4);
+		//removeScripts(tempPlayer4);
+		//removeScripts(basePlayer4);
 	}
 
 

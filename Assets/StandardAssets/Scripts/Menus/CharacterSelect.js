@@ -25,7 +25,18 @@ var startToPlay : GameObject;
 
 function Start(){
 	GlobalHandlerScript.playersJoined = 0;
+	GlobalHandlerScript.player1Joined = false;
+	GlobalHandlerScript.player2Joined = false;
+	GlobalHandlerScript.player3Joined = false;
+	GlobalHandlerScript.player4Joined = false;
+
+	GlobalHandlerScript.player1Locked = false;
+	GlobalHandlerScript.player2Locked = false;
+	GlobalHandlerScript.player3Locked = false;
+	GlobalHandlerScript.player4Locked = false;
+
 }
+
 function Awake(){
   GlobalHandlerObject = GameObject.Find("GlobalHandler");
   GlobalHandlerScript = GlobalHandlerObject.GetComponent("GlobalHandler");
@@ -36,7 +47,7 @@ function Update(){
 
 
 	//for every joined player, render the sprite they picked
-	//else display something in eacn player's box telling them to press start to join
+	//else display something in each player's box telling them to press start to join
 	if(GlobalHandlerScript.player1Joined == true ){
 		p1join.GetComponent(SpriteRenderer).enabled = false;
 	}
@@ -66,6 +77,7 @@ function Update(){
 	if ( Input.GetButtonDown("Start_1") && GlobalHandlerScript.player1Joined == false ){
 		GlobalHandlerScript.joined("Player1");
 		p1 = Instantiate( GlobalHandlerScript.tempPlayer1 );
+		p1.GetComponent(SpriteRenderer).enabled = false;
 		p1.transform.position.x = -7.437364;
 		p1.transform.position.y = -4.139224;
 		p1.transform.localScale.x = .3;
@@ -124,29 +136,32 @@ function Update(){
 			 Input.GetButtonDown("Start_3") && GlobalHandlerScript.player3Locked == true ||
 			 Input.GetButtonDown("Start_4") && GlobalHandlerScript.player4Locked == true ){
 		
-
 			if(oneselected){
-				if(oneselected.name === "FireWizard"){
+				removePreviousScripts(GlobalHandlerScript.tempPlayer1);
+
+				if(oneselected.name == "FireWizard"){
 					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(FireWizard) as MonoScript;
 				}
-				if(oneselected.name === "FrostWizard"){
+				if(oneselected.name == "FrostWizard"){
 					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(FrostWizard) as MonoScript;
 				}
-				if(oneselected.name === "EarthWizard"){
+				if(oneselected.name == "EarthWizard"){
 					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(EarthWizard) as MonoScript;
 				}
-				if(oneselected.name === "ElectricityWizard"){
+				if(oneselected.name == "ElectricityWizard"){
 					tempPlayer1 = GlobalHandlerScript.tempPlayer1.AddComponent(ElectricityWizard) as MonoScript;
 				}
 			}
 			if(twoselected){
-				if(twoselected.name === "FireWizard"){
+				removePreviousScripts(GlobalHandlerScript.tempPlayer2);
+
+				if(twoselected.name == "FireWizard"){
 					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(FireWizard) as MonoScript;
 				}
-				if(twoselected.name === "FrostWizard"){
+				if(twoselected.name == "FrostWizard"){
 					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(FrostWizard) as MonoScript;
 				}
-				if(twoselected.name === "EarthWizard"){
+				if(twoselected.name == "EarthWizard"){
 					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(EarthWizard) as MonoScript;
 				}
 				if(twoselected.name === "ElectricityWizard"){
@@ -154,13 +169,15 @@ function Update(){
 				}
 			}
 			if(threeselected){
-				if(threeselected.name === "FireWizard"){
+				removePreviousScripts(GlobalHandlerScript.tempPlayer3);
+
+				if(threeselected.name == "FireWizard"){
 					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(FireWizard) as MonoScript;
 				}
-				if(threeselected.name === "FrostWizard"){
+				if(threeselected.name == "FrostWizard"){
 					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(FrostWizard) as MonoScript;
 				}
-				if(threeselected.name === "EarthWizard"){
+				if(threeselected.name == "EarthWizard"){
 					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(EarthWizard) as MonoScript;
 				}
 				if(threeselected.name === "ElectricityWizard"){
@@ -168,16 +185,18 @@ function Update(){
 				}
 			}
 			if(fourselected){
-				if(fourselected.name === "FirWizard"){
+				removePreviousScripts(GlobalHandlerScript.tempPlayer3);
+
+				if(fourselected.name == "FirWizard"){
 					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(FireWizard) as MonoScript;
 				}
-				if(fourselected.name === "FrostWizard"){
+				if(fourselected.name == "FrostWizard"){
 					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(FrostWizard) as MonoScript;
 				}
-				if(fourselected.name === "EarthWizard"){
+				if(fourselected.name == "EarthWizard"){
 					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(EarthWizard) as MonoScript;
 				}
-				if(fourselected.name === "ElectricityWizard"){
+				if(fourselected.name == "ElectricityWizard"){
 					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(ElectricityWizard) as MonoScript;
 				}
 			}
@@ -276,14 +295,11 @@ function Update(){
 		//find the object they selected, make it their sprite
 		oneselected = FindCharacter( p1cursor );
 		if( oneselected ){
-		
-		
+			
 			//update the temp character sprite. 
 			var p1sprite = oneselected.GetComponent(SpriteRenderer).sprite;
 			p1.GetComponent(SpriteRenderer).sprite = p1sprite;
-			
-			
-			
+			p1.GetComponent(SpriteRenderer).enabled = true;
 			
 			//now update the actual player for next scene 
 			GlobalHandlerScript.tempPlayer1.GetComponent(SpriteRenderer).sprite = p1sprite;
@@ -295,9 +311,10 @@ function Update(){
 		//find the object they selected, make it their sprite
 		twoselected = FindCharacter( p2cursor );
 		if( twoselected ){
-
+		
 			var p2sprite = twoselected.GetComponent(SpriteRenderer).sprite;
 			p2.GetComponent(SpriteRenderer).sprite = p2sprite;
+			p2.GetComponent(SpriteRenderer).enabled = true;
 			
 			//now update the actual player for next scene 
 			GlobalHandlerScript.tempPlayer2.GetComponent(SpriteRenderer).sprite = p2sprite;
@@ -310,16 +327,13 @@ function Update(){
 		//find the object they selected, make it their sprite
 		threeselected = FindCharacter( p3cursor );
 		if( threeselected ){
-			//update the temp character sprite. should change this so it doesn't generate a temp,
-			//but instead just instantiates a sprite
+			//update the temp character sprite. 
 			var p3sprite = threeselected.GetComponent(SpriteRenderer).sprite;
 			p3.GetComponent(SpriteRenderer).sprite = p3sprite;
+			p3.GetComponent(SpriteRenderer).enabled = true;
 			
 			//now update the actual player for next scene 
-			GlobalHandlerScript.tempPlayer3.GetComponent( SpriteRenderer).sprite = p3sprite;
-			
-			
-			
+			GlobalHandlerScript.tempPlayer3.GetComponent(SpriteRenderer).sprite = p3sprite;
 			GlobalHandlerScript.player3Locked = true;		
 		}
 	}
@@ -328,14 +342,13 @@ function Update(){
 		//find the object they selected, make it their sprite
 		fourselected = FindCharacter( p4cursor );
 		if( fourselected ){
-			//update the temp character sprite. should change this so it doesn't generate a temp,
-			//but instead just instantiates a sprite
+			//update the temp character sprite. 
 			var p4sprite = fourselected.GetComponent(SpriteRenderer).sprite;
 			p4.GetComponent(SpriteRenderer).sprite = p4sprite;
+			p4.GetComponent(SpriteRenderer).enabled = true;
 			
 			//now update the actual player for next scene 
 			GlobalHandlerScript.tempPlayer4.GetComponent(SpriteRenderer).sprite = p4sprite;
-			
 			GlobalHandlerScript.player4Locked = true;
 		}
 	}
@@ -368,4 +381,17 @@ function FindCharacter( cursor ) {
     }
 }
 
-
+function removePreviousScripts(player){
+	if (player.GetComponent(FireWizard)){
+			DestroyImmediate(player.GetComponent(FireWizard), true);
+	}
+	if (player.GetComponent(ElectricityWizard)){
+			DestroyImmediate(player.GetComponent(ElectricityWizard), true);
+	}
+	if (player.GetComponent(EarthWizard)){
+			DestroyImmediate(player.GetComponent(EarthWizard), true);
+	}
+	if (player.GetComponent(FrostWizard)){
+			DestroyImmediate(player.GetComponent(FrostWizard), true);
+	}
+}

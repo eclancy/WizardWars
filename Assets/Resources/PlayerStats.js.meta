@@ -1,8 +1,17 @@
 fileFormatVersion: 2
 guid: a470b4831f45d744fae37665bbedce4f
 MonoImporter:
+  externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - GlobalHandler: {instanceID: 0}
+  - GlobalHandlerScript: {instanceID: 0}
+  - controllerScript: {instanceID: 0}
+  - healthBarEmpty: {fileID: 2800000, guid: 1d950685849605b4caa2ec586e91eb1f, type: 3}
+  - healthBarFull: {fileID: 2800000, guid: dfd8474f229c3b54794596f853e2667f, type: 3}
+  - energyBarFull: {fileID: 2800000, guid: 1d5a5f855a39e0f4c8f79f95a5d4367f, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 

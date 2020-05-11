@@ -37,7 +37,7 @@ function basicAttack( args ){
 			allow1 = false;
  			var shot = Instantiate( attack1, transform.position, Quaternion.identity );
     		//make sure player can't hit himself with it
-    		Physics2D.IgnoreCollision( shot.collider2D, GetComponent.<Collider2D>() );
+    		Physics2D.IgnoreCollision( shot.GetComponent(Collider2D), GetComponent(Collider2D) );
     		//turn to face where it's heading
     		shot.transform.Rotate( targetVector );
     		//Destroy automatically after time
@@ -67,7 +67,7 @@ function thirdAttack( args ){
 		flameThrower = true;
 		flameThrowerArgs = args;
 		flameShot = Instantiate( attack3, transform.position, Quaternion.identity );
-		Physics2D.IgnoreCollision( flameShot.collider2D, GetComponent.<Collider2D>() );
+		Physics2D.IgnoreCollision( flameShot.GetComponent(Collider2D), GetComponent(Collider2D) );
 		var xAim = Input.GetAxis(flameThrowerArgs[3]);
 	 	var yAim = Input.GetAxis(flameThrowerArgs[4]);
 	 	// Calculate the angle of the thumbstick

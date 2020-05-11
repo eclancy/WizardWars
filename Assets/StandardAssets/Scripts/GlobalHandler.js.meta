@@ -1,6 +1,7 @@
 fileFormatVersion: 2
 guid: e89008ab4cc19344f89723acf6895e3a
 MonoImporter:
+  externalObjects: {}
   serializedVersion: 2
   defaultReferences:
   - basePlayer1: {fileID: 100002, guid: 94c708469ede0ed49a2deda8b2eac3fe, type: 2}
@@ -15,7 +16,9 @@ MonoImporter:
   - p2Wins: {fileID: 100000, guid: cbc87054fdca4a24ca8dcb81ae7077d8, type: 2}
   - p3Wins: {fileID: 100000, guid: 8317c12ac6dd4014d94d1a89a9572d17, type: 2}
   - p4Wins: {fileID: 100000, guid: 8e6c3091dd79fef42a299fbf3f15c684, type: 2}
-  - AI: {fileID: 100000, guid: 9a481e2fb6eafa849aa7969b1e8da4b3, type: 2}
+  - AI: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 

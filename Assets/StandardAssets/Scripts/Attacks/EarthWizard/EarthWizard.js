@@ -32,7 +32,7 @@ function basicAttack( args ){
 			allow1 = false;
  			var shot = attack1.Instantiate( attack1, transform.position, Quaternion.identity );
     		//make sure player can't hit himself with it
-    		Physics2D.IgnoreCollision( shot.collider2D, GetComponent.<Collider2D>() );
+    		Physics2D.IgnoreCollision( shot.GetComponent(Collider2D), GetComponent(Collider2D) );
     		//turn to face where it's heading
     		shot.transform.Rotate( targetVector );
     		//Destroy automatically after time
@@ -62,14 +62,13 @@ function thirdAttack( args ){
 		if( statScript.DepleteEnergy(25) ){
 			allow3 = false;
 			
-			//if a vertical wall should be placed
 			if( Mathf.Abs( Mathf.Abs(args[1].y) - Mathf.Abs( transform.position.y) ) > 
 				Mathf.Abs( Mathf.Abs(args[1].x) - Mathf.Abs( transform.position.x) ) ){
-				
  				shot = Instantiate( attack3Horizontal, args[1], Quaternion.identity );
  				
  			}else{
  				shot = Instantiate( attack3Vertical, args[1], Quaternion.identity );
+				shot.transform.Rotate(0,0,270);
  			} 			
  			
     		//Destroy automatically after time

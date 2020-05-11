@@ -1,8 +1,17 @@
 fileFormatVersion: 2
 guid: 36157607ab61af243915fdd763b776f2
 MonoImporter:
+  externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - GlobalHandler: {instanceID: 0}
+  - GlobalHandlerScript: {instanceID: 0}
+  - three: {fileID: 100000, guid: 9a2743487e1591944a5289330785e768, type: 2}
+  - two: {fileID: 100000, guid: 38286d9739a3e5c4cbf55af018d7ef54, type: 2}
+  - one: {fileID: 100000, guid: 5ed73421ff1b4b3428ac14c19a4a169c, type: 2}
+  - go: {fileID: 100000, guid: c505e62bdf9e21b4788adc8f24f01ca7, type: 2}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 

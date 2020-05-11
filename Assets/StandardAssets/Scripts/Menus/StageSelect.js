@@ -75,7 +75,11 @@ function Update () {
  	
  	
  	
- 	if ( Input.GetButtonDown("A_1") && p1cursor ){
+ 	if ( Input.GetButtonDown("A_1") && p1cursor || 
+	     Input.GetButtonDown("A_2") && p2cursor || 
+		 Input.GetButtonDown("A_3") && p3cursor ||
+		 Input.GetButtonDown("A_4") && p4cursor
+		 ){
 		if(currentStage == Stage1){
 			Application.LoadLevel("Park");
 		}
@@ -89,50 +93,7 @@ function Update () {
 			Application.LoadLevel("Park");
 		}
 	} 
-	if ( Input.GetButtonDown("A_2") && p2cursor ){
-			if(currentStage == Stage1){
-			Application.LoadLevel("Park");
-		}
-		if(currentStage == Stage2){
-			Application.LoadLevel("Park");
-		}
-		if(currentStage == Stage3){
-			Application.LoadLevel("Park");
-		}
-		if(currentStage == Stage4){
-			Application.LoadLevel("Park");
-		}
-	}
-	if ( Input.GetButtonDown("A_3") && p3cursor ){
-			if(currentStage == Stage1){
-			Application.LoadLevel("Park");
-		}
-		if(currentStage == Stage2){
-			Application.LoadLevel("Park");
-		}
-		if(currentStage == Stage3){
-			Application.LoadLevel("Park");
-		}
-		if(currentStage == Stage4){
-			Application.LoadLevel("Park");
-		}
-	}
-	if ( Input.GetButtonDown("A_4") && p4cursor ){
-			if(currentStage == Stage1){
-			Application.LoadLevel("Park");
-		}
-		if(currentStage == Stage2){
-			Application.LoadLevel("Park");
-		}
-		if(currentStage == Stage3){
-			Application.LoadLevel("Park");
-		}
-		if(currentStage == Stage4){
-			Application.LoadLevel("Park");
-		}
-	}
 	
-
 	if(cursor == true && currentStage != null){
 		highlighter.transform.position = currentStage.transform.position;
 	}
