@@ -5,6 +5,7 @@ var fireSprite;
 
 function Start () {
 	fireSprite = Resources.Load("OnFire");
+	rotateObject();
 }
 
 function Update () {
@@ -32,3 +33,11 @@ function disappear(){
 	yield WaitForSeconds(GetComponent.<AudioSource>().clip.length);
 	Destroy(gameObject);
 }
+
+function rotateObject(){
+	while (true) {
+        transform.Rotate( 0.0f, 180.0f, 0.0f);
+		yield WaitForSeconds(.3);
+	}
+}
+

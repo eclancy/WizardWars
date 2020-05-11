@@ -91,6 +91,7 @@ function Update(){
 	if ( Input.GetButtonDown("Start_2") && GlobalHandlerScript.player2Joined == false ){
 		GlobalHandlerScript.joined("Player2");
 		p2 = Instantiate( GlobalHandlerScript.tempPlayer2 );
+		p2.GetComponent(SpriteRenderer).enabled = false;
 		p2.transform.position.x = -1.995348;
 		p2.transform.position.y = -4.139226;
 		p2.transform.localScale.x = .3;
@@ -102,6 +103,7 @@ function Update(){
 	if ( Input.GetButtonDown("Start_3") && GlobalHandlerScript.player3Joined == false ){
 		GlobalHandlerScript.joined("Player3");
 		p3 = Instantiate( GlobalHandlerScript.tempPlayer3 );
+		p3.GetComponent(SpriteRenderer).enabled = false;
 		p3.transform.position.x = 3.446668;
 		p3.transform.position.y = -4.139226;
 		p3.transform.localScale.x = .3;
@@ -112,6 +114,7 @@ function Update(){
 	if ( Input.GetButtonDown("Start_4") && GlobalHandlerScript.player4Joined == false ){
 		GlobalHandlerScript.joined("Player4");
 		p4 = Instantiate( GlobalHandlerScript.tempPlayer4 );
+		p4.GetComponent(SpriteRenderer).enabled = false;
 		p4.transform.position.x = 8.888684;
 		p4.transform.position.y = -4.139226;
 		p4.transform.localScale.x = .3;
@@ -131,6 +134,7 @@ function Update(){
 		  GlobalHandlerScript.playersJoined > 0 ){
 		  
 		startToPlay.GetComponent(SpriteRenderer).enabled = true;
+		startToPlay.transform.position.z = -2.0;
 			
 		//if someone presses start
 		if ( Input.GetButtonDown("Start_1") && GlobalHandlerScript.player1Locked == true ||

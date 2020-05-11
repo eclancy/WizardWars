@@ -27,8 +27,8 @@ function Awake(){
 
   	if ( GlobalHandlerScript.player1Joined == true ){
 
-		p1 = Instantiate(GlobalHandlerScript.tempPlayer1);	//instantiate player
-		
+		//instantiate player
+		p1 = Instantiate(GlobalHandlerScript.tempPlayer1);	
 		p1.transform.localScale.x = .15;
 		p1.transform.localScale.y = .15;
 		GlobalHandlerScript.player1Alive = true;
@@ -38,6 +38,8 @@ function Awake(){
   
 		//instantiate player
 		p2 = Instantiate(GlobalHandlerScript.tempPlayer2);
+		p2.transform.localScale.x = .15;
+		p2.transform.localScale.y = .15;
 		p2.transform.position.x = 7;
 		p2.transform.position.y = 4;
 		GlobalHandlerScript.player2Alive = true;
@@ -47,10 +49,10 @@ function Awake(){
   
 		//instantiate player
 		p3 = Instantiate(GlobalHandlerScript.tempPlayer3);
-		p3.transform.position.x = -7;
-		p3.transform.position.y = -4;
 		p3.transform.localScale.x = .15;
 		p3.transform.localScale.y = .15;
+		p3.transform.position.x = -7;
+		p3.transform.position.y = -4;
 		GlobalHandlerScript.player3Alive = true;
 		GlobalHandlerScript.playersAlive += 1;
 	}
@@ -58,10 +60,10 @@ function Awake(){
   
 		//instantiate player
 		p4 = Instantiate(GlobalHandlerScript.tempPlayer4);
-		p4.transform.position.x = 7;
-		p4.transform.position.y = -4;
 		p4.transform.localScale.x = .15;
 		p4.transform.localScale.y = .15;
+		p4.transform.position.x = 7;
+		p4.transform.position.y = -4;
 		GlobalHandlerScript.player4Alive = true;
 		GlobalHandlerScript.playersAlive += 1;
 	}

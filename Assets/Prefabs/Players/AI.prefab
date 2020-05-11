@@ -159,6 +159,7 @@ MonoBehaviour:
   burnDuration: 0
   burnDamage: 0
   stunDuration: 0
+  GUIEnabled: 1
 --- !u!114 &11400002
 MonoBehaviour:
   m_ObjectHideFlags: 1

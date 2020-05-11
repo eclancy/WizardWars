@@ -29,7 +29,7 @@ GameObject:
   - component: {fileID: 5000000}
   - component: {fileID: 114173864864201658}
   - component: {fileID: 114539251326399028}
-  - component: {fileID: 114094932541513584}
+  - component: {fileID: 114288767008967216}
   m_Layer: 0
   m_Name: Player1
   m_TagString: Player
@@ -191,25 +191,6 @@ Prefab:
   m_SourcePrefab: {fileID: 0}
   m_RootGameObject: {fileID: 100002}
   m_IsPrefabAsset: 1
---- !u!114 &114094932541513584
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 100002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 844d93b076744084b9a70d2f4ec32d31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  allow1: 1
-  allow2: 1
-  allow3: 1
-  allowFlame: 1
-  allow4: 1
-  flameThrower: 0
-  rechargeFlame: 0
-  lastTick: 0
 --- !u!114 &114173864864201658
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -236,6 +217,26 @@ MonoBehaviour:
   burnDuration: 0
   burnDamage: 0
   stunDuration: 0
+  GUIEnabled: 1
+--- !u!114 &114288767008967216
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 844d93b076744084b9a70d2f4ec32d31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  allow1: 1
+  allow2: 1
+  allow3: 1
+  allowFlame: 1
+  allow4: 1
+  flameThrower: 0
+  rechargeFlame: 0
+  lastTick: 0
 --- !u!114 &114539251326399028
 MonoBehaviour:
   m_ObjectHideFlags: 1
