@@ -112,15 +112,19 @@ function ApplyDamage (damage : int) {
  
  //set damage for burn
  function setFire( args ){
- 	Destroy(onFireObject);
- 	onFireObject = Instantiate(fireSprite, transform.position, Quaternion.identity);
-	onFireObject.transform.parent = gameObject.transform.root;
-	onFireObject.transform.position.y+=0;
-	onFireObject.transform.position.x-=0;
-				
- 	burnDuration = args[0];
- 	burnDamage = args[1];
- 	onFire = true;
+	if(!onFire){
+ 		onFireObject = Instantiate(fireSprite, transform.position, Quaternion.identity);
+		onFireObject.transform.parent = gameObject.transform.root;
+		onFireObject.transform.position.y+=0;
+		onFireObject.transform.position.x-=0;
+
+		rotateObject(onFireObject);
+		onFire = true;
+	}
+
+		burnDuration = args[0];
+ 		burnDamage = args[1];
+ 		
  }
  
  
@@ -189,4 +193,11 @@ function noRecharge(){
 
 function recharge(){
 	rechargeEnabled = true;
+}
+
+function rotateObject(object){
+	while (object) {
+        object.transform.Rotate( 0.0f, 180.0f, 0.0f);
+		yield WaitForSeconds(.3);
+	}
 }
