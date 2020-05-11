@@ -134,7 +134,7 @@ function OnGUI(){
 	var size : Vector2 = new Vector2(60, 20);
 	
 	var screenPos : Vector3 = Camera.main.WorldToScreenPoint (transform.position);
- 	screenPos.y = Screen.height - screenPos.y - 60;
+ 	screenPos.y = Screen.height - screenPos.y - 75;
 
  	screenPos.x -= size.x/2 - 3;
  	 	
