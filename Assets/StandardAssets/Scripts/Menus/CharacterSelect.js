@@ -170,7 +170,7 @@ function Update(){
 				if(twoselected.name == "EarthWizard"){
 					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(EarthWizard) as MonoBehaviour;
 				}
-				if(twoselected.name === "ElectricityWizard"){
+				if(twoselected.name == "ElectricityWizard"){
 					tempPlayer2 = GlobalHandlerScript.tempPlayer2.AddComponent(ElectricityWizard) as MonoBehaviour;
 				}
 			}
@@ -186,7 +186,7 @@ function Update(){
 				if(threeselected.name == "EarthWizard"){
 					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(EarthWizard) as MonoBehaviour;
 				}
-				if(threeselected.name === "ElectricityWizard"){
+				if(threeselected.name == "ElectricityWizard"){
 					tempPlayer3 = GlobalHandlerScript.tempPlayer3.AddComponent(ElectricityWizard) as MonoBehaviour;
 				}
 			}

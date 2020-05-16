@@ -29,7 +29,7 @@ GameObject:
   - component: {fileID: 5000000}
   - component: {fileID: 114173864864201658}
   - component: {fileID: 114539251326399028}
-  - component: {fileID: 114288767008967216}
+  - component: {fileID: 114323883828766702}
   m_Layer: 0
   m_Name: Player1
   m_TagString: Player
@@ -217,8 +217,8 @@ MonoBehaviour:
   burnDuration: 0
   burnDamage: 0
   stunDuration: 0
-  GUIEnabled: 1
---- !u!114 &114288767008967216
+  GUIEnabled: 0
+--- !u!114 &114323883828766702
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
