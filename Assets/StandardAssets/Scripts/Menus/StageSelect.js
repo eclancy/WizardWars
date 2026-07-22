@@ -75,21 +75,25 @@ function Update () {
  	
  	
  	
- 	if ( Input.GetButtonDown("A_1") && p1cursor || 
-	     Input.GetButtonDown("A_2") && p2cursor || 
-		 Input.GetButtonDown("A_3") && p3cursor ||
-		 Input.GetButtonDown("A_4") && p4cursor
+	if ( (Input.GetButtonDown("A_1") && p1cursor) ||
+	     (Input.GetButtonDown("A_2") && p2cursor) ||
+		 (Input.GetButtonDown("A_3") && p3cursor) ||
+		 (Input.GetButtonDown("A_4") && p4cursor)
 		 ){
 		if(currentStage == Stage1){
+			GlobalHandlerScript.setSelectedStage(1);
 			Application.LoadLevel("Park");
 		}
 		if(currentStage == Stage2){
+			GlobalHandlerScript.setSelectedStage(2);
 			Application.LoadLevel("Park");
 		}
 		if(currentStage == Stage3){
+			GlobalHandlerScript.setSelectedStage(3);
 			Application.LoadLevel("Park");
 		}
 		if(currentStage == Stage4){
+			GlobalHandlerScript.setSelectedStage(4);
 			Application.LoadLevel("Park");
 		}
 	} 

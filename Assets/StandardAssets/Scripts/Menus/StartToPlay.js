@@ -15,3 +15,16 @@ function Update () {
 	
 	}
 }
+
+function OnGUI() {
+	var boxWidth = 430;
+	var boxHeight = 140;
+	var boxX = 20;
+	var boxY = Screen.height - boxHeight - 20;
+
+	GUI.Box(Rect(boxX, boxY, boxWidth, boxHeight), "Keyboard Controls (Player 1)");
+	GUI.Label(Rect(boxX + 12, boxY + 28, boxWidth - 24, 22), "Move: W A S D      Aim: Arrow Keys");
+	GUI.Label(Rect(boxX + 12, boxY + 50, boxWidth - 24, 22), "Basic: J      Second: K      Third: E      Ultimate: Q");
+	GUI.Label(Rect(boxX + 12, boxY + 72, boxWidth - 24, 22), "Join / Start: Enter      Back / Leave: Backspace");
+	GUI.Label(Rect(boxX + 12, boxY + 102, boxWidth - 24, 22), "Controller support remains enabled for all players.");
+}

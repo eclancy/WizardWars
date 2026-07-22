@@ -135,6 +135,10 @@ function ApplyDamage (damage : int) {
 
  
 function OnGUI(){
+	if(GUIEnabled == false) {
+		return;
+	}
+
 	if(GUIEnabled == true) {
 	//Debug.Log('rendering');
 		var size : Vector2 = new Vector2(60, 20);

@@ -42,6 +42,7 @@ var p4Wins : GameObject;
 
 var AI : GameObject;
 var battling = false;
+var selectedStage = 1;
 
 function Start(){
 
@@ -65,6 +66,15 @@ function Update () {
 function battleStart(){
 	battling = true;
 }
+
+function setSelectedStage(stageNumber : int){
+	selectedStage = stageNumber;
+}
+
+function getSelectedStage(){
+	return selectedStage;
+}
+
 function getBattling(){
 	return battling;
 }
@@ -138,6 +148,9 @@ function joined( player ){
 function left( player ){
 	
 	if( player == "Player1" ){
+		if( player1Joined == true ){
+			playersJoined--;
+		}
 		player1Joined = false;
 		player1Locked = false;
 		player1Alive = false;
@@ -148,6 +161,9 @@ function left( player ){
 		
 	}
 	if( player == "Player2" ){
+		if( player2Joined == true ){
+			playersJoined--;
+		}
 		player2Joined = false;
 		player2Locked = false;
 		player2Alive = false;
@@ -157,6 +173,9 @@ function left( player ){
 		//removeScripts(basePlayer2);
 	}
 	if( player == "Player3" ){
+		if( player3Joined == true ){
+			playersJoined--;
+		}
 		player3Joined = false;
 		player3Locked = false;
 		player3Alive = false;
@@ -166,6 +185,9 @@ function left( player ){
 		//removeScripts(basePlayer3);
 	}
 	if( player == "Player4" ){
+		if( player4Joined == true ){
+			playersJoined--;
+		}
 		player4Joined = false;
 		player4Locked = false;
 		player4Alive = false;
@@ -180,7 +202,7 @@ function left( player ){
 
 //reset
 function OnSceneLoaded(scene: Scene, mode: LoadSceneMode) {
-	if (scene == 1) {
+	if (scene.name == "Character Select") {
 	
 		left("Player1");
 		left("Player2");

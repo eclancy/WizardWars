@@ -137,10 +137,10 @@ function Update(){
 		startToPlay.transform.position.z = -2.0;
 			
 		//if someone presses start
-		if ( Input.GetButtonDown("Start_1") && GlobalHandlerScript.player1Locked == true ||
-			 Input.GetButtonDown("Start_2") && GlobalHandlerScript.player2Locked == true ||
-			 Input.GetButtonDown("Start_3") && GlobalHandlerScript.player3Locked == true ||
-			 Input.GetButtonDown("Start_4") && GlobalHandlerScript.player4Locked == true ){
+		if ( (Input.GetButtonDown("Start_1") && GlobalHandlerScript.player1Locked == true) ||
+			 (Input.GetButtonDown("Start_2") && GlobalHandlerScript.player2Locked == true) ||
+			 (Input.GetButtonDown("Start_3") && GlobalHandlerScript.player3Locked == true) ||
+			 (Input.GetButtonDown("Start_4") && GlobalHandlerScript.player4Locked == true) ){
 		
 			if(oneselected){
 				removePreviousScripts(GlobalHandlerScript.tempPlayer1);
@@ -191,9 +191,9 @@ function Update(){
 				}
 			}
 			if(fourselected){
-				removePreviousScripts(GlobalHandlerScript.tempPlayer3);
+				removePreviousScripts(GlobalHandlerScript.tempPlayer4);
 
-				if(fourselected.name == "FirWizard"){
+				if(fourselected.name == "FireWizard"){
 					tempPlayer4 = GlobalHandlerScript.tempPlayer4.AddComponent(FireWizard) as MonoBehaviour;
 				}
 				if(fourselected.name == "FrostWizard"){
