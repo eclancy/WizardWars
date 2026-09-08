@@ -24,6 +24,7 @@ var startToPlay : GameObject;
 	
 
 function Start(){
+	EnsureLocalMultiplayerRuntime();
 	GlobalHandlerScript.playersJoined = 0;
 	GlobalHandlerScript.player1Joined = false;
 	GlobalHandlerScript.player2Joined = false;
@@ -35,13 +36,53 @@ function Start(){
 	GlobalHandlerScript.player3Locked = false;
 	GlobalHandlerScript.player4Locked = false;
 
+	SyncRuntimeSelectionState(0, false, false, "");
+	SyncRuntimeSelectionState(1, false, false, "");
+	SyncRuntimeSelectionState(2, false, false, "");
+	SyncRuntimeSelectionState(3, false, false, "");
+
 }
 
 function Awake(){
   GlobalHandlerObject = GameObject.Find("GlobalHandler");
   GlobalHandlerScript = GlobalHandlerObject.GetComponent("GlobalHandler");
+  EnsureLocalMultiplayerRuntime();
   startToPlay = GameObject.Find("StartToBattle");
   disableGUI();
+}
+
+function EnsureLocalMultiplayerRuntime(){
+	var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+	if (bootstrapObject == null) {
+		bootstrapObject = new GameObject("LocalMultiplayerBootstrap");
+	}
+
+	var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+	if (bridge == null) {
+		bootstrapObject.AddComponent("LegacyGlobalStateBridge");
+	}
+
+	var playerManager = bootstrapObject.GetComponent("LocalPlayerManager");
+	if (playerManager == null) {
+		bootstrapObject.AddComponent("LocalPlayerManager");
+	}
+
+	var matchManager = bootstrapObject.GetComponent("MatchManager");
+	if (matchManager == null) {
+		bootstrapObject.AddComponent("MatchManager");
+	}
+}
+
+function SyncRuntimeSelectionState(slotIndex, joined, locked, wizardName){
+	var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+	if (bootstrapObject == null) {
+		return;
+	}
+
+	var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+	if (bridge != null) {
+		bridge.RegisterLegacySlot(slotIndex, joined, locked, wizardName, "Player" + (slotIndex + 1));
+	}
 }
 
 function Update(){
@@ -78,6 +119,7 @@ function Update(){
 	//**************************player joined**********************
 	if ( Input.GetButtonDown("Start_1") && GlobalHandlerScript.player1Joined == false ){
 		GlobalHandlerScript.joined("Player1");
+		SyncRuntimeSelectionState(0, true, false, "");
 		p1 = Instantiate( GlobalHandlerScript.tempPlayer1 );
 		p1.GetComponent(SpriteRenderer).enabled = false;
 		p1.transform.position.x = -7.437364;
@@ -90,6 +132,7 @@ function Update(){
 	} 
 	if ( Input.GetButtonDown("Start_2") && GlobalHandlerScript.player2Joined == false ){
 		GlobalHandlerScript.joined("Player2");
+		SyncRuntimeSelectionState(1, true, false, "");
 		p2 = Instantiate( GlobalHandlerScript.tempPlayer2 );
 		p2.GetComponent(SpriteRenderer).enabled = false;
 		p2.transform.position.x = -1.995348;
@@ -102,6 +145,7 @@ function Update(){
 	}
 	if ( Input.GetButtonDown("Start_3") && GlobalHandlerScript.player3Joined == false ){
 		GlobalHandlerScript.joined("Player3");
+		SyncRuntimeSelectionState(2, true, false, "");
 		p3 = Instantiate( GlobalHandlerScript.tempPlayer3 );
 		p3.GetComponent(SpriteRenderer).enabled = false;
 		p3.transform.position.x = 3.446668;
@@ -113,6 +157,7 @@ function Update(){
 	}
 	if ( Input.GetButtonDown("Start_4") && GlobalHandlerScript.player4Joined == false ){
 		GlobalHandlerScript.joined("Player4");
+		SyncRuntimeSelectionState(3, true, false, "");
 		p4 = Instantiate( GlobalHandlerScript.tempPlayer4 );
 		p4.GetComponent(SpriteRenderer).enabled = false;
 		p4.transform.position.x = 8.888684;
@@ -234,6 +279,7 @@ function Update(){
 		if( GlobalHandlerScript.player1Locked == false){
 			//if player is not locked
 			GlobalHandlerScript.left("Player1");
+			SyncRuntimeSelectionState(0, false, false, "");
 			Destroy(p1);
 			Destroy(p1cursor);
 			//disable player select script
@@ -242,7 +288,8 @@ function Update(){
 		else{
 			p1.GetComponent(SpriteRenderer).sprite = null;
 			oneselected = null;
-			GlobalHandlerScript.player1Locked = false;	
+			GlobalHandlerScript.player1Locked = false;
+			SyncRuntimeSelectionState(0, true, false, "");
 		}
 		
 	} 
@@ -254,6 +301,7 @@ function Update(){
 		if( GlobalHandlerScript.player2Locked == false){
 			//if player is not locked
 			GlobalHandlerScript.left("Player2");
+			SyncRuntimeSelectionState(1, false, false, "");
 			Destroy(p2);
 			Destroy(p2cursor);
 			//disable player select script
@@ -262,7 +310,8 @@ function Update(){
 		else{
 			p2.GetComponent(SpriteRenderer).sprite = null;
 			twoselected = null;
-			GlobalHandlerScript.player2Locked = false;	
+			GlobalHandlerScript.player2Locked = false;
+			SyncRuntimeSelectionState(1, true, false, "");
 		}
 	}
 	if ( Input.GetButtonDown("B_3") && GlobalHandlerScript.player3Joined == true ){
@@ -271,6 +320,7 @@ function Update(){
 		if( GlobalHandlerScript.player3Locked == false){
 			//if player is not locked
 			GlobalHandlerScript.left("Player3");
+			SyncRuntimeSelectionState(2, false, false, "");
 			Destroy(p3);
 			Destroy(p3cursor);
 			//disable player select script
@@ -280,6 +330,7 @@ function Update(){
 			p3.GetComponent(SpriteRenderer).sprite = null;
 			threeselected = null;
 			GlobalHandlerScript.player3Locked = false;
+			SyncRuntimeSelectionState(2, true, false, "");
 		}
 	}
 	if ( Input.GetButtonDown("B_4") && GlobalHandlerScript.player4Joined == true ){
@@ -287,7 +338,8 @@ function Update(){
 		//if player is unlocked, they left
 		if( GlobalHandlerScript.player4Locked == false){
 			//if player is not locked
-			GlobalHandlerScript.left("Player1");
+			GlobalHandlerScript.left("Player4");
+			SyncRuntimeSelectionState(3, false, false, "");
 			Destroy(p4);
 			Destroy(p4cursor);
 			//disable player select script
@@ -296,7 +348,8 @@ function Update(){
 		else{
 			p4.GetComponent(SpriteRenderer).sprite = null;
 			fourselected = null;
-			GlobalHandlerScript.player4Locked = false;	
+			GlobalHandlerScript.player4Locked = false;
+			SyncRuntimeSelectionState(3, true, false, "");
 		}
 	}
 	
@@ -315,7 +368,8 @@ function Update(){
 			
 			//now update the actual player for next scene 
 			GlobalHandlerScript.tempPlayer1.GetComponent(SpriteRenderer).sprite = p1sprite;
-			GlobalHandlerScript.player1Locked = true;	
+			GlobalHandlerScript.player1Locked = true;
+			SyncRuntimeSelectionState(0, true, true, oneselected.name);
 		}
 	} 
 	if ( Input.GetButtonDown("A_2") && GlobalHandlerScript.player2Joined == true ){
@@ -330,7 +384,8 @@ function Update(){
 			
 			//now update the actual player for next scene 
 			GlobalHandlerScript.tempPlayer2.GetComponent(SpriteRenderer).sprite = p2sprite;
-			GlobalHandlerScript.player2Locked = true;	
+			GlobalHandlerScript.player2Locked = true;
+			SyncRuntimeSelectionState(1, true, true, twoselected.name);
 		
 		}
 	}
@@ -346,7 +401,8 @@ function Update(){
 			
 			//now update the actual player for next scene 
 			GlobalHandlerScript.tempPlayer3.GetComponent(SpriteRenderer).sprite = p3sprite;
-			GlobalHandlerScript.player3Locked = true;		
+			GlobalHandlerScript.player3Locked = true;
+			SyncRuntimeSelectionState(2, true, true, threeselected.name);
 		}
 	}
 	if ( Input.GetButtonDown("A_4") && GlobalHandlerScript.player4Joined == true ){
@@ -362,6 +418,7 @@ function Update(){
 			//now update the actual player for next scene 
 			GlobalHandlerScript.tempPlayer4.GetComponent(SpriteRenderer).sprite = p4sprite;
 			GlobalHandlerScript.player4Locked = true;
+			SyncRuntimeSelectionState(3, true, true, fourselected.name);
 		}
 	}
 	

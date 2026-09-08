@@ -24,7 +24,42 @@ var GlobalHandlerScript;
 function Awake(){
 	GlobalHandlerObject = GameObject.Find("GlobalHandler");
   	GlobalHandlerScript = GlobalHandlerObject.GetComponent("GlobalHandler");
+  	EnsureLocalMultiplayerRuntime();
   	startToPlay = GameObject.Find("StartToBattle");
+}
+
+function EnsureLocalMultiplayerRuntime(){
+	var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+	if (bootstrapObject == null) {
+		bootstrapObject = new GameObject("LocalMultiplayerBootstrap");
+	}
+
+	var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+	if (bridge == null) {
+		bootstrapObject.AddComponent("LegacyGlobalStateBridge");
+	}
+
+	var playerManager = bootstrapObject.GetComponent("LocalPlayerManager");
+	if (playerManager == null) {
+		bootstrapObject.AddComponent("LocalPlayerManager");
+	}
+
+	var matchManager = bootstrapObject.GetComponent("MatchManager");
+	if (matchManager == null) {
+		bootstrapObject.AddComponent("MatchManager");
+	}
+}
+
+function SyncRuntimeStageSelection(stageNumber){
+	var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+	if (bootstrapObject == null) {
+		return;
+	}
+
+	var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+	if (bridge != null) {
+		bridge.SetSelectedStage(stageNumber);
+	}
 }
   
 function Start () {
@@ -82,18 +117,22 @@ function Update () {
 		 ){
 		if(currentStage == Stage1){
 			GlobalHandlerScript.setSelectedStage(1);
+			SyncRuntimeStageSelection(1);
 			Application.LoadLevel("Park");
 		}
 		if(currentStage == Stage2){
 			GlobalHandlerScript.setSelectedStage(2);
+			SyncRuntimeStageSelection(2);
 			Application.LoadLevel("Park");
 		}
 		if(currentStage == Stage3){
 			GlobalHandlerScript.setSelectedStage(3);
+			SyncRuntimeStageSelection(3);
 			Application.LoadLevel("Park");
 		}
 		if(currentStage == Stage4){
 			GlobalHandlerScript.setSelectedStage(4);
+			SyncRuntimeStageSelection(4);
 			Application.LoadLevel("Park");
 		}
 	} 

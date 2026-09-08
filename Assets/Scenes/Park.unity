@@ -203,17 +203,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 42524695}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36157607ab61af243915fdd763b776f2, type: 3}
+  m_Script: {fileID: 11500000, guid: e7f8091a2b3c4d5e6f708192a3b4c5d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   GlobalHandler: {fileID: 0}
   GlobalHandlerScript: {fileID: 0}
-  ControllerScriptRef: {fileID: 11500000, guid: 9733b289fd3590c4b9a06575fac8564c,
-    type: 3}
   three: {fileID: 100000, guid: 9a2743487e1591944a5289330785e768, type: 2}
   two: {fileID: 100000, guid: 38286d9739a3e5c4cbf55af018d7ef54, type: 2}
   one: {fileID: 100000, guid: 5ed73421ff1b4b3428ac14c19a4a169c, type: 2}
   go: {fileID: 100000, guid: c505e62bdf9e21b4788adc8f24f01ca7, type: 2}
+  stage1Background: {fileID: 21300000, guid: 618ee82186cbe514981a68ab79bf6e59, type: 3}
+  stage2Background: {fileID: 21300000, guid: 4e5f6a7b8c9d0e1f2a3b4c5d6e7f8091, type: 3}
+  stage3Background: {fileID: 21300000, guid: 5f6a7b8c9d0e1f2a3b4c5d6e7f809192, type: 3}
+  stage4Background: {fileID: 21300000, guid: 6a7b8c9d0e1f2a3b4c5d6e7f80919293, type: 3}
 --- !u!82 &42524699
 AudioSource:
   m_ObjectHideFlags: 0
@@ -866,8 +868,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1644224894}
   - component: {fileID: 1644224893}
-  - component: {fileID: 1644224892}
-  - component: {fileID: 1644224891}
   - component: {fileID: 1644224890}
   m_Layer: 0
   m_Name: Main Camera
@@ -878,20 +878,6 @@ GameObject:
   m_IsActive: 1
 --- !u!81 &1644224890
 AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1644224889}
-  m_Enabled: 1
---- !u!124 &1644224891
-Behaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1644224889}
-  m_Enabled: 1
---- !u!92 &1644224892
-Behaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}

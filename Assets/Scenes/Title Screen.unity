@@ -122,8 +122,6 @@ GameObject:
   m_Component:
   - component: {fileID: 157748153}
   - component: {fileID: 157748152}
-  - component: {fileID: 157748151}
-  - component: {fileID: 157748150}
   - component: {fileID: 157748149}
   m_Layer: 0
   m_Name: Main Camera
@@ -134,20 +132,6 @@ GameObject:
   m_IsActive: 1
 --- !u!81 &157748149
 AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 157748148}
-  m_Enabled: 1
---- !u!124 &157748150
-Behaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 157748148}
-  m_Enabled: 1
---- !u!92 &157748151
-Behaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
@@ -573,7 +557,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1699586683}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c4fb231fdf48df4084c45c750003ead, type: 3}
+  m_Script: {fileID: 11500000, guid: 6b2c7d8e9f104a5b8c6d7e8f90123456, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &1699586687
@@ -584,7 +568,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1699586683}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f46d185c7cd45fc429e0833e6bb0dc65, type: 3}
+  m_Script: {fileID: 11500000, guid: 7c3d8e9f0a214b6c9d7e8f9012345678, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1782920696 stripped
@@ -600,7 +584,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1782920696}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 112a8978ed576ee40b96c981f8b73a12, type: 3}
+  m_Script: {fileID: 11500000, guid: 8d4e9f0a1b325c7d0e8f90123456789a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &2123823346
@@ -627,7 +611,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2123823346}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e89008ab4cc19344f89723acf6895e3a, type: 3}
+  m_Script: {fileID: 11500000, guid: b3c4d5e6f708192a3b4c5d6e7f8091a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   playersAlive: 0

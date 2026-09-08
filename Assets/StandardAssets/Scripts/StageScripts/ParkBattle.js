@@ -27,9 +27,47 @@ var aiSpawn : Vector3;
 var rockWallHorizontal;
 var rockWallVertical;
 
+function EnsureLocalMultiplayerRuntime(){
+	var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+	if (bootstrapObject == null) {
+		bootstrapObject = new GameObject("LocalMultiplayerBootstrap");
+	}
+
+	var playerManager = bootstrapObject.GetComponent("LocalPlayerManager");
+	if (playerManager == null) {
+		bootstrapObject.AddComponent("LocalPlayerManager");
+	}
+
+	var matchManager = bootstrapObject.GetComponent("MatchManager");
+	if (matchManager == null) {
+		bootstrapObject.AddComponent("MatchManager");
+	}
+
+	var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+	if (bridge == null) {
+		bootstrapObject.AddComponent("LegacyGlobalStateBridge");
+	}
+}
+
+function GetRuntimeParticipantCount(){
+	EnsureLocalMultiplayerRuntime();
+	var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+	if (bootstrapObject == null) {
+		return 0;
+	}
+
+	var matchManager = bootstrapObject.GetComponent("MatchManager");
+	if (matchManager == null) {
+		return 0;
+	}
+
+	return matchManager.GetActiveParticipants().Count;
+}
+
 function Awake(){
   	GlobalHandler = GameObject.Find("GlobalHandler");
   	GlobalHandlerScript = GlobalHandler.GetComponent("GlobalHandler");
+  	EnsureLocalMultiplayerRuntime();
   	GlobalHandlerScript.playersAlive = 0;
   	GlobalHandler.transform.Find("menuMusic").GetComponent.<AudioSource>().Stop();
 	rockWallHorizontal = Resources.Load("RockWallHorizontal");
@@ -82,7 +120,7 @@ function Awake(){
 	//*********************************TEST ENEMY**************************
 		
 		//instantiate test player
-	if (GlobalHandlerScript.playersAlive == 1 ){
+	if (GlobalHandlerScript.playersAlive == 1 || GetRuntimeParticipantCount() <= 1 ){
 		p5 = Instantiate(GlobalHandlerScript.AI);
 		p5.transform.position = aiSpawn;
 		p5.transform.localScale.x = .3;
@@ -90,6 +128,14 @@ function Awake(){
 		GlobalHandlerScript.AIAlive = true;
 		GlobalHandlerScript.playersAlive += 1;
 		p5.GetComponent(PlayerStats).GUIEnabled = true;
+	}
+
+	var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+	if (bootstrapObject != null) {
+		var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+		if (bridge != null) {
+			bridge.StartMatchForLegacyStage();
+		}
 	}
 }
 

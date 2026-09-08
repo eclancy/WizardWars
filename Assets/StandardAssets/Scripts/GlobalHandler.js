@@ -3,6 +3,57 @@ import UnityEngine.SceneManagement;
 
 function Awake () {
 	DontDestroyOnLoad (this);
+	EnsureLocalMultiplayerRuntime();
+}
+
+function EnsureLocalMultiplayerRuntime() {
+	if (runtimeBridgeReady) {
+		return;
+	}
+
+	var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+	if (bootstrapObject == null) {
+		bootstrapObject = new GameObject("LocalMultiplayerBootstrap");
+	}
+
+	var bootstrap = bootstrapObject.GetComponent("LocalMultiplayerBootstrap");
+	if (bootstrap == null) {
+		bootstrapObject.AddComponent("LocalMultiplayerBootstrap");
+	}
+
+	var playerManager = bootstrapObject.GetComponent("LocalPlayerManager");
+	if (playerManager == null) {
+		bootstrapObject.AddComponent("LocalPlayerManager");
+	}
+
+	var matchManager = bootstrapObject.GetComponent("MatchManager");
+	if (matchManager == null) {
+		bootstrapObject.AddComponent("MatchManager");
+	}
+
+	var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+	if (bridge == null) {
+		bootstrapObject.AddComponent("LegacyGlobalStateBridge");
+	}
+
+	runtimeBridgeReady = true;
+}
+
+function SyncLegacyStateToRuntime() {
+	EnsureLocalMultiplayerRuntime();
+	var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+	if (bootstrapObject == null) {
+		return;
+	}
+
+	var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+	if (bridge != null) {
+		bridge.RegisterLegacySlot(0, player1Joined, player1Locked, "", "Player1");
+		bridge.RegisterLegacySlot(1, player2Joined, player2Locked, "", "Player2");
+		bridge.RegisterLegacySlot(2, player3Joined, player3Locked, "", "Player3");
+		bridge.RegisterLegacySlot(3, player4Joined, player4Locked, "", "Player4");
+		playersJoined = bridge.GetJoinedPlayerCount();
+	}
 }
 
 var playersAlive = 0;
@@ -43,8 +94,10 @@ var p4Wins : GameObject;
 var AI : GameObject;
 var battling = false;
 var selectedStage = 1;
+var runtimeBridgeReady = false;
 
 function Start(){
+	EnsureLocalMultiplayerRuntime();
 
 
 }
@@ -69,6 +122,14 @@ function battleStart(){
 
 function setSelectedStage(stageNumber : int){
 	selectedStage = stageNumber;
+
+	var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+	if (bootstrapObject != null) {
+		var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+		if (bridge != null) {
+			bridge.SetSelectedStage(stageNumber);
+		}
+	}
 }
 
 function getSelectedStage(){
@@ -81,7 +142,8 @@ function getBattling(){
 
 function kill(character){
 	playersAlive--;
-	var winner : GameObject;	
+	var winner : GameObject;
+	var winningPlayerName = "";
 	
 	if( character == "Player1(Clone)" ){
 		player1Alive = false;
@@ -99,22 +161,31 @@ function kill(character){
 		AIAlive = false;
 	}
 
-	
 	//game win
 	if (playersAlive == 1){
-			
-		
 		if( player1Alive == true ){
 			winner = Instantiate(p1Wins);
+			winningPlayerName = "Player1";
 		}
 		if( player2Alive == true ){
 			winner = Instantiate(p2Wins);
+			winningPlayerName = "Player2";
 		}
 		if( player3Alive == true ){
 			winner = Instantiate(p3Wins);
+			winningPlayerName = "Player3";
 		}
 		if( player4Alive == true ){
 			winner = Instantiate(p4Wins);
+			winningPlayerName = "Player4";
+		}
+
+		var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+		if (bootstrapObject != null) {
+			var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+			if (bridge != null && winningPlayerName != "") {
+				bridge.RegisterWinner(winningPlayerName);
+			}
 		}
 		
 		yield WaitForSeconds(5);
@@ -143,6 +214,7 @@ function joined( player ){
 		playersJoined++;
 	}
 	
+	SyncLegacyStateToRuntime();
 }
 
 function left( player ){
@@ -197,19 +269,25 @@ function left( player ){
 		//removeScripts(basePlayer4);
 	}
 
+	SyncLegacyStateToRuntime();
 
 }
 
 //reset
 function OnSceneLoaded(scene: Scene, mode: LoadSceneMode) {
 	if (scene.name == "Character Select") {
+		var bootstrapObject = GameObject.Find("LocalMultiplayerBootstrap");
+		if (bootstrapObject != null) {
+			var bridge = bootstrapObject.GetComponent("LegacyGlobalStateBridge");
+			if (bridge != null) {
+				bridge.ResetRuntimeState();
+			}
+		}
 	
 		left("Player1");
 		left("Player2");
 		left("Player3");
 		left("Player4");
-	
-			
 	}
 }
 
