@@ -45,3 +45,15 @@ ehthumbs.db
 Corridor/Library/ShaderCache/
 Corridor/Library/metadata/
 Library
+
+# ===================== #
+# Unity 2022 generated  #
+# ===================== #
+/[Ll]ogs/
+/[Uu]serSettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/[Aa]rtifacts/
+.vsconfig
+*.crashlytics
+sysinfo.txt

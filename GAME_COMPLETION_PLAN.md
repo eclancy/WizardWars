@@ -1,56 +1,71 @@
-# WizardsArena Completion Plan (Current Unity Version)
+# Wizard Wars Completion Plan
 
-Goal: ship a stable and fun v1 on Unity 2018.2.10f1 without engine upgrades.
+Goal: ship a stable and fun v1 on Unity 2022.3.62f3.
+
+Superseded: the earlier version of this plan targeted Unity 2018.2.10f1 and listed the
+engine upgrade and the C# rewrite as out of scope. Both have since shipped, so the plan
+below starts from the post-migration project.
 
 ## Scope Lock
-- Keep engine and project settings baseline unchanged except required bug fixes.
+- Engine stays on Unity 2022.3.62f3. No further engine upgrades before v1.
 - Prefer script fixes over scene/prefab rewrites.
-- Defer engine upgrades and platform expansion until after v1 release.
+- Do not edit the dead legacy `.js` files; they are reference copies only.
+- Defer the Unity Input System migration, online play, and platform expansion until
+  after v1.
 
 ## Definition of Done (v1)
-- Full game loop works with controllers: Title -> Character Select -> Stage Select -> Park -> Win Screen -> Back to Character Select.
-- 1 to 4 local players can join/leave, lock character, and start match reliably.
-- All four wizard archetypes are playable and their first three attacks work consistently.
-- Health and energy UI bars display correctly and only when intended.
-- No known hard-locks, missing references, or repeatable crashes in normal play.
+- Full game loop works with controllers: Title -> Character Select -> Stage Select ->
+  Park -> Win Screen -> Back to Character Select.
+- 1 to 4 local players can join/leave, lock character, and start a match reliably.
+- All four wizard archetypes are playable, and every ability slot works: basic, second,
+  third, fourth (LB), and ultimate (X).
+- Health, energy, and ultimate charge UI display correctly and only when intended.
+- All four stages load with the correct background and obstacles.
+- No known hard-locks, missing script references, or repeatable crashes in normal play.
 
-## Milestone 1: Critical Gameplay Stability (Week 1)
-- Fix character select lock-in bugs and player-specific script assignment issues.
-- Fix HUD and match state bugs that affect readability or flow.
-- Verify GlobalHandler state resets correctly between matches.
-- Test matrix: 1P, 2P, and 4P join/leave/start flow.
+## Milestone 1: Validate the migration
+- Open the project in Unity 2022.3.62f3 and confirm a clean Console.
+- Play through Title -> Character Select -> Stage Select -> Park with 1P, 2P, and 4P.
+- Confirm no `Missing (Mono Script)` on any player prefab, cursor, or attack prefab.
+- Confirm `GlobalHandler` state and the `LocalMultiplayer` runtime stay in sync across
+  join, leave, lock, match start, death, and rematch.
+- Work through `docs/smoke-test-checklist.md` and fix what it surfaces.
 
-## Milestone 2: Combat Reliability and Balance (Week 2)
-- Validate each wizard attack behavior against intended role.
+## Milestone 2: Ability completeness and reliability
+- Verify each wizard's five abilities against the intent recorded in
+  `CLAUDE_HANDOFF.md`.
+- Confirm ultimate charge gating, `ultimateActive` input lockout, and charge reset
+  between matches.
+- Validate projectile and zone interactions across elements.
 - Normalize obvious outliers in energy cost, cooldown, and damage.
-- Validate projectile/zone interactions (fire/ice/earth/electric counters).
-- Test matrix: every wizard matchup at least once.
 
-## Milestone 3: UX and Match Flow Polish (Week 3)
-- Improve readability of key states (joined, locked, ready, winner).
-- Ensure stage transitions and countdown timing always complete.
-- Ensure AI fallback in single-player behaves consistently.
-- Add minimal quality-of-life tweaks only if they are low-risk.
+## Milestone 3: UX and match flow polish
+- Improve readability of key states: joined, locked, ready, winner.
+- Ensure stage transitions and the countdown always complete.
+- Ensure the single-player AI fallback behaves consistently.
+- Confirm the win screen and return-to-Character-Select loop is repeatable.
 
-## Milestone 4: Release Candidate (Week 4)
-- Run a bug bash focused on controller edge cases and rematch loops.
-- Freeze gameplay values for v1 unless a bug requires change.
-- Tag release candidate and capture known issues list.
+## Milestone 4: Release candidate
+- Bug bash focused on controller edge cases and rematch loops.
+- Freeze gameplay values for v1 unless a bug requires a change.
+- Tag a release candidate and capture a known issues list.
 
 ## Prioritized Backlog (Only If Time Permits)
-- Add one low-risk content extension (small stage variant or minor attack variant).
-- Add optional simple settings toggle screen (audio volume only).
-- Add a quick how-to-play overlay on title/character select.
+- Team mode with shared win/loss and friendly fire disabled
+  (`docs/local-multiplayer-roadmap.md`).
+- Optional settings screen (audio volume only).
+- A quick how-to-play overlay on the title or character select screen.
 
 ## Session Checklist (Use Every Work Session)
-- Reproduce issue in editor.
-- Apply minimal fix.
-- Retest full loop: Character Select -> Stage Select -> Park -> Win -> Return.
+- Reproduce the issue in the Editor.
+- Apply a minimal fix.
+- Compile-check with `bash tools/compile-check.sh` (Editor must be closed).
+- Retest the full loop: Character Select -> Stage Select -> Park -> Win -> Return.
 - Retest 1P and 2P controller flow.
-- Log behavior changes in commit message.
+- Log behavior changes in the commit message.
 
 ## Out of Scope for v1
-- Unity version upgrades.
-- Rewrite to C# or another engine.
+- Further Unity version upgrades.
+- Unity Input System migration.
 - Large scene art overhauls.
 - Online multiplayer.
