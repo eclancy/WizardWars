@@ -18,7 +18,9 @@ public class ControllerScript : MonoBehaviour
     public string X;
     public Component characterScript;
     public bool cantmove;
-    public float targeterRange = 6f;
+    public float targeterRange = 4.5f;
+    // Radial deadzone for raw stick input, so a resting stick does not drift.
+    public float moveDeadzone = 0.2f;
     public GameObject GlobalHandler;
     public Component GlobalHandlerScript;
     public float xAxis;
@@ -82,8 +84,17 @@ public class ControllerScript : MonoBehaviour
         activeSpeed = baseSpeed - baseSpeed * slowPercentage / 100f + baseSpeed * speedPercentage / 100f;
         if (!cantmove)
         {
-            xAxis = Input.GetAxis(L_XAxis);
-            yAxis = Input.GetAxis(L_YAxis);
+            // Raw input: GetAxis smooths through the InputManager's gravity and
+            // sensitivity, which makes the wizard ease up to speed instead of moving
+            // the moment the stick or key goes down.
+            Vector2 move = new Vector2(Input.GetAxisRaw(L_XAxis), Input.GetAxisRaw(L_YAxis));
+            if (move.sqrMagnitude < moveDeadzone * moveDeadzone) move = Vector2.zero;
+            // Speed is taken from this vector's magnitude, which reaches 1.41 on a
+            // full diagonal. Clamping to 1 keeps every direction the same speed while
+            // leaving a part-pushed stick analogue.
+            move = Vector2.ClampMagnitude(move, 1f);
+            xAxis = move.x;
+            yAxis = move.y;
         }
 
         transform.rotation = Quaternion.identity;

@@ -28,10 +28,11 @@ Each player slot (1-4) maps to a controller (Joystick 1-4) in `ProjectSettings/I
 | Aim | Right Stick | Arrow Keys |
 | Join/Confirm | A (Button 0) | Space |
 | Leave/Back | B (Button 1) | Backspace |
-| Basic Attack | Triggers (LT/RT) | Q / E |
-| Second Attack | Triggers (opposite) | Q / E |
-| Third Attack | RB (Button 5) | E |
-| Ultimate | LB (Button 4) | Q |
+| Basic Attack | Right Trigger | 1 |
+| Second Attack | Left Trigger | 2 |
+| Third Attack | RB (Button 5) | 3 |
+| Fourth Attack | LB (Button 4) | 4 |
+| Ultimate | X (Button 2) | 5 |
 | Start Menu | Start (Button 7) | Return |
 
 ### Player 2-4 (Joystick 2-4)
@@ -42,10 +43,11 @@ Each player slot (1-4) maps to a controller (Joystick 1-4) in `ProjectSettings/I
 | Aim | Right Stick |
 | Join/Confirm | A (Button 0) |
 | Leave/Back | B (Button 1) |
-| Basic Attack | Triggers (LT/RT) |
-| Second Attack | Triggers (opposite) |
+| Basic Attack | Right Trigger |
+| Second Attack | Left Trigger |
 | Third Attack | RB (Button 5) |
-| Ultimate | LB (Button 4) |
+| Fourth Attack | LB (Button 4) |
+| Ultimate | X (Button 2) |
 | Start Menu | Start (Button 7) |
 
 ## Menu Flow
