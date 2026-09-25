@@ -41,11 +41,16 @@ The player prefabs, Character Select, Stage Select, Park, Title Screen, and Reso
 - LB: fourth attack
 - X: ultimate
 
-The legacy input names use suffixes `_1` through `_4`. `X_1` has keyboard fallback `R`; existing keyboard attack fallbacks are documented in `ProjectSettings/InputManager.asset` and the Title Screen help text in `StartToPlay.cs`.
+The legacy input names use suffixes `_1` through `_4`. Player 1 has keyboard bindings for every ability (`1`-`5`), defined in `ProjectSettings/InputManager.asset` and shown by the Title Screen help text in `StartToPlay.cs`. The old `J K E Q R` aliases were removed.
 
 The aim reticle now hides when the right stick is neutral and reappears when the player aims.
 
-## Ultimate / Fourth Ability Design
+## Ability Design
+
+Every wizard has exactly four abilities. The LB "fourth" slot was cut: three of the
+four fourth abilities were the worst in the game (Earthquake dealt no damage, Chain
+Lightning dealt 9 for 85 energy), and they all shared a cooldown flag with the third.
+`ControllerScript` still dispatches `fourthAttack` on LB; nothing receives it.
 
 Ultimates are gated by `PlayerStats.ultimateCharge`:
 
@@ -54,16 +59,33 @@ Ultimates are gated by `PlayerStats.ultimateCharge`:
 - `TryUseUltimate()` consumes the charge.
 - `ControllerScript.ultimateActive` blocks all other ability input while an ultimate coroutine runs.
 
-Current intended ability mapping:
+Current kits:
 
-- Fire X ultimate: Phoenix Rebirth, heals over time and damages nearby enemies.
-- Fire LB fourth: targeted Meteor Strike, telegraphed before damage and burn.
-- Frost X ultimate: Absolute Zero, slows enemies and disables their energy recharge; no stun.
-- Frost LB fourth: Deep Freeze, targeted long-duration stun.
-- Earth X ultimate: Fortress, four deliberate walls around the caster, then collapse damage.
-- Earth LB fourth: Earthquake, area movement-stun/knockup approximation.
-- Electricity X ultimate: Overcharge, rapidly fires electricity balls and randomly places lightning rods around the caster. Rods self-destroy after 2.5 seconds.
-- Electricity LB fourth: Chain Lightning, hits up to three nearest opponents.
+| Wizard | Basic | Second | Third | Ultimate |
+|---|---|---|---|---|
+| Fire | Fireball | Ring of Fire | Flamethrower | Meteor Storm |
+| Frost | Icicle | Ice Patch | Ice Wave | Absolute Zero |
+| Earth | Mudball | Mud Patch | Rock Wall | Earthquake |
+| Electricity | Electricity Ball | Lightning Rod | Speed Up | Overcharge |
+
+- Fire ultimate: Meteor Storm rains `meteorStormCount` meteors on random points inside
+  `meteorStormArea`, several in the air at once, damage falling off from
+  `meteorCentreDamage` to `meteorEdgeDamage`. It leaves no fire.
+- Frost ultimate: Absolute Zero slows enemies and disables their energy recharge; no stun.
+- Earth ultimate: Earthquake shakes the ground around the caster and slows anyone inside
+  `quakeRadius` by `quakeSlow` for as long as they stay in it. The caster is not slowed.
+- Electricity ultimate: Overcharge rapidly fires electricity balls and randomly places
+  lightning rods around the caster. Those rods self-destroy after 2.5 seconds.
+
+The fire wizard is immune to his own fire. Projectiles and the flamethrower rely on
+`Physics2D.IgnoreCollision` against the caster; Ring of Fire's sources and the meteor
+blasts find targets with overlap queries, which ignore that, so they skip the caster
+explicitly.
+
+Cut and not replaced: Phoenix Rebirth, Fortress, Deep Freeze, Chain Lightning, and the
+old single-target Meteor Strike. Their generated PNGs remain in `Assets/Resources/`
+(`PhoenixRebirth`, `MeteorStrike`, `DeepFreeze`, `ChainLightning`, `FortressRing`,
+`BlizzardField`) but nothing loads them.
 
 ## Current Visual Assets
 
@@ -150,3 +172,98 @@ This mode should live in explicit match state and drive friendly-fire rules, win
 ## Caution About History
 
 This worktree contains many pre-existing and migration-related uncommitted changes. Do not reset or revert unrelated edits. Inspect current files before patching because Unity or formatters may have rewritten `.meta`, scene, or prefab data.
+
+## Abilities Reworked as Generated Animations
+
+Ice Wave and Ring of Fire were converted from single authored sprites into effects
+that are generated and animated in code, in the same spirit as the ultimates.
+
+- `ProceduralFx.cs` builds their art at runtime from `Texture2D` pixels — an ice
+  shard, a flame blob, and a ring outline — and caches each one. No new PNGs.
+- Ice Wave (`FrostWizard.SpawnIceWave`) is an arc of nine shards that sweeps outward,
+  widens, and fades, replacing the sprite that used to slide across the arena.
+- Ring of Fire (`FireWizard.SpawnRingOfFire`) places twelve independent `FireSource`
+  flames around the circle, each growing out of the ground where it lands. A source
+  that lands in a wall, an obstacle, or a mud patch is put out on its own while the
+  rest of the ring keeps burning.
+- Ring behaviour is tunable on `FireWizard`: `ringRadius`, `ringSourceCount`,
+  `ringLifetime`, `ringBurnDuration`, `ringDamagePerTick`.
+- `iceWave.prefab` and `ringOfFire.prefab` remain in `Resources/` but are unloaded.
+
+Still to validate in the Editor: ring spacing against obstacles on stages 2-4, and
+whether twelve sources feel right.
+
+## Ground Patch Telegraphs
+
+Ice Patch and Mud Patch now animate into existence instead of appearing instantly,
+and neither affects anyone until its formation finishes.
+
+- Ice: six generated puddles seep out around the target, slide together, and the
+  sheet glosses over from wet blue to plain ice (~0.83s total).
+- Mud: eight clods of earth spurt up out of the ground on parabolic arcs, land
+  around the point, and the patch spreads outward from there (~0.75s total).
+- The prefab is instantiated only at the end of the spurt/gather, and its
+  `PolygonCollider2D` is disabled while it grows, so the telegraph is honest.
+- The ice patch is smaller than before: `FrostWizard.icePatchScale` is 0.95 where the
+  prefab is authored at 1.5. Mud is unchanged at `EarthWizard.mudPatchScale` 1.5.
+
+The ice patch expires. `IcePatch` self-destructs `lifetime` seconds after
+`beginLife()` (2s, started when the gloss finishes so the telegraph does not count
+against it), and releases any player still standing on it first — destroying a trigger
+does not run its own `OnTriggerExit2D`, so without that a player would stay stuck
+sliding for the rest of the match. `FrostWizard.Second` still broadcasts `notSliding`
+to every player a second later; that is now a redundant safety net rather than the
+only cleanup. Mud patches self-destruct after 3s as they always did.
+
+
+## Fire Rework (current)
+
+- The flame is a six-frame generated loop with a full, broad silhouette and a fully
+  opaque body. An earlier version used a square-root envelope with fast waves, which
+  broke the flame into thin tongues that were mostly soft edge and read as translucent
+  no matter how opaque the pixels were. Transparent pixels carry the flame's colour so
+  bilinear filtering cannot fringe the edges toward transparent black.
+- Ring of Fire has no telegraph. Sources are placed immediately and each grows out of
+  the ground over 0.4s, stuttering as it catches.
+- Meteor Strike leaves no fire. Damage runs from `meteorCentreDamage` (45) at the
+  impact point down to `meteorEdgeDamage` (8) at `meteorBlastRadius` (3).
+- `ProceduralFx.RingOutline` is no longer used by anything now that the ring telegraph
+  is gone. It is a lazily built generator, so it costs nothing while unused.
+
+## Resource Rebalance
+
+The single energy pool used to throttle the basic attack (33 energy against a 0.3s
+cooldown, so energy bound it by 5.5x) while every other ability was cooldown-bound.
+Three basics emptied the bar, and it took five to kill — so you could not finish a kill
+on one bar, and an empty bar left you with no action at all.
+
+- **The basic attack is free**, on a `basicCooldown` of 0.55s. You always have an
+  action; a dry bar costs you options, not agency.
+- **Mid abilities dropped to ~20-35** so energy budgets them instead of denying them:
+  Ring of Fire 50 to 35, Ice Patch 50 to 30, Ice Wave 66 to 35, Mud Patch 50 to 30,
+  Rock Wall 25 to 20, Speed Up 30 to 25, Lightning Rod unchanged at 30. Costs are
+  serialized fields on each wizard so they can be tuned in the Inspector.
+- **The ultimate is earned, not waited out.** `ultimateChargeRate` dropped from 4/s to
+  1.2/s, and charge is now also granted by `ultimateChargePerEnergy` (0.3 per energy
+  spent) and `ultimateChargePerDamageTaken` (0.3 per damage). Active play reaches an
+  ultimate in roughly 30s; standing still takes over 80s. Taking damage charging it
+  gives the losing player a way back in.
+
+Damage *dealt* does not grant charge. `ApplyDamage` is invoked by `SendMessage` with no
+attacker reference, so crediting the dealer would mean threading a source through every
+attack call site. Energy spent is used as the aggression proxy instead.
+
+## HUD
+
+The bar block above each wizard is now three rows in 28px instead of two in 20px:
+health, energy, and a gold ultimate meter that flashes white when ready. The energy bar
+flashes red for 0.35s whenever a cast is refused for want of energy — previously
+`DepleteEnergy` returned false and the ability silently did nothing, which is the main
+reason it was unclear when a spell could be cast.
+
+Three cooldown pips sit under the bars, one each for the basic, second and third
+abilities (the ultimate has the gold meter). Readiness comes from the wizard through
+`IWizardAbilities.IsAbilityReady`; the pip fill rate is learned by timing how long the
+ability stayed unavailable last time, so no ability has to report its own cooldown
+length. The first use of each ability fills from a 4s guess and self-corrects after
+that, and a pip never reads ready early because readiness is always the wizard flag.

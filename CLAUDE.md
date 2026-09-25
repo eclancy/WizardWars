@@ -36,6 +36,16 @@ Do this after any non-trivial script edit. It catches compile breaks and broken 
 references, but it cannot catch runtime or gameplay regressions — those still need the
 Editor and `docs/smoke-test-checklist.md`.
 
+**With the Editor open**, use the lighter check instead:
+
+```bash
+bash tools/syntax-check.sh
+```
+
+It runs Unity's own Roslyn over `Assets/Scripts/` against Unity's assemblies without
+opening the project, so it needs no `Library/` lock. It reports the same C# errors and
+warnings, but it does not import assets, so it cannot catch broken GUID references.
+
 Baseline as of 2026-09-07: **0 errors, 0 warnings**.
 
 ## Architecture
@@ -59,16 +69,95 @@ Baseline as of 2026-09-07: **0 errors, 0 warnings**.
   player joined.
 - Wizards: `FireWizard.cs`, `FrostWizard.cs`, `EarthWizard.cs`,
   `ElectricityWizard.cs`. Each exposes `basicAttack`, `secondAttack`, `thirdAttack`,
-  `ultimateAttack`, still invoked by `SendMessage`.
+  `ultimateAttack`, still invoked by `SendMessage`. There is no `fourthAttack`:
+  `ControllerScript` still dispatches it on LB, which is now a harmless no-op.
+- `ProceduralFx.cs` — runtime-generated sprites (ice shard, flame, ring outline)
+  built from `Texture2D` pixels and cached statically. Abilities that are animated in
+  code rather than authored as art use these, so they add no files to `Resources/`.
+  It also owns `IsInsideSolid`, the shared "is this point in a wall or obstacle" test.
+
+### Abilities animated in code
+
+Ice Wave (`FrostWizard.SpawnIceWave`) and Ring of Fire (`FireWizard.SpawnRingOfFire`)
+are no longer single sprites that move. Each is assembled at cast time from many small
+objects and driven by a coroutine:
+
+- Ice Wave spawns nine `IceWaveShard` pieces on an arc that sweeps outward, widening
+  and fading. All shards of one cast share a hit set so a player is stunned once.
+- Ring of Fire places `FireSource` flames straight onto the circle with no telegraph.
+  Each grows up out of the ground and stutters as it catches, then cycles the six
+  generated flame frames at its own rate and offset. Each source lives independently —
+  one that lands in a wall, obstacle, or mud patch is put out by itself and the rest
+  keep burning.
+- Earthquake is the Earth ultimate: shockwave rings ripple out to `quakeRadius` while
+  anyone inside is slowed by `quakeSlow`. The slow is applied and removed exactly once
+  per player via a tracked set, because `ControllerScript.slow` is additive.
+- Meteor Storm is the Fire ultimate: `meteorStormCount` meteors rain on random points
+  inside `meteorStormArea`, several in the air at once. Each is a shadow that tightens
+  and turns fiery as it falls, then a blast disc sized to `meteorBlastRadius`, with
+  damage interpolating from `meteorCentreDamage` to `meteorEdgeDamage` at the rim. It
+  leaves no fire behind, and never damages the caster.
+- `FireSource` finds players with `Physics2D.OverlapCircleAll` on a slow tick instead
+  of trigger callbacks, so a source needs no collider or `Rigidbody2D`. This means
+  trigger-based interactions elsewhere cannot see it: cross-ability reactions that
+  used to match the object name `ringOfFire(Clone)` now live inside `FireSource`.
+- Both ground patches have a formation telegraph before they take effect.
+  `FrostWizard.FormIcePatch` gathers generated puddles inward and glosses them into
+  the sheet; `EarthWizard.FormMudPatch` spurts clods of earth up and lets the patch
+  spread from where they land. In both cases the prefab is instantiated only at the
+  end, and its `PolygonCollider2D` stays disabled while it grows, so the patch cannot
+  slip or slow anyone during the telegraph. Final size is set in code
+  (`FrostWizard.icePatchScale`, `EarthWizard.mudPatchScale`), not by the prefab.
+
+`iceWave.prefab` and `ringOfFire.prefab` still exist in `Resources/` but nothing loads
+them. Leave them there; they are the fallback if a rework needs reverting.
 
 ## Controls
 
-Left stick moves, right stick aims, triggers fire basic/second, RB third, LB fourth,
-X ultimate. Input names carry `_1`..`_4` suffixes and live in
+Left stick moves, right stick aims, triggers fire basic/second, RB third, X ultimate.
+Every wizard has four abilities; the LB (fourth) slot was cut.
+
+Input names carry `_1`..`_4` suffixes and live in
 `ProjectSettings/InputManager.asset`; `ControllerScript` picks the suffix from the
 clone name. Ultimates are gated by `PlayerStats.ultimateCharge`, and
 `ControllerScript.ultimateActive` blocks all other ability input while an ultimate
 coroutine runs.
+
+Player 1 can play without a controller: WASD moves, arrow keys aim, and `1`, `2`, `3`
+and `5` fire basic / second / third / ultimate; `4` is bound but does nothing.
+Menu keys are Enter to join/start, Backspace to leave, Space to confirm. Players 2-4 are controller-only.
+
+Keyboard bindings are added as **extra entries reusing the same axis name** rather than
+by editing the joystick entries — Unity allows duplicate axis names and `GetAxis` /
+`GetButtonDown` consider all of them. That is why `InputManager.asset` contains several
+entries called `L_XAxis_1`, `RB_1`, and so on. Add keyboard support that way; do not
+overwrite a joystick binding.
+
+Note the Y-axis polarity trap: Unity joystick vertical axes report **up as -1**, and the
+aim code negates `yAim` (`ControllerScript.cs`, targeter position and `Atan2`). A keyboard
+axis standing in for a stick therefore needs `invert: 1`, or up and down come out
+backwards.
+
+## Resources
+
+Energy is 100 with a 20/s regen. The basic attack is free on a cooldown; the other
+abilities cost 20-35 and are bound by their own cooldowns, so energy limits dumping the
+whole kit at once rather than limiting the default action. Ability costs are serialized
+fields on each wizard (`basicCost`, `ringCost`, `icePatchCost`, and so on).
+
+Ultimate charge is earned: a slow passive trickle plus charge per energy spent and per
+damage taken. `PlayerStats.AddUltimateCharge` is the single entry point.
+
+The HUD shows health, energy, an ultimate meter and three cooldown pips. Wizards expose
+readiness through `IWizardAbilities`, which `PlayerStats` resolves lazily because
+`CharacterSelect` adds the wizard component at runtime. Note that an interface-typed
+reference does not get Unity's overloaded `== null`, so a destroyed wizard has to be
+detected by casting to `MonoBehaviour`.
+
+Watch the prefab-override trap here. `Player1` and `Player2` pinned `ultimateChargeRate`
+while `Player3`, `Player4` and the AI did not, so changing the code default alone would
+have given players 1 and 2 a 3.3x faster ultimate than everyone else. After changing any
+tuning default, grep the prefabs for that field name.
 
 ## Contracts that are not type-checked — preserve them
 

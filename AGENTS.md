@@ -14,7 +14,8 @@ stay consistent with it.
   do not treat them as live code.
 - There is no automated test suite. Validate in the Unity Editor and use
   `docs/smoke-test-checklist.md`. To compile-check without the Editor, run
-  `bash tools/compile-check.sh` with the Editor closed.
+  `bash tools/compile-check.sh` with the Editor closed, or `bash tools/syntax-check.sh`
+  while it is open.
 
 ## Key Files and Flow
 - Build scenes in `ProjectSettings/EditorBuildSettings.asset`: `Title Screen`,
@@ -34,7 +35,8 @@ stay consistent with it.
   charge.
 - Wizards live in `FireWizard.cs`, `FrostWizard.cs`, `EarthWizard.cs`,
   `ElectricityWizard.cs`; each exposes `basicAttack`, `secondAttack`, `thirdAttack`,
-  and `ultimateAttack`, still called via `SendMessage`.
+  and `ultimateAttack`, still called via `SendMessage`. `fourthAttack` was cut from all
+  four wizards; the LB dispatch in `ControllerScript` is now a no-op.
 
 ## Unity Conventions
 - Keep `.meta` files with their assets. Do not rename, move, or delete Unity assets,
@@ -52,8 +54,8 @@ stay consistent with it.
 - Input names live in `ProjectSettings/InputManager.asset`, duplicated per player with
   `_1` through `_4` suffixes: `Start_n`, `A_n`, `B_n`, `X_n`, `LB_n`, `RB_n`,
   `L_XAxis_n`, `L_YAxis_n`, `R_XAxis_n`, `R_YAxis_n`, `Triggers_n`.
-- Left stick moves, right stick aims, triggers fire basic/second, RB third, LB fourth,
-  X ultimate.
+- Left stick moves, right stick aims, triggers fire basic/second, RB third, X ultimate.
+  Every wizard has four abilities; the LB (fourth) slot was cut.
 - `ControllerScript.cs` derives the input suffix from the instantiated clone name. If
   you add players or change clone names, update the input mapping and global state
   together.
