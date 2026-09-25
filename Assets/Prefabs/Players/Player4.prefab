@@ -231,6 +231,6 @@ MonoBehaviour:
   activeSpeed: 4
   targeterLoad: {fileID: 0}
   cantmove: 0
-  targeterRange: 6
+  targeterRange: 4.5
   slowPercentage: 0
   speedPercentage: 0

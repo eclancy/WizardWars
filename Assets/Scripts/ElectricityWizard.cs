@@ -1,20 +1,27 @@
 using System.Collections;
 using UnityEngine;
 
-public class ElectricityWizard : MonoBehaviour
+public class ElectricityWizard : MonoBehaviour, IWizardAbilities
 {
     public bool allow1 = true, allow2 = true, allow3 = true, allow4 = true;
+    // The basic attack is free so a dry energy bar never leaves you with no action.
+    public float basicCost = 0f;
+    public float basicCooldown = 0.55f;
+    public float rodCost = 30f;
+    public float speedCost = 25f;
     public GameObject attack1, attack2, attack3, attack4;
     public PlayerStats statScript;
     public bool running;
     public ControllerScript controllerScript;
     private void Start() { attack1 = Resources.Load<GameObject>("electricityball"); attack2 = Resources.Load<GameObject>("lightningRod"); attack3 = Resources.Load<GameObject>("speedUpParticles"); Sprite oc = Resources.Load<Sprite>("Overcharge"); attack4 = new GameObject("OverchargeVisual"); attack4.AddComponent<SpriteRenderer>().sprite = oc; attack4.transform.SetParent(transform); attack4.transform.localPosition = Vector3.zero; attack4.SetActive(false); statScript = GetComponent<PlayerStats>(); controllerScript = GetComponent<ControllerScript>(); }
     public string getName() => "ElectricityWizard";
-    public void basicAttack(object[] args) { if (allow1 && statScript != null && statScript.DepleteEnergy(33)) StartCoroutine(Basic(args)); }
-    private IEnumerator Basic(object[] args) { allow1 = false; GameObject shot = Instantiate(attack1, transform.position, Quaternion.identity); IgnoreSelf(shot); shot.transform.Rotate((Vector3)args[0]); Destroy(shot, 2f); yield return new WaitForSeconds(.3f); allow1 = true; }
-    public void secondAttack(object[] args) { if (allow2 && statScript != null && statScript.DepleteEnergy(30)) StartCoroutine(Second(args)); }
+    public bool IsAbilityReady(int slot) => slot == 1 ? allow1 : slot == 2 ? allow2 : slot == 3 && allow3;
+
+    public void basicAttack(object[] args) { if (allow1 && statScript != null && statScript.DepleteEnergy(basicCost)) StartCoroutine(Basic(args)); }
+    private IEnumerator Basic(object[] args) { allow1 = false; GameObject shot = Instantiate(attack1, transform.position, Quaternion.identity); IgnoreSelf(shot); shot.transform.Rotate((Vector3)args[0]); Destroy(shot, 2f); yield return new WaitForSeconds(basicCooldown); allow1 = true; }
+    public void secondAttack(object[] args) { if (allow2 && statScript != null && statScript.DepleteEnergy(rodCost)) StartCoroutine(Second(args)); }
     private IEnumerator Second(object[] args) { allow2 = false; Instantiate(attack2, (Vector3)args[1], Quaternion.identity); yield return new WaitForSeconds(3.5f); allow2 = true; }
-    public void thirdAttack(object[] args) { if (allow3 && statScript != null && statScript.DepleteEnergy(30)) StartCoroutine(Third()); }
+    public void thirdAttack(object[] args) { if (allow3 && statScript != null && statScript.DepleteEnergy(speedCost)) StartCoroutine(Third()); }
     private IEnumerator Third() { allow3 = false; controllerScript?.speedUp(50); if (attack3 != null) { GameObject shot = Instantiate(attack3, transform.position, Quaternion.identity); shot.transform.SetParent(transform); Destroy(shot, 2.5f); } yield return new WaitForSeconds(2.5f); controllerScript?.removeSpeed(50); allow3 = true; }
     public void ultimateAttack(object[] args)
     {
@@ -71,29 +78,6 @@ public class ElectricityWizard : MonoBehaviour
             yield return null;
         }
         if (visual != null) visual.transform.localScale = Vector3.one;
-    }
-    public void fourthAttack(object[] args)
-    {
-        if (!allow3 || statScript == null || controllerScript == null || controllerScript.ultimateActive || !statScript.DepleteEnergy(85)) return;
-        allow3 = false;
-        StartCoroutine(ChainLightning());
-    }
-    private IEnumerator ChainLightning()
-    {
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-        System.Collections.Generic.List<GameObject> targets = new System.Collections.Generic.List<GameObject>();
-        foreach (GameObject player in players) if (player != gameObject) targets.Add(player);
-        targets.Sort((a, b) => (a.transform.position - transform.position).sqrMagnitude.CompareTo((b.transform.position - transform.position).sqrMagnitude));
-        int chained = 0, damage = 3;
-        foreach (GameObject target in targets)
-        {
-            if (chained >= 3) break;
-            target.SendMessage("ApplyDamage", damage, SendMessageOptions.DontRequireReceiver);
-            chained++;
-            yield return new WaitForSeconds(0.1f);
-        }
-        yield return new WaitForSeconds(4f);
-        allow3 = true;
     }
     private void IgnoreSelf(GameObject shot) { Collider2D a = shot.GetComponent<Collider2D>(), b = GetComponent<Collider2D>(); if (a != null && b != null) Physics2D.IgnoreCollision(a, b); }
 }

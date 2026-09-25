@@ -7,9 +7,13 @@ public class LightningStaff : MonoBehaviour
     public Animator anim;
     public float damageDelay = 0.5f;
     public float lastDamage = -10f;
+    // Rods used to live forever, so every cast left a permanent 6 damage/second zone
+    // and the arena filled up with them. Overcharge destroys its own rods sooner.
+    public float lifetime = 6f;
 
     private void Start()
     {
+        Destroy(gameObject, lifetime);
         electricitySprite = transform.Find("rodShock");
         if (electricitySprite != null)
         {

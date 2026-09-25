@@ -175,7 +175,7 @@ MonoBehaviour:
   activeSpeed: 4
   targeterLoad: {fileID: 0}
   cantmove: 0
-  targeterRange: 4
+  targeterRange: 3
   slowPercentage: 0
   speedPercentage: 0
 --- !u!212 &21200000

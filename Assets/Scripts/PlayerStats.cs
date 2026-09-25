@@ -22,11 +22,30 @@ public class PlayerStats : MonoBehaviour
     public float stunDuration;
     public bool GUIEnabled;
     public float ultimateCharge;
-    public float ultimateChargeRate = 4f;
+    // The ultimate is mostly earned rather than waited out. Passive trickle is slow;
+    // most of the charge comes from spending energy (fighting) and from taking damage
+    // (which gives the player who is losing a way back in).
+    public float ultimateChargeRate = 1.2f;
+    public float ultimateChargePerEnergy = 0.3f;
+    public float ultimateChargePerDamageTaken = 0.3f;
     public bool ultimateReady;
 
     private float damageDelay = 0.5f;
     private float lastDamage = -10f;
+    // When a cast was refused for want of energy, so the bar can say so.
+    private float lastFizzle = -10f;
+    private const float FizzleFlashTime = 0.35f;
+
+    // Cooldown pips for the basic, second and third abilities. The ultimate has its
+    // own meter. Rather than making every ability report its cooldown length, the
+    // duration is learned by watching how long the ability stayed unavailable last
+    // time; the pip is seeded with a guess and self-corrects after one use. Readiness
+    // itself always comes from the wizard, so a pip never claims ready early.
+    private const int PipCount = 3;
+    private IWizardAbilities abilities;
+    private readonly float[] pipStart = new float[PipCount];
+    private readonly float[] pipDuration = { 4f, 4f, 4f };
+    private readonly bool[] pipWasReady = { true, true, true };
 
     private void Awake()
     {
@@ -65,6 +84,8 @@ public class PlayerStats : MonoBehaviour
             stunned = false;
         }
 
+        TrackCooldowns();
+
         if (energy < 100f && rechargeEnabled) energy = Mathf.Min(100f, energy + recoveryRate * Time.deltaTime);
         if (!ultimateReady)
         {
@@ -84,6 +105,7 @@ public class PlayerStats : MonoBehaviour
     public void ApplyDamage(int damage)
     {
         health -= damage;
+        AddUltimateCharge(damage * ultimateChargePerDamageTaken);
         if (health <= 0f)
         {
             InvokeGlobal("kill", name);
@@ -93,9 +115,55 @@ public class PlayerStats : MonoBehaviour
 
     public bool DepleteEnergy(float energyUse)
     {
-        if (energy < energyUse) return false;
+        if (energy < energyUse)
+        {
+            // Tell the player why nothing happened instead of silently swallowing it.
+            lastFizzle = Time.time;
+            return false;
+        }
         energy -= energyUse;
+        AddUltimateCharge(energyUse * ultimateChargePerEnergy);
         return true;
+    }
+
+    // The wizard component is added at runtime by CharacterSelect, so it is looked up
+    // lazily rather than in Awake.
+    private void TrackCooldowns()
+    {
+        // An interface-typed reference does not use Unity's overloaded == null, so a
+        // destroyed wizard would still look alive here. Compare as a MonoBehaviour to
+        // catch that and re-resolve, which matters when CharacterSelect swaps wizards.
+        if (abilities == null || (abilities as MonoBehaviour) == null)
+        {
+            abilities = GetComponent<IWizardAbilities>();
+            if (abilities == null) return;
+        }
+        for (int i = 0; i < PipCount; i++)
+        {
+            bool ready = abilities.IsAbilityReady(i + 1);
+            if (!ready && pipWasReady[i]) pipStart[i] = Time.time;
+            else if (ready && !pipWasReady[i])
+            {
+                float measured = Time.time - pipStart[i];
+                if (measured > 0.05f) pipDuration[i] = measured;
+            }
+            pipWasReady[i] = ready;
+        }
+    }
+
+    private float PipFill(int index)
+    {
+        if (abilities == null) return 1f;
+        if (abilities.IsAbilityReady(index + 1)) return 1f;
+        if (pipDuration[index] <= 0f) return 0f;
+        return Mathf.Clamp01((Time.time - pipStart[index]) / pipDuration[index]);
+    }
+
+    public void AddUltimateCharge(float amount)
+    {
+        if (ultimateReady || amount <= 0f) return;
+        ultimateCharge = Mathf.Min(100f, ultimateCharge + amount);
+        if (ultimateCharge >= 100f) ultimateReady = true;
     }
 
     public void stun(float stunTime)
@@ -139,16 +207,56 @@ public class PlayerStats : MonoBehaviour
     private void OnGUI()
     {
         if (!GUIEnabled || Camera.main == null) return;
-        Vector2 size = new Vector2(60f, 20f);
+        Vector2 size = new Vector2(60f, 32f);
         Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position);
         screenPos.y = Screen.height - screenPos.y - 75f;
         screenPos.x -= size.x / 2f - 3f;
         if (transform.root.name == "AI(Clone)") { screenPos.y -= Screen.height / 50f; screenPos.x -= 2f; }
         GUI.BeginGroup(new Rect(screenPos.x, screenPos.y, size.x, size.y));
-        GUI.Box(new Rect(0f, 0f, size.x, size.y / 2f), healthBarEmpty);
-        GUI.BeginGroup(new Rect(0f, 0f, size.x * health / 100f, size.y)); GUI.Box(new Rect(0f, 0f, size.x, size.y), healthBarFull); GUI.EndGroup();
-        GUI.Box(new Rect(0f, 8f, size.x, size.y / 2f), healthBarEmpty);
-        GUI.BeginGroup(new Rect(0f, 0f, size.x * energy / 100f, size.y)); GUI.Box(new Rect(0f, 8f, size.x, size.y), energyBarFull); GUI.EndGroup();
+
+        GUI.Box(new Rect(0f, 0f, size.x, 10f), healthBarEmpty);
+        GUI.BeginGroup(new Rect(0f, 0f, size.x * health / 100f, size.y)); GUI.Box(new Rect(0f, 0f, size.x, 20f), healthBarFull); GUI.EndGroup();
+
+        // The energy bar flashes red when a cast was refused for want of energy.
+        Color previous = GUI.color;
+        if (Time.time < lastFizzle + FizzleFlashTime)
+        {
+            float flash = 1f - (Time.time - lastFizzle) / FizzleFlashTime;
+            GUI.color = Color.Lerp(Color.white, new Color(1f, 0.25f, 0.2f), flash);
+        }
+        GUI.Box(new Rect(0f, 8f, size.x, 10f), healthBarEmpty);
+        GUI.BeginGroup(new Rect(0f, 0f, size.x * energy / 100f, size.y)); GUI.Box(new Rect(0f, 8f, size.x, 20f), energyBarFull); GUI.EndGroup();
+        GUI.color = previous;
+
+        // Ultimate meter. Gold while filling, flashing white once it is ready, so a
+        // 25-second investment is not invisible.
+        GUI.Box(new Rect(0f, 16f, size.x, 10f), healthBarEmpty);
+        GUI.color = ultimateReady
+            ? Color.Lerp(new Color(1f, 0.85f, 0.2f), Color.white, (Mathf.Sin(Time.time * 8f) + 1f) * 0.5f)
+            : new Color(0.85f, 0.65f, 0.15f);
+        GUI.BeginGroup(new Rect(0f, 0f, size.x * ultimateCharge / 100f, size.y)); GUI.Box(new Rect(0f, 16f, size.x, 20f), energyBarFull); GUI.EndGroup();
+        GUI.color = previous;
+
+        // One pip per ability: basic, second, third. A pip refills left to right while
+        // its ability is recharging and brightens the moment it is castable again.
+        const float pipTop = 25f, pipHeight = 5f, pipGap = 3f;
+        float pipWidth = (size.x - pipGap * (PipCount - 1)) / PipCount;
+        for (int i = 0; i < PipCount; i++)
+        {
+            float x = i * (pipWidth + pipGap);
+            GUI.color = new Color(1f, 1f, 1f, 0.5f);
+            GUI.Box(new Rect(x, pipTop, pipWidth, pipHeight), healthBarEmpty);
+            float fill = PipFill(i);
+            if (fill > 0f)
+            {
+                GUI.color = fill >= 1f ? new Color(0.55f, 0.92f, 1f) : new Color(0.3f, 0.45f, 0.55f);
+                GUI.BeginGroup(new Rect(x, pipTop, pipWidth * fill, pipHeight));
+                GUI.Box(new Rect(0f, 0f, pipWidth, pipHeight), energyBarFull);
+                GUI.EndGroup();
+            }
+            GUI.color = previous;
+        }
+
         GUI.EndGroup();
     }
 
