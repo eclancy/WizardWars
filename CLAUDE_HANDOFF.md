@@ -142,14 +142,18 @@ Earth walls were removed from Park stage spawning. Park now places sparse rock/c
 9. Check whether generated visual GameObjects should use sorting layers/order explicitly; current code uses `SpriteRenderer.sortingOrder` only for targeted indicators in some places.
 10. Review gameplay balance and refine ultimate timings, damage, mana costs, and charge rate after a real playtest.
 
-## Multiplayer Mode Intent
+## Multiplayer Modes
 
-The game should eventually support both:
+Both modes are implemented:
 
-- Free-for-All as the default mode.
-- Teams with shared win/loss, friendly-fire disabled, and team-aware victory conditions.
+- Free-for-All is the default.
+- Teams (Red vs Blue) has shared win/loss, no friendly fire, and ends when one team is left standing.
 
-This mode should live in explicit match state and drive friendly-fire rules, win condition, and UI. See `docs/local-multiplayer-roadmap.md`.
+The mode is toggled on Character Select (Back/View or Tab), and players change team with Y or T. Design and code map: the **Teams mode** section of `CLAUDE.md`.
+
+Still to validate in the Editor: the position of the team marker under each wizard,
+team labels on Character Select at different resolutions, and a 2v2 and 2v1 match on
+each stage.
 
 ## Critical Files
 

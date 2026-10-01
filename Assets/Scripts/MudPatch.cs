@@ -3,6 +3,10 @@ using UnityEngine;
 
 public class MudPatch : MonoBehaviour
 {
+    // The earth wizard's team. Teammates still have fire put out by the mud but are
+    // not slowed by it. The caster himself is still slowed, as he always has been.
+    [System.NonSerialized] public int ownerTeam = Teams.NoTeam;
+    [System.NonSerialized] public GameObject caster;
     private readonly List<GameObject> inRangePlayers = new List<GameObject>();
     private float spawnTime;
 
@@ -20,9 +24,12 @@ public class MudPatch : MonoBehaviour
         if (collision.transform.root.CompareTag("Player"))
         {
             GameObject player = collision.transform.root.gameObject;
-            player.GetComponent<ControllerScript>()?.slow(50);
             player.SendMessage("putOutFire", SendMessageOptions.DontRequireReceiver);
-            if (!inRangePlayers.Contains(player)) inRangePlayers.Add(player);
+            if (!IsTeammate(player))
+            {
+                player.GetComponent<ControllerScript>()?.slow(50);
+                if (!inRangePlayers.Contains(player)) inRangePlayers.Add(player);
+            }
         }
         if (collision.gameObject.name == "ringOfFire(Clone)") Destroy(collision.gameObject);
     }
@@ -31,9 +38,12 @@ public class MudPatch : MonoBehaviour
     {
         if (!collision.transform.root.CompareTag("Player")) return;
         GameObject player = collision.transform.root.gameObject;
+        if (IsTeammate(player)) return;
         player.GetComponent<ControllerScript>()?.removeSlow(50);
         inRangePlayers.Remove(player);
     }
+
+    private bool IsTeammate(GameObject player) => player != caster && Teams.IsAlly(ownerTeam, player);
 
     public void disappear() { Destroy(gameObject); }
 }

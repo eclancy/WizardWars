@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using WizardWars.LocalMultiplayer;
 
@@ -44,6 +45,8 @@ public class ParkBattle : MonoBehaviour
         rockObstaclePrefab = Resources.Load<GameObject>("RockObstacle");
         cactusObstaclePrefab = Resources.Load<GameObject>("CactusObstacle");
         ConfigureStageVariant();
+        GlobalHandlerScript.BeginMatch();
+        if (GlobalHandlerScript.teamsActive) ArrangeTeamSpawns();
         SpawnPlayers();
         StartCoroutine(StartCountDown());
         LegacyGlobalStateBridge bridge = FindBridge();
@@ -68,6 +71,8 @@ public class ParkBattle : MonoBehaviour
         if (!joined || source == null) return;
         result = Instantiate(source, position, Quaternion.identity);
         result.transform.localScale = Vector3.one * 0.15f;
+        PlayerStats stats = result.GetComponent<PlayerStats>();
+        if (stats != null) stats.SetTeam(GlobalHandlerScript.teamsActive ? GlobalHandlerScript.GetTeam(playerNumber - 1) : Teams.NoTeam);
         if (playerNumber == 1) GlobalHandlerScript.player1Alive = true;
         if (playerNumber == 2) GlobalHandlerScript.player2Alive = true;
         if (playerNumber == 3) GlobalHandlerScript.player3Alive = true;
@@ -84,6 +89,31 @@ public class ParkBattle : MonoBehaviour
         if (stage == 2) { p1Spawn = new Vector3(-8, 0, 0); p2Spawn = new Vector3(8, 0, 0); p3Spawn = new Vector3(0, 5, 0); p4Spawn = new Vector3(0, -5, 0); aiSpawn = p2Spawn; SpawnObstacle(rockObstaclePrefab, new Vector3(-3, 2.5f, 0)); SpawnObstacle(rockObstaclePrefab, new Vector3(3, -2.5f, 0)); }
         if (stage == 3) { p1Spawn = new Vector3(-7, 0, 0); p2Spawn = new Vector3(7, 0, 0); p3Spawn = new Vector3(0, 5, 0); p4Spawn = new Vector3(0, -5, 0); aiSpawn = p2Spawn; SpawnObstacle(cactusObstaclePrefab, new Vector3(-3, 2.5f, 0)); SpawnObstacle(cactusObstaclePrefab, new Vector3(3, -2.5f, 0)); SpawnObstacle(rockObstaclePrefab, new Vector3(3, 2.5f, 0)); }
         if (stage == 4) { p1Spawn = new Vector3(-8, 4.5f, 0); p2Spawn = new Vector3(8, 4.5f, 0); p3Spawn = new Vector3(-8, -4.5f, 0); p4Spawn = new Vector3(8, -4.5f, 0); aiSpawn = p4Spawn; SpawnObstacle(rockObstaclePrefab, new Vector3(-4, 0, 0)); SpawnObstacle(rockObstaclePrefab, new Vector3(4, 0, 0)); }
+    }
+
+    // Teammates start together: Red takes the player 1 and 3 spawns, Blue takes the
+    // player 2 and 4 spawns. A team with more than two players spills over into
+    // whatever spawns the other side left unused.
+    private void ArrangeTeamSpawns()
+    {
+        List<Vector3>[] sides = { new List<Vector3> { p1Spawn, p3Spawn }, new List<Vector3> { p2Spawn, p4Spawn } };
+        Vector3[] spawns = { p1Spawn, p2Spawn, p3Spawn, p4Spawn };
+        List<int> overflow = new List<int>();
+        for (int slot = 0; slot < 4; slot++)
+        {
+            if (!GlobalHandlerScript.IsJoined(slot)) continue;
+            List<Vector3> side = sides[GlobalHandlerScript.GetTeam(slot) == Teams.Red ? 0 : 1];
+            if (side.Count == 0) { overflow.Add(slot); continue; }
+            spawns[slot] = side[0];
+            side.RemoveAt(0);
+        }
+        foreach (int slot in overflow)
+        {
+            List<Vector3> side = sides[0].Count > 0 ? sides[0] : sides[1];
+            spawns[slot] = side[0];
+            side.RemoveAt(0);
+        }
+        p1Spawn = spawns[0]; p2Spawn = spawns[1]; p3Spawn = spawns[2]; p4Spawn = spawns[3];
     }
 
     private void SpawnObstacle(GameObject prefab, Vector3 position) { if (prefab != null) Instantiate(prefab, position, Quaternion.identity); }

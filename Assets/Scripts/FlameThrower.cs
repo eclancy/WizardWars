@@ -10,6 +10,7 @@ public class FlameThrower : MonoBehaviour
     public float damageInterval = 1f;
     // Set by FireWizard so the caster cannot be burned by his own flame.
     public GameObject caster;
+    [System.NonSerialized] public int ownerTeam = Teams.NoTeam;
     private float lastDamage;
 
     private void Start()
@@ -22,7 +23,7 @@ public class FlameThrower : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.transform.root.gameObject == caster) return;
+        if (collision.transform.root.gameObject == caster || Teams.IsAlly(ownerTeam, collision.transform.root.gameObject)) return;
         if (!collision.transform.root.CompareTag("Player") || Time.time <= damageInterval + lastDamage) return;
         collision.SendMessage("ApplyDamage", Mathf.RoundToInt(directDamage), SendMessageOptions.DontRequireReceiver);
         lastDamage = Time.time;

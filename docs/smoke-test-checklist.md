@@ -142,6 +142,13 @@ Debug.Log("Player 1 RB: " + state.RB);
 - [ ] Title → Character Select → 4 players join → lock wizards → Stage Select → Battle → Winner → Character Select
 - [ ] Rematch: from Character Select, 2 players join different wizards → lock → stage → battle → winner → back
 - [ ] Solo mode: 1 player joins → AI opponent spawns → battle proceeds normally
+- [ ] Teams: Tab or Back/View toggles the mode banner; Y or T flips a joined player between RED and BLUE
+- [ ] Teams: with every player on one team, Start is blocked and "Both teams need at least one player" shows
+- [ ] Teams 2v2: teammates spawn together with matching ground markers and HUD strips
+- [ ] Teams: a teammate's basic shots pass through you; Ring of Fire, Meteor Storm, Ice Wave, the patches, Lightning Rod, Absolute Zero and Earthquake do not affect you
+- [ ] Teams: enemies are still hit by all of the above, and the caster still slips or is slowed on their own patch
+- [ ] Teams: the match ends with "RED TEAM WINS" or "BLUE TEAM WINS" once the other team is out, even if the winning team has two players alive
+- [ ] Free-for-All after a Teams match: no ground markers, friendly fire on, last player standing wins
 - [ ] No console errors or warnings related to null references, missing scenes, or state mismatches
 - [ ] `InputProvider` is accessible and provides slot-based input queries
 

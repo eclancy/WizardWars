@@ -88,6 +88,14 @@ namespace WizardWars.LocalMultiplayer
             ApplySlotState(2, player3Joined, player3Locked, GetLegacyString("tempPlayer3"));
             ApplySlotState(3, player4Joined, player4Locked, GetLegacyString("tempPlayer4"));
 
+            // Teams mode and each player's team are chosen on Character Select and
+            // held by GlobalHandler; mirror them so the two state layers agree.
+            matchManager.SetTeamMode(GetLegacyBool("teamsMode") ? TeamMode.Teams : TeamMode.FreeForAll);
+            ApplySlotTeam(0, player1Joined, GetLegacyInt("player1Team"));
+            ApplySlotTeam(1, player2Joined, GetLegacyInt("player2Team"));
+            ApplySlotTeam(2, player3Joined, GetLegacyInt("player3Team"));
+            ApplySlotTeam(3, player4Joined, GetLegacyInt("player4Team"));
+
             var selectedStage = GetLegacyInt("selectedStage");
             if (selectedStage > 0)
             {
@@ -171,6 +179,14 @@ namespace WizardWars.LocalMultiplayer
             }
         }
 
+        public void RegisterWinningTeam(int team)
+        {
+            if (matchManager != null)
+            {
+                matchManager.RegisterWinningTeam(team);
+            }
+        }
+
         public void ResetRuntimeState()
         {
             if (matchManager != null)
@@ -212,6 +228,15 @@ namespace WizardWars.LocalMultiplayer
         private void ApplySlotState(int slotIndex, bool joined, bool locked, string wizardName)
         {
             RegisterLegacySlot(slotIndex, joined, locked, wizardName, "Player" + (slotIndex + 1));
+        }
+
+        private void ApplySlotTeam(int slotIndex, bool joined, int team)
+        {
+            var slot = playerManager.GetSlot(slotIndex);
+            if (slot != null)
+            {
+                slot.Team = joined ? team : Teams.NoTeam;
+            }
         }
 
         private bool GetLegacyBool(string fieldName)

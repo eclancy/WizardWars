@@ -18,6 +18,8 @@ public class FireSource : MonoBehaviour
     // The wizard who lit this fire. Overlap queries ignore Physics2D.IgnoreCollision,
     // so the caster has to be skipped by hand or he burns in his own ring.
     public GameObject caster;
+    // The caster's team, captured at cast so teammates stay safe if he dies.
+    [System.NonSerialized] public int ownerTeam = Teams.NoTeam;
 
     private SpriteRenderer flameRenderer;
     private bool extinguished;
@@ -77,7 +79,7 @@ public class FireSource : MonoBehaviour
             {
                 if (hit == null) continue;
                 Transform root = hit.transform.root;
-                if (root.gameObject == caster) continue;
+                if (root.gameObject == caster || Teams.IsAlly(ownerTeam, root.gameObject)) continue;
                 if (root.CompareTag("Player"))
                     root.SendMessage("setFire", new object[] { burnDuration, damagePerTick }, SendMessageOptions.DontRequireReceiver);
                 else if (hit.gameObject.name == "icePatch(Clone)")

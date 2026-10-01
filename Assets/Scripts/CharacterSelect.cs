@@ -62,8 +62,10 @@ public class CharacterSelect : MonoBehaviour
         HandleSelect(1, "A_2", p2cursor, ref selections[1], p2);
         HandleSelect(2, "A_3", p3cursor, ref selections[2], p3);
         HandleSelect(3, "A_4", p4cursor, ref selections[3], p4);
+        HandleModeToggle();
+        HandleTeamSwitch(0, "Y_1"); HandleTeamSwitch(1, "Y_2"); HandleTeamSwitch(2, "Y_3"); HandleTeamSwitch(3, "Y_4");
 
-        bool ready = GlobalHandlerScript.playersJoined > 0 &&
+        bool ready = GlobalHandlerScript.playersJoined > 0 && !TeamsUnbalanced() &&
                      (!GlobalHandlerScript.player1Joined || GlobalHandlerScript.player1Locked) &&
                      (!GlobalHandlerScript.player2Joined || GlobalHandlerScript.player2Locked) &&
                      (!GlobalHandlerScript.player3Joined || GlobalHandlerScript.player3Locked) &&
@@ -109,6 +111,62 @@ public class CharacterSelect : MonoBehaviour
         GameObject basePlayer = GetBasePlayer(slot);
         if (basePlayer != null && source != null) basePlayer.GetComponent<SpriteRenderer>().sprite = source.sprite;
         SetLocked(slot, true); SyncSlot(slot, true, true, selected.name);
+    }
+
+    // Any player's Back/View button (Tab on the keyboard) flips the match between
+    // Free-for-All and Teams.
+    private void HandleModeToggle()
+    {
+        if (Input.GetButtonDown("Back_1") || Input.GetButtonDown("Back_2") || Input.GetButtonDown("Back_3") || Input.GetButtonDown("Back_4"))
+            GlobalHandlerScript.teamsMode = !GlobalHandlerScript.teamsMode;
+    }
+
+    // Y (T on the keyboard) moves a joined player to the other team. It works before
+    // or after locking in a wizard.
+    private void HandleTeamSwitch(int slot, string input)
+    {
+        if (!GlobalHandlerScript.teamsMode || !Input.GetButtonDown(input) || !IsJoined(slot)) return;
+        GlobalHandlerScript.SetTeam(slot, GlobalHandlerScript.GetTeam(slot) == Teams.Red ? Teams.Blue : Teams.Red);
+    }
+
+    // Teams with two or more players needs somebody on each side. One player alone
+    // plays the AI as usual, whatever the mode.
+    private bool TeamsUnbalanced() => GlobalHandlerScript.teamsMode && GlobalHandlerScript.playersJoined > 1 && !GlobalHandlerScript.TeamsPlayable();
+
+    private void OnGUI()
+    {
+        if (GlobalHandlerScript == null) return;
+        GUIStyle centred = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 18 };
+        const float width = 420f;
+        float x = (Screen.width - width) / 2f;
+        GUI.Box(new Rect(x, 10f, width, 58f), GUIContent.none);
+        GUI.Label(new Rect(x, 12f, width, 26f), GlobalHandlerScript.teamsMode ? "Mode: TEAMS" : "Mode: FREE-FOR-ALL", centred);
+        GUIStyle hint = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 12 };
+        GUI.Label(new Rect(x, 38f, width, 26f), GlobalHandlerScript.teamsMode ? "Back/View or Tab: change mode     Y or T: switch team" : "Back/View or Tab: change mode", hint);
+
+        if (TeamsUnbalanced())
+        {
+            Color previous = GUI.color;
+            GUI.color = new Color(1f, 0.8f, 0.3f);
+            GUI.Label(new Rect(x, 70f, width, 24f), "Both teams need at least one player", centred);
+            GUI.color = previous;
+        }
+
+        if (!GlobalHandlerScript.teamsMode || Camera.main == null) return;
+        GameObject[] previews = { p1, p2, p3, p4 };
+        GUIStyle teamStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 20 };
+        for (int slot = 0; slot < 4; slot++)
+        {
+            if (!IsJoined(slot) || previews[slot] == null) continue;
+            Vector3 screen = Camera.main.WorldToScreenPoint(previews[slot].transform.position + Vector3.down * 1.3f);
+            int team = GlobalHandlerScript.GetTeam(slot);
+            Color previous = GUI.color;
+            GUI.color = Teams.Colour(team);
+            // The previews sit near the bottom edge, so keep the label on screen.
+            float y = Mathf.Min(Screen.height - screen.y - 14f, Screen.height - 32f);
+            GUI.Label(new Rect(screen.x - 60f, y, 120f, 28f), Teams.Name(team).ToUpper(), teamStyle);
+            GUI.color = previous;
+        }
     }
 
     private GameObject FindCharacter(GameObject cursorObject, GameObject previous)

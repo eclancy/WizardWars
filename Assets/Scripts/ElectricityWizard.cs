@@ -20,7 +20,7 @@ public class ElectricityWizard : MonoBehaviour, IWizardAbilities
     public void basicAttack(object[] args) { if (allow1 && statScript != null && statScript.DepleteEnergy(basicCost)) StartCoroutine(Basic(args)); }
     private IEnumerator Basic(object[] args) { allow1 = false; GameObject shot = Instantiate(attack1, transform.position, Quaternion.identity); IgnoreSelf(shot); shot.transform.Rotate((Vector3)args[0]); Destroy(shot, 2f); yield return new WaitForSeconds(basicCooldown); allow1 = true; }
     public void secondAttack(object[] args) { if (allow2 && statScript != null && statScript.DepleteEnergy(rodCost)) StartCoroutine(Second(args)); }
-    private IEnumerator Second(object[] args) { allow2 = false; Instantiate(attack2, (Vector3)args[1], Quaternion.identity); yield return new WaitForSeconds(3.5f); allow2 = true; }
+    private IEnumerator Second(object[] args) { allow2 = false; MarkRod(Instantiate(attack2, (Vector3)args[1], Quaternion.identity)); yield return new WaitForSeconds(3.5f); allow2 = true; }
     public void thirdAttack(object[] args) { if (allow3 && statScript != null && statScript.DepleteEnergy(speedCost)) StartCoroutine(Third()); }
     private IEnumerator Third() { allow3 = false; controllerScript?.speedUp(50); if (attack3 != null) { GameObject shot = Instantiate(attack3, transform.position, Quaternion.identity); shot.transform.SetParent(transform); Destroy(shot, 2.5f); } yield return new WaitForSeconds(2.5f); controllerScript?.removeSpeed(50); allow3 = true; }
     public void ultimateAttack(object[] args)
@@ -63,6 +63,7 @@ public class ElectricityWizard : MonoBehaviour, IWizardAbilities
         if (attack2 == null) return;
         Vector2 offset = UnityEngine.Random.insideUnitCircle * 5f;
         GameObject rod = Instantiate(attack2, transform.position + new Vector3(offset.x, offset.y, 0f), Quaternion.identity);
+        MarkRod(rod);
         Destroy(rod, 2.5f);
     }
 
@@ -79,5 +80,13 @@ public class ElectricityWizard : MonoBehaviour, IWizardAbilities
         }
         if (visual != null) visual.transform.localScale = Vector3.one;
     }
-    private void IgnoreSelf(GameObject shot) { Collider2D a = shot.GetComponent<Collider2D>(), b = GetComponent<Collider2D>(); if (a != null && b != null) Physics2D.IgnoreCollision(a, b); }
+    // Rods shock everyone in range, the caster included, but spare his teammates.
+    private void MarkRod(GameObject rod)
+    {
+        LightningStaff staff = rod == null ? null : rod.GetComponent<LightningStaff>();
+        if (staff != null) { staff.ownerTeam = Teams.Of(gameObject); staff.caster = gameObject; }
+    }
+
+    // Passes through the caster and, in Teams mode, the caster's teammates.
+    private void IgnoreSelf(GameObject shot) => Teams.IgnoreFriendlyCollisions(shot, gameObject);
 }

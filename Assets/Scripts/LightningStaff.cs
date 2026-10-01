@@ -10,6 +10,8 @@ public class LightningStaff : MonoBehaviour
     // Rods used to live forever, so every cast left a permanent 6 damage/second zone
     // and the arena filled up with them. Overcharge destroys its own rods sooner.
     public float lifetime = 6f;
+    [System.NonSerialized] public int ownerTeam = Teams.NoTeam;
+    [System.NonSerialized] public GameObject caster;
 
     private void Start()
     {
@@ -25,13 +27,15 @@ public class LightningStaff : MonoBehaviour
 
     private void Update() { if (Time.time > damageDelay + lastDamage) { lastDamage = Time.time; StartCoroutine(Shock()); } }
 
+    private bool IsTeammate(GameObject player) => player != caster && Teams.IsAlly(ownerTeam, player);
+
     private IEnumerator Shock()
     {
         Renderer renderer = electricitySprite == null ? null : electricitySprite.GetComponent<Renderer>(); if (renderer != null) renderer.enabled = true;
         GetComponent<AudioSource>()?.Play();
         if (anim != null) { anim.Play("rodShock", -1, 0f); anim.speed = 7f; }
         foreach (Collider2D collider in Physics2D.OverlapCircleAll(transform.position, 1.8f))
-            if (collider.transform.root.CompareTag("Player")) collider.transform.root.SendMessage("ApplyDamage", 3, SendMessageOptions.DontRequireReceiver);
+            if (collider.transform.root.CompareTag("Player") && !IsTeammate(collider.transform.root.gameObject)) collider.transform.root.SendMessage("ApplyDamage", 3, SendMessageOptions.DontRequireReceiver);
         yield return new WaitForSeconds(.3f);
         if (renderer != null) renderer.enabled = false;
     }

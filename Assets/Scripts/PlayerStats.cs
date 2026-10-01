@@ -29,6 +29,9 @@ public class PlayerStats : MonoBehaviour
     public float ultimateChargePerEnergy = 0.3f;
     public float ultimateChargePerDamageTaken = 0.3f;
     public bool ultimateReady;
+    // Teams.NoTeam in Free-for-All. Set by ParkBattle at spawn and never serialized,
+    // so a prefab cannot pin a player to a team.
+    [System.NonSerialized] public int team = Teams.NoTeam;
 
     private float damageDelay = 0.5f;
     private float lastDamage = -10f;
@@ -191,6 +194,30 @@ public class PlayerStats : MonoBehaviour
         }
     }
 
+    // Puts the player on a team and marks them with a coloured disc on the ground,
+    // so which side someone is on reads in the arena and not only on the HUD.
+    public void SetTeam(int newTeam)
+    {
+        team = newTeam;
+        Transform existing = transform.Find("TeamMarker");
+        if (existing != null) Destroy(existing.gameObject);
+        if (team == Teams.NoTeam) return;
+
+        GameObject marker = new GameObject("TeamMarker");
+        marker.transform.SetParent(transform, false);
+        SpriteRenderer renderer = marker.AddComponent<SpriteRenderer>();
+        renderer.sprite = ProceduralFx.Shadow;
+        Color colour = Teams.Colour(team);
+        renderer.color = new Color(colour.r, colour.g, colour.b, 0.6f);
+        renderer.sortingOrder = 1;
+        // The player is scaled down at spawn, so size the marker in world units.
+        float parentScale = Mathf.Max(0.0001f, transform.lossyScale.x);
+        marker.transform.localScale = Vector3.one * (0.8f / parentScale);
+        SpriteRenderer body = GetComponent<SpriteRenderer>();
+        float feet = body != null && body.sprite != null ? body.bounds.extents.y * 0.8f : 0.4f;
+        marker.transform.localPosition = new Vector3(0f, -feet / parentScale, 0f);
+    }
+
     public void Die()
     {
         if (controllerScript != null && controllerScript.targeter != null) Destroy(controllerScript.targeter);
@@ -258,6 +285,15 @@ public class PlayerStats : MonoBehaviour
         }
 
         GUI.EndGroup();
+
+        // A strip in the team colour down the left edge of the bars.
+        if (team != Teams.NoTeam)
+        {
+            Color outer = GUI.color;
+            GUI.color = Teams.Colour(team);
+            GUI.DrawTexture(new Rect(screenPos.x - 6f, screenPos.y, 4f, 30f), Texture2D.whiteTexture);
+            GUI.color = outer;
+        }
     }
 
     private void InvokeGlobal(string methodName, string argument)

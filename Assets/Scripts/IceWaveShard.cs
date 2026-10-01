@@ -10,13 +10,14 @@ public class IceWaveShard : MonoBehaviour
     public float stunDuration = 1.5f;
     public int damage = 8;
     public GameObject caster;
+    [System.NonSerialized] public int ownerTeam = Teams.NoTeam;
     public GameObject iceCubePrefab;
     public HashSet<Transform> alreadyHit;
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         Transform root = collision.transform.root;
-        if (!root.CompareTag("Player") || root.gameObject == caster) return;
+        if (!root.CompareTag("Player") || root.gameObject == caster || Teams.IsAlly(ownerTeam, root.gameObject)) return;
         if (alreadyHit != null && !alreadyHit.Add(root)) return;
 
         PlayerStats stats = root.GetComponent<PlayerStats>();

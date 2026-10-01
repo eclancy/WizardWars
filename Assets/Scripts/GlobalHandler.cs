@@ -37,6 +37,19 @@ public class GlobalHandler : MonoBehaviour
     public int selectedStage = 1;
     public bool runtimeBridgeReady;
 
+    // Teams mode. teamsMode is the choice made on Character Select and carries over
+    // between matches; teamsActive says whether the battle in progress is actually
+    // being played as teams, which also needs two players on two different teams.
+    // None of this is serialized, so the scene cannot pin a default.
+    [System.NonSerialized] public bool teamsMode;
+    [System.NonSerialized] public bool teamsActive;
+    [System.NonSerialized] public int player1Team = Teams.DefaultForSlot(0);
+    [System.NonSerialized] public int player2Team = Teams.DefaultForSlot(1);
+    [System.NonSerialized] public int player3Team = Teams.DefaultForSlot(2);
+    [System.NonSerialized] public int player4Team = Teams.DefaultForSlot(3);
+    private bool matchOver;
+    private int winningTeam = Teams.NoTeam;
+
     private void Awake()
     {
         DontDestroyOnLoad(gameObject);
@@ -49,6 +62,38 @@ public class GlobalHandler : MonoBehaviour
     private void Start() => EnsureLocalMultiplayerRuntime();
 
     public void battleStart() => battling = true;
+
+    public int GetTeam(int slot) => slot == 0 ? player1Team : slot == 1 ? player2Team : slot == 2 ? player3Team : player4Team;
+
+    public void SetTeam(int slot, int team)
+    {
+        if (slot == 0) player1Team = team; else if (slot == 1) player2Team = team; else if (slot == 2) player3Team = team; else player4Team = team;
+    }
+
+    public bool IsJoined(int slot) => slot == 0 ? player1Joined : slot == 1 ? player2Joined : slot == 2 ? player3Joined : player4Joined;
+
+    // Teams needs at least two players and somebody on each side. A lone player in
+    // Teams mode falls back to the usual Free-for-All against the AI.
+    public bool TeamsPlayable()
+    {
+        if (!teamsMode) return false;
+        bool red = false, blue = false;
+        for (int slot = 0; slot < 4; slot++)
+        {
+            if (!IsJoined(slot)) continue;
+            if (GetTeam(slot) == Teams.Red) red = true; else blue = true;
+        }
+        return red && blue;
+    }
+
+    // Called by ParkBattle as it spawns the players, so the match knows its rules
+    // before anyone can be killed.
+    public void BeginMatch()
+    {
+        teamsActive = TeamsPlayable();
+        matchOver = false;
+        winningTeam = Teams.NoTeam;
+    }
 
     public void setSelectedStage(int stageNumber)
     {
@@ -86,7 +131,24 @@ public class GlobalHandler : MonoBehaviour
         if (character == "Player3(Clone)") player3Alive = false;
         if (character == "Player4(Clone)") player4Alive = false;
         if (character == "AI(Clone)") AIAlive = false;
-        if (playersAlive == 1) StartCoroutine(FinishMatch());
+        if (matchOver) return;
+        if (teamsActive ? AliveTeamCount() <= 1 : playersAlive == 1)
+        {
+            matchOver = true;
+            StartCoroutine(teamsActive ? FinishTeamMatch() : FinishMatch());
+        }
+    }
+
+    private int AliveTeamCount()
+    {
+        bool red = false, blue = false;
+        bool[] alive = { player1Alive, player2Alive, player3Alive, player4Alive };
+        for (int slot = 0; slot < 4; slot++)
+        {
+            if (!alive[slot]) continue;
+            if (GetTeam(slot) == Teams.Red) red = true; else blue = true;
+        }
+        return (red ? 1 : 0) + (blue ? 1 : 0);
     }
 
     private IEnumerator FinishMatch()
@@ -101,6 +163,37 @@ public class GlobalHandler : MonoBehaviour
         if (bridge != null && winningPlayerName != string.Empty) bridge.RegisterWinner(winningPlayerName);
         yield return new WaitForSeconds(5f);
         if (winner != null) Destroy(winner);
+        ReturnToCharacterSelect();
+    }
+
+    // There is no authored "team wins" art, so the result is drawn by OnGUI below.
+    private IEnumerator FinishTeamMatch()
+    {
+        bool[] alive = { player1Alive, player2Alive, player3Alive, player4Alive };
+        for (int slot = 0; slot < 4; slot++) if (alive[slot]) { winningTeam = GetTeam(slot); break; }
+        LegacyGlobalStateBridge bridge = FindBridge();
+        if (bridge != null && winningTeam != Teams.NoTeam) bridge.RegisterWinningTeam(winningTeam);
+        yield return new WaitForSeconds(5f);
+        winningTeam = Teams.NoTeam;
+        ReturnToCharacterSelect();
+    }
+
+    private void OnGUI()
+    {
+        if (winningTeam == Teams.NoTeam) return;
+        GUIStyle style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = Mathf.Max(32, Screen.height / 9), fontStyle = FontStyle.Bold };
+        Rect rect = new Rect(0f, Screen.height * 0.3f, Screen.width, Screen.height * 0.25f);
+        Color previous = GUI.color;
+        GUI.color = new Color(0f, 0f, 0f, 0.7f);
+        GUI.Label(new Rect(rect.x + 4f, rect.y + 4f, rect.width, rect.height), Teams.Name(winningTeam).ToUpper() + " TEAM WINS", style);
+        GUI.color = Teams.Colour(winningTeam);
+        GUI.Label(rect, Teams.Name(winningTeam).ToUpper() + " TEAM WINS", style);
+        GUI.color = previous;
+    }
+
+    private void ReturnToCharacterSelect()
+    {
+        teamsActive = false;
         SceneManager.LoadScene("Character Select");
         Transform menuMusic = transform.Find("menuMusic");
         if (menuMusic != null) menuMusic.GetComponent<AudioSource>()?.Play();
@@ -119,6 +212,7 @@ public class GlobalHandler : MonoBehaviour
     {
         if (joinedState) playersJoined--;
         joinedState = false; locked = false; alive = false;
+        SetTeam(number - 1, Teams.DefaultForSlot(number - 1));
         if (basePlayer != null)
         {
             SpriteRenderer renderer = basePlayer.GetComponent<SpriteRenderer>();

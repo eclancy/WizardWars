@@ -21,6 +21,8 @@ namespace WizardWars.LocalMultiplayer
         public string SelectedWizard;
         public bool IsHuman;
         public bool IsAlive;
+        // Teams.Red or Teams.Blue while joined; Teams.NoTeam for an empty slot.
+        public int Team = Teams.NoTeam;
         public Color PlayerColor = Color.white;
         public Transform SpawnPoint;
         public GameObject RuntimeController;
@@ -33,6 +35,7 @@ namespace WizardWars.LocalMultiplayer
             SelectedWizard = string.Empty;
             IsHuman = false;
             IsAlive = false;
+            Team = Teams.NoTeam;
             PlayerColor = Color.white;
             SpawnPoint = null;
             RuntimeController = null;

@@ -56,8 +56,7 @@ Baseline as of 2026-09-07: **0 errors, 0 warnings**.
 - `Assets/Scripts/LocalMultiplayer/` — the newer state layer: `LocalPlayerManager`,
   `MatchManager`, `MatchConfig`, `PlayerSlotState`, `InputProvider`, reached through
   the static `LocalMultiplayerRuntime` and spawned by `LocalMultiplayerBootstrap`.
-  Free-for-all works; team mode is intended but not finished
-  (`docs/local-multiplayer-roadmap.md`).
+  Free-for-All is the default; Teams mode is implemented (see **Teams mode** below).
 - Two systems hold match state at once. When you change join/lock/alive/stage
   behavior, update **both** the `GlobalHandler` field and the bridge sync, or the
   two will drift.
@@ -125,7 +124,8 @@ coroutine runs.
 
 Player 1 can play without a controller: WASD moves, arrow keys aim, and `1`, `2`, `3`
 and `5` fire basic / second / third / ultimate; `4` is bound but does nothing.
-Menu keys are Enter to join/start, Backspace to leave, Space to confirm. Players 2-4 are controller-only.
+Menu keys are Enter to join/start, Backspace to leave, Space to confirm, Tab to toggle
+Teams mode, and T to switch team. Players 2-4 are controller-only.
 
 Keyboard bindings are added as **extra entries reusing the same axis name** rather than
 by editing the joystick entries — Unity allows duplicate axis names and `GetAxis` /
@@ -158,6 +158,46 @@ Watch the prefab-override trap here. `Player1` and `Player2` pinned `ultimateCha
 while `Player3`, `Player4` and the AI did not, so changing the code default alone would
 have given players 1 and 2 a 3.3x faster ultimate than everyone else. After changing any
 tuning default, grep the prefabs for that field name.
+
+## Teams mode
+
+Character Select has a Free-for-All / Teams toggle: any player's Back/View button, or
+Tab on the keyboard. In Teams mode each joined player switches between Red and Blue
+with Y, or T on the keyboard. Players 1 and 3 start on Red, and players 2 and 4 on
+Blue. A team choice resets when the player leaves, and because every player is
+un-joined on returning to Character Select, teams are picked again for each match.
+The mode itself carries over between matches.
+
+- State lives on `GlobalHandler` (`teamsMode`, `player1Team`..`player4Team`,
+  `teamsActive`) and is mirrored by `LegacyGlobalStateBridge` into
+  `MatchManager.SelectedTeamMode` / `MatchConfig.TeamMode` and `PlayerSlotState.Team`.
+  All of it is `[NonSerialized]`, so the scene cannot pin a default.
+- With two or more players, the match will not start until both teams have at least
+  one player. A lone player in Teams mode plays the AI in Free-for-All as usual.
+  `GlobalHandler.TeamsPlayable()` holds that rule.
+- `ParkBattle` calls `GlobalHandler.BeginMatch()`, which settles `teamsActive`. In a
+  Teams match, Red takes the player 1 and 3 spawns and Blue the player 2 and 4 spawns.
+  Each player gets a team through `PlayerStats.SetTeam`, which also adds a coloured
+  ground marker. The HUD shows a team-coloured strip.
+- The win condition is that one team is left standing. `GlobalHandler.kill` ends the
+  match once, guarded by `matchOver`. There is no authored "team wins" art, so
+  `GlobalHandler.OnGUI` draws the banner.
+
+Friendly fire is off. `Teams.cs` holds the rule, and every hostile effect checks it:
+
+- Projectiles: each wizard's `IgnoreSelf` calls `Teams.IgnoreFriendlyCollisions`,
+  which ignores collisions with the caster and every teammate, so a shot passes
+  through allies instead of popping on them.
+- Overlap or trigger effects: Fire Source, Flamethrower, Ice Wave shards, Ice Patch,
+  Mud Patch and Lightning Rod store `ownerTeam` when cast, so they still spare
+  teammates if the caster has died. Meteor Storm, Absolute Zero and Earthquake run on
+  the caster and skip `Teams.AreAllies`.
+- Patches and rods still affect their own caster, exactly as in Free-for-All. Only
+  teammates are spared. Ice and mud still put out a teammate's fire.
+
+Any new damaging, slowing or stunning effect must apply the same check. In
+Free-for-All every player is `Teams.NoTeam`, which nothing treats as an ally, so the
+check costs nothing there.
 
 ## Contracts that are not type-checked — preserve them
 

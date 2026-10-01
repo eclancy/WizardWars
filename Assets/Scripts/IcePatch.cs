@@ -5,6 +5,10 @@ using UnityEngine;
 public class IcePatch : MonoBehaviour
 {
     public float lifetime = 2f;
+    // The frost wizard's team. Teammates still have fire put out by the ice but do
+    // not slip on it. The caster himself still slips, as he always has.
+    [System.NonSerialized] public int ownerTeam = Teams.NoTeam;
+    [System.NonSerialized] public GameObject caster;
     private readonly List<GameObject> inRangePlayers = new List<GameObject>();
     private float expireTime;
 
@@ -35,7 +39,9 @@ public class IcePatch : MonoBehaviour
         if (collision.transform.root.CompareTag("Player"))
         {
             ControllerScript controller = collision.transform.root.GetComponent<ControllerScript>();
-            if (controller != null)
+            if (controller != null && IsTeammate(controller.gameObject))
+                controller.SendMessage("putOutFire", SendMessageOptions.DontRequireReceiver);
+            else if (controller != null)
             {
                 controller.sliding();
                 controller.SendMessage("putOutFire", SendMessageOptions.DontRequireReceiver);
@@ -48,11 +54,13 @@ public class IcePatch : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (!collision.transform.root.CompareTag("Player")) return;
+        if (!collision.transform.root.CompareTag("Player") || IsTeammate(collision.transform.root.gameObject)) return;
         ControllerScript controller = collision.transform.root.GetComponent<ControllerScript>();
         if (controller != null) controller.notSliding();
         inRangePlayers.Remove(collision.transform.root.gameObject);
     }
+
+    private bool IsTeammate(GameObject player) => player != caster && Teams.IsAlly(ownerTeam, player);
 
     public void disappear() { StartCoroutine(Disappear()); }
     private IEnumerator Disappear()

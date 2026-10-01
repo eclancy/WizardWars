@@ -75,7 +75,10 @@ public class FrostWizard : MonoBehaviour, IWizardAbilities
         for (int i = 0; i < puddleCount; i++) if (puddles[i] != null) Destroy(puddles[i]);
 
         if (attack2 == null) yield break;
-        yield return StartCoroutine(GlossOver(Instantiate(attack2, center, Quaternion.identity)));
+        GameObject patch = Instantiate(attack2, center, Quaternion.identity);
+        IcePatch ice = patch.GetComponent<IcePatch>();
+        if (ice != null) { ice.ownerTeam = Teams.Of(gameObject); ice.caster = gameObject; }
+        yield return StartCoroutine(GlossOver(patch));
     }
 
     // The sheet snaps up to size with a wet blue sheen that clears to plain ice. The
@@ -141,6 +144,7 @@ public class FrostWizard : MonoBehaviour, IWizardAbilities
         collider.radius = 0.4f;
         IceWaveShard behaviour = shard.AddComponent<IceWaveShard>();
         behaviour.caster = gameObject;
+        behaviour.ownerTeam = Teams.Of(gameObject);
         behaviour.iceCubePrefab = iceCubePrefab;
         behaviour.alreadyHit = hits;
         return shard;
@@ -205,7 +209,7 @@ public class FrostWizard : MonoBehaviour, IWizardAbilities
         {
             foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
             {
-                if (player == gameObject) continue;
+                if (player == gameObject || Teams.AreAllies(gameObject, player)) continue;
                 ControllerScript c = player.GetComponent<ControllerScript>();
                 PlayerStats p = player.GetComponent<PlayerStats>();
                 if (c != null && p != null && (player.transform.position - transform.position).sqrMagnitude <= 64f)
@@ -240,5 +244,6 @@ public class FrostWizard : MonoBehaviour, IWizardAbilities
         }
         if (visual != null) visual.transform.localScale = Vector3.one;
     }
-    private void IgnoreSelf(GameObject shot) { Collider2D a = shot.GetComponent<Collider2D>(), b = GetComponent<Collider2D>(); if (a != null && b != null) Physics2D.IgnoreCollision(a, b); }
+    // Passes through the caster and, in Teams mode, the caster's teammates.
+    private void IgnoreSelf(GameObject shot) => Teams.IgnoreFriendlyCollisions(shot, gameObject);
 }

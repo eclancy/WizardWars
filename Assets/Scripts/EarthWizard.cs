@@ -78,7 +78,10 @@ public class EarthWizard : MonoBehaviour, IWizardAbilities
         for (int i = 0; i < globCount; i++) if (globs[i] != null) Destroy(globs[i]);
 
         if (attack2 == null) yield break;
-        yield return StartCoroutine(SpreadMud(Instantiate(attack2, center, Quaternion.identity)));
+        GameObject patch = Instantiate(attack2, center, Quaternion.identity);
+        MudPatch mud = patch.GetComponent<MudPatch>();
+        if (mud != null) { mud.ownerTeam = Teams.Of(gameObject); mud.caster = gameObject; }
+        yield return StartCoroutine(SpreadMud(patch));
     }
 
     // The patch settles outward, wider before taller, as the mud finds its level.
@@ -127,7 +130,7 @@ public class EarthWizard : MonoBehaviour, IWizardAbilities
         {
             foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
             {
-                if (player == gameObject) continue;
+                if (player == gameObject || Teams.AreAllies(gameObject, player)) continue;
                 ControllerScript c = player.GetComponent<ControllerScript>();
                 if (c == null) continue;
                 bool inside = (player.transform.position - transform.position).sqrMagnitude <= quakeRadius * quakeRadius;
@@ -194,5 +197,6 @@ public class EarthWizard : MonoBehaviour, IWizardAbilities
         }
         if (visual != null) visual.transform.localScale = Vector3.one;
     }
-    private void IgnoreSelf(GameObject shot) { Collider2D a = shot.GetComponent<Collider2D>(), b = GetComponent<Collider2D>(); if (a != null && b != null) Physics2D.IgnoreCollision(a, b); }
+    // Passes through the caster and, in Teams mode, the caster's teammates.
+    private void IgnoreSelf(GameObject shot) => Teams.IgnoreFriendlyCollisions(shot, gameObject);
 }

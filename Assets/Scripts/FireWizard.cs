@@ -93,6 +93,7 @@ public class FireWizard : MonoBehaviour, IWizardAbilities
             fire.damagePerTick = ringDamagePerTick;
             fire.lifetime = ringLifetime;
             fire.caster = gameObject;
+            fire.ownerTeam = Teams.Of(gameObject);
         }
     }
 
@@ -106,7 +107,7 @@ public class FireWizard : MonoBehaviour, IWizardAbilities
         flameShot = Instantiate(attack3, transform.position, Quaternion.identity);
         IgnoreSelf(flameShot);
         FlameThrower flame = flameShot.GetComponent<FlameThrower>();
-        if (flame != null) flame.caster = gameObject;
+        if (flame != null) { flame.caster = gameObject; flame.ownerTeam = Teams.Of(gameObject); }
         allow3 = false;
         lastTick = Time.time;
     }
@@ -142,10 +143,10 @@ public class FireWizard : MonoBehaviour, IWizardAbilities
     {
         yield return StartCoroutine(MeteorApproach(target));
         StartCoroutine(Explode(target));
-        // Damage falls off with distance, and never touches the caster.
+        // Damage falls off with distance, and never touches the caster or his team.
         foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
         {
-            if (player == gameObject) continue;
+            if (player == gameObject || Teams.AreAllies(gameObject, player)) continue;
             float distance = (player.transform.position - target).magnitude;
             if (distance > meteorBlastRadius) continue;
             int damage = Mathf.RoundToInt(Mathf.Lerp(meteorCentreDamage, meteorEdgeDamage, distance / meteorBlastRadius));
@@ -251,5 +252,6 @@ public class FireWizard : MonoBehaviour, IWizardAbilities
     private IEnumerator ResetFlame() { yield return new WaitForSeconds(flameRecastDelay); allow3 = true; }
 
     private void SpawnProjectile(GameObject prefab, Vector3 position, object[] args, bool rotate, float lifetime) { if (prefab == null) return; GameObject shot = Instantiate(prefab, position, Quaternion.identity); IgnoreSelf(shot); if (rotate) shot.transform.Rotate((Vector3)args[0]); Destroy(shot, lifetime); }
-    private void IgnoreSelf(GameObject shot) { Collider2D a = shot.GetComponent<Collider2D>(), b = GetComponent<Collider2D>(); if (a != null && b != null) Physics2D.IgnoreCollision(a, b); }
+    // Passes through the caster and, in Teams mode, the caster's teammates.
+    private void IgnoreSelf(GameObject shot) => Teams.IgnoreFriendlyCollisions(shot, gameObject);
 }
