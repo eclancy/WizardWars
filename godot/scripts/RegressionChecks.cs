@@ -28,6 +28,7 @@ public static class RegressionChecks
 		CheckStatusEffects();
 		CheckFriendlyFire();
 		CheckUltimateCharge();
+		CheckMusic();
 
 		GD.Print($"RegressionChecks: {passed} passed, {failed} failed");
 		return failed;
@@ -159,6 +160,18 @@ public static class RegressionChecks
 		Expect(!Teams.Allied(Teams.NoTeam, Teams.NoTeam), "no-team players are not allies");
 
 		foreach (Wizard wizard in new[] { caster, ally, enemy, loner }) wizard.Free();
+	}
+
+	/// <summary>
+	/// Both tracks must load and loop. The loop is an import setting, so a re-import with
+	/// default settings would quietly reintroduce a gap or silence at the end of the track.
+	/// </summary>
+	static void CheckMusic()
+	{
+		AudioStream title = Content.Sound("res://assets/music/title.mp3");
+		AudioStream battle = Content.Sound("res://assets/music/battle.wav");
+		Expect(title is AudioStreamMP3 { Loop: true }, "title music loads and loops");
+		Expect(battle is AudioStreamWav { LoopMode: AudioStreamWav.LoopModeEnum.Forward }, "battle music loads and loops");
 	}
 
 	static void CheckUltimateCharge()

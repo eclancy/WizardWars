@@ -137,5 +137,5 @@ Export: `"$GODOT_BIN" --headless --path . --export-release "Windows Desktop" bui
 - **Positioning UI:** setting `Position` on a centre-anchored Control places it from the
   parent's corner. Centre with a `CenterContainer` instead (see `Battle.Centred`).
 - **Shell:** heredocs on this machine mangle quotes. Write generator scripts as files.
-- **Music:** the battle and title tracks are commercial soundtracks. They are fine privately
-  but **must be replaced before any public release**.
+- **Music:** both tracks are CC0, credited in `assets/music/CREDITS.md`. Check the licence
+  of any new audio on its own page before adding it, and record it there.

@@ -229,7 +229,7 @@ Rough total: **13–18 working sessions**. Phase 2 is the bulk and the least pre
   - Four unused animated sheets exist: `Resources/*WizardSpritesheet.png`. Treat animating the wizards as an *improvement*, not parity.
   - The five Unity `.anim` clips (fireball, mudball, electricity ball, rod shock, ice wave) become `SpriteFrames`. The sheets are sliced with their `spriteMode: 2` metadata as a guide.
 - **Scale:** Unity's Park camera shows about 21 × 11.9 world units, and wizards are scaled to 0.15. Choose one Godot pixels-per-unit (for example 90 px per Unity unit at 1080p) and convert every position, radius and speed through it. Put the factor in one constant, so tuning values can be copied straight from the Unity docs.
-- **Music licensing:** `The_Final_Confrontation_-_Castle_Crashers.wav`, `Gunz The Second Duel OST- Battle Theme 1.mp3` and `DST-DawnOfWar.mp3` are commercial soundtracks. They're fine for private play, but **must be replaced before any public release** (itch.io, Steam, a public GitHub release). Port them for parity, and list this as a release blocker.
+- **Music licensing (resolved 2026-10-11):** the Unity game's commercial soundtracks (Castle Crashers, Gunz, Dawn of War) were not ported. The Godot version uses two CC0 orchestral tracks from OpenGameArt, credited in `godot/assets/music/CREDITS.md`. The Unity project still contains the commercial files, so it must not be released as-is.
 
 ## Risks and how to handle them
 
