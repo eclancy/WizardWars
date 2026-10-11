@@ -1,6 +1,6 @@
 # Wizard Wars: Godot Port Plan
 
-Status: **planned, not started** (2026-10-11).
+Status: **Phase 0 done** (2026-10-11): `godot/` builds and passes `godot/tools/check.sh`. Next: Phase 1, the vertical slice.
 
 ## Decisions
 
