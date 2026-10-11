@@ -1,0 +1,7 @@
+# Godot and bash both expect LF. The repo root runs core.autocrlf, which would
+# otherwise check these files out with CRLF and break tools/check.sh.
+* text=auto eol=lf
+*.png binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
