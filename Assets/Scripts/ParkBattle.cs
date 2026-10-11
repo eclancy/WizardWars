@@ -61,9 +61,56 @@ public class ParkBattle : MonoBehaviour
         SpawnPlayer(GlobalHandlerScript.player4Joined, GlobalHandlerScript.tempPlayer4, p4Spawn, ref p4, 4);
         if (GlobalHandlerScript.playersAlive == 1 || GetRuntimeParticipantCount() <= 1)
         {
-            p5 = GlobalHandlerScript.AI == null ? null : Instantiate(GlobalHandlerScript.AI, aiSpawn, Quaternion.identity);
-            if (p5 != null) { p5.transform.localScale = Vector3.one * 0.3f; GlobalHandlerScript.AIAlive = true; GlobalHandlerScript.playersAlive++; PlayerStats stats = p5.GetComponent<PlayerStats>(); if (stats != null) stats.GUIEnabled = true; }
+            p5 = SpawnWizardAI();
+            if (p5 == null)
+            {
+                p5 = GlobalHandlerScript.AI == null ? null : Instantiate(GlobalHandlerScript.AI, aiSpawn, Quaternion.identity);
+                if (p5 != null) p5.transform.localScale = Vector3.one * 0.3f;
+            }
+            if (p5 != null) { GlobalHandlerScript.AIAlive = true; GlobalHandlerScript.playersAlive++; PlayerStats stats = p5.GetComponent<PlayerStats>(); if (stats != null) stats.GUIEnabled = true; }
         }
+    }
+
+    // The solo opponent is a real wizard played by WizardAI. It is built from a player
+    // template so it has a player's body, colliders and HUD, then renamed to AI(Clone)
+    // before any of its scripts look at the name — that name maps to no input suffix,
+    // and GlobalHandler.kill already knows it. Returns null when the wizard portraits
+    // were never captured (Park opened directly in the Editor), and the caller falls
+    // back to the old target dummy.
+    private GameObject SpawnWizardAI()
+    {
+        GameObject template = GlobalHandlerScript.basePlayer1 != null ? GlobalHandlerScript.basePlayer1 :
+            GlobalHandlerScript.basePlayer2 != null ? GlobalHandlerScript.basePlayer2 :
+            GlobalHandlerScript.basePlayer3 != null ? GlobalHandlerScript.basePlayer3 : GlobalHandlerScript.basePlayer4;
+        string wizardName = PickAIWizard();
+        Sprite sprite = WizardRoster.SpriteFor(wizardName);
+        if (template == null || sprite == null) return null;
+
+        GameObject ai = Instantiate(template, aiSpawn, Quaternion.identity);
+        ai.name = "AI(Clone)";
+        // The template is a player prefab that may still carry a human's wizard.
+        foreach (MonoBehaviour component in ai.GetComponents<MonoBehaviour>())
+            if (component.GetType().Name.EndsWith("Wizard")) DestroyImmediate(component);
+        ai.transform.localScale = Vector3.one * 0.15f;
+        SpriteRenderer renderer = ai.GetComponent<SpriteRenderer>();
+        if (renderer != null) { renderer.sprite = sprite; renderer.enabled = true; }
+        WizardRoster.Attach(ai, wizardName);
+        ai.AddComponent<WizardAI>();
+        return ai;
+    }
+
+    // A wizard the human is not playing, so the matchup is not a mirror.
+    private string PickAIWizard()
+    {
+        List<string> options = new List<string>(WizardRoster.Names);
+        foreach (GameObject human in new[] { p1, p2, p3, p4 })
+        {
+            if (human == null) continue;
+            foreach (MonoBehaviour component in human.GetComponents<MonoBehaviour>())
+                options.Remove(component.GetType().Name);
+        }
+        if (options.Count == 0) options.AddRange(WizardRoster.Names);
+        return options[Random.Range(0, options.Count)];
     }
 
     private void SpawnPlayer(bool joined, GameObject source, Vector3 position, ref GameObject result, int playerNumber)

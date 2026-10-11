@@ -161,8 +161,12 @@ public class GlobalHandler : MonoBehaviour
         if (player4Alive) { winner = Instantiate(p4Wins); winningPlayerName = "Player4"; }
         LegacyGlobalStateBridge bridge = FindBridge();
         if (bridge != null && winningPlayerName != string.Empty) bridge.RegisterWinner(winningPlayerName);
+        // The P1-P4 win art has no counterpart for the computer, so draw that result.
+        if (winner == null && AIAlive) banner = "THE COMPUTER WINS";
+        bannerColour = new Color(0.85f, 0.55f, 1f);
         yield return new WaitForSeconds(5f);
         if (winner != null) Destroy(winner);
+        banner = null;
         ReturnToCharacterSelect();
     }
 
@@ -173,21 +177,27 @@ public class GlobalHandler : MonoBehaviour
         for (int slot = 0; slot < 4; slot++) if (alive[slot]) { winningTeam = GetTeam(slot); break; }
         LegacyGlobalStateBridge bridge = FindBridge();
         if (bridge != null && winningTeam != Teams.NoTeam) bridge.RegisterWinningTeam(winningTeam);
+        if (winningTeam != Teams.NoTeam) { banner = Teams.Name(winningTeam).ToUpper() + " TEAM WINS"; bannerColour = Teams.Colour(winningTeam); }
         yield return new WaitForSeconds(5f);
         winningTeam = Teams.NoTeam;
+        banner = null;
         ReturnToCharacterSelect();
     }
 
+    // A result with no authored art: a team win, or the computer winning a solo game.
+    private string banner;
+    private Color bannerColour = Color.white;
+
     private void OnGUI()
     {
-        if (winningTeam == Teams.NoTeam) return;
+        if (string.IsNullOrEmpty(banner)) return;
         GUIStyle style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = Mathf.Max(32, Screen.height / 9), fontStyle = FontStyle.Bold };
         Rect rect = new Rect(0f, Screen.height * 0.3f, Screen.width, Screen.height * 0.25f);
         Color previous = GUI.color;
         GUI.color = new Color(0f, 0f, 0f, 0.7f);
-        GUI.Label(new Rect(rect.x + 4f, rect.y + 4f, rect.width, rect.height), Teams.Name(winningTeam).ToUpper() + " TEAM WINS", style);
-        GUI.color = Teams.Colour(winningTeam);
-        GUI.Label(rect, Teams.Name(winningTeam).ToUpper() + " TEAM WINS", style);
+        GUI.Label(new Rect(rect.x + 4f, rect.y + 4f, rect.width, rect.height), banner, style);
+        GUI.color = bannerColour;
+        GUI.Label(rect, banner, style);
         GUI.color = previous;
     }
 

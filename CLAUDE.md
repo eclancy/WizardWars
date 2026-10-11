@@ -66,6 +66,18 @@ Baseline as of 2026-09-07: **0 errors, 0 warnings**.
 - `ParkBattle.cs` — spawns joined players, swaps the stage background by selected
   stage, scatters rock/cactus obstacles, runs the countdown, adds an AI when one
   player joined.
+- `WizardAI.cs` — the solo opponent. `ParkBattle.SpawnWizardAI` instantiates a player
+  template, renames it `AI(Clone)` before any script reads the name (so it maps to no
+  input suffix and `GlobalHandler.kill` still recognises it), strips any human wizard
+  left on the template, gives it a wizard the human is not playing, and adds
+  `WizardAI`, which moves it and casts through the same `SendMessage` entry points a
+  human uses. It plays deliberately imperfectly: there's a reaction delay, aim error,
+  a dodge chance, and abilities held back at random. Fire never uses the
+  flamethrower, because that ability reads a held button through `Input`, which the
+  AI has no axis for. The wizard portraits come from `WizardRoster`, which
+  `CharacterSelect` fills from its `Character` objects. When Park is opened directly
+  in the Editor the roster is empty, and the old target-dummy `AI` prefab spawns
+  instead.
 - Wizards: `FireWizard.cs`, `FrostWizard.cs`, `EarthWizard.cs`,
   `ElectricityWizard.cs`. Each exposes `basicAttack`, `secondAttack`, `thirdAttack`,
   `ultimateAttack`, still invoked by `SendMessage`. There is no `fourthAttack`:
@@ -125,7 +137,8 @@ coroutine runs.
 Player 1 can play without a controller: WASD moves, arrow keys aim, and `1`, `2`, `3`
 and `5` fire basic / second / third / ultimate; `4` is bound but does nothing.
 Menu keys are Enter to join/start, Backspace to leave, Space to confirm, Tab to toggle
-Teams mode, and T to switch team. Players 2-4 are controller-only.
+Teams mode, T to switch team, and H (any player's RS) to hold up the how-to-play panel.
+Players 2-4 are controller-only.
 
 Keyboard bindings are added as **extra entries reusing the same axis name** rather than
 by editing the joystick entries — Unity allows duplicate axis names and `GetAxis` /

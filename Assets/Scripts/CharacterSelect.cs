@@ -33,6 +33,8 @@ public class CharacterSelect : MonoBehaviour
         EnsureLocalMultiplayerRuntime();
         if (startToPlay == null) startToPlay = GameObject.Find("StartToBattle");
         SetGui(false);
+        // Remember the wizard portraits so the Park can dress the AI opponent.
+        WizardRoster.Capture();
     }
 
     private void Start()
@@ -133,40 +135,138 @@ public class CharacterSelect : MonoBehaviour
     // plays the AI as usual, whatever the mode.
     private bool TeamsUnbalanced() => GlobalHandlerScript.teamsMode && GlobalHandlerScript.playersJoined > 1 && !GlobalHandlerScript.TeamsPlayable();
 
+    // Ability names in button order: basic (RT), second (LT), third (RB), ultimate (X).
+    private static readonly string[][] Kits =
+    {
+        new[] { "FireWizard", "Fireball", "Ring of Fire", "Flamethrower (hold)", "Meteor Storm" },
+        new[] { "FrostWizard", "Icicle", "Ice Patch", "Ice Wave", "Absolute Zero" },
+        new[] { "EarthWizard", "Mudball", "Mud Patch", "Rock Wall", "Earthquake" },
+        new[] { "ElectricityWizard", "Electricity Ball", "Lightning Rod", "Speed Up", "Overcharge" },
+    };
+
+    private static readonly Color Waiting = new Color(1f, 0.85f, 0.3f);
+    private static readonly Color Done = new Color(0.45f, 1f, 0.5f);
+
+    // All of Character Select's text: the mode banner and what the room is waiting
+    // for, each joined player's status, team and wizard kit, and the how-to-play panel
+    // while RS (H on the keyboard) is held.
     private void OnGUI()
     {
         if (GlobalHandlerScript == null) return;
-        GUIStyle centred = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 18 };
-        const float width = 420f;
-        float x = (Screen.width - width) / 2f;
-        GUI.Box(new Rect(x, 10f, width, 58f), GUIContent.none);
-        GUI.Label(new Rect(x, 12f, width, 26f), GlobalHandlerScript.teamsMode ? "Mode: TEAMS" : "Mode: FREE-FOR-ALL", centred);
-        GUIStyle hint = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 12 };
-        GUI.Label(new Rect(x, 38f, width, 26f), GlobalHandlerScript.teamsMode ? "Back/View or Tab: change mode     Y or T: switch team" : "Back/View or Tab: change mode", hint);
+        float scale = Mathf.Max(0.75f, Screen.height / 1080f);
+        Color previous = GUI.color;
 
-        if (TeamsUnbalanced())
-        {
-            Color previous = GUI.color;
-            GUI.color = new Color(1f, 0.8f, 0.3f);
-            GUI.Label(new Rect(x, 70f, width, 24f), "Both teams need at least one player", centred);
-            GUI.color = previous;
-        }
+        GUIStyle title = Style(22, scale, true);
+        GUIStyle hint = Style(14, scale, false);
+        float width = 560f * scale, x = (Screen.width - width) / 2f, line = 26f * scale;
+        GUI.Box(new Rect(x, 8f, width, line * 3.4f), GUIContent.none);
+        GUI.Label(new Rect(x, 10f, width, line * 1.2f), GlobalHandlerScript.teamsMode ? "Mode: TEAMS" : "Mode: FREE-FOR-ALL", title);
+        string controls = "Back/View or Tab: change mode" + (GlobalHandlerScript.teamsMode ? "     Y or T: switch team" : "") + "     Hold RS or H: how to play";
+        GUI.Label(new Rect(x, 10f + line * 1.2f, width, line), controls, hint);
+        string status = RoomStatus(out bool ready);
+        GUI.color = ready ? Done : Waiting;
+        GUI.Label(new Rect(x, 10f + line * 2.2f, width, line), status, Style(16, scale, true));
+        GUI.color = previous;
 
-        if (!GlobalHandlerScript.teamsMode || Camera.main == null) return;
+        if (Camera.main != null) DrawSlots(scale);
+        if (Input.GetButton("RS_1") || Input.GetButton("RS_2") || Input.GetButton("RS_3") || Input.GetButton("RS_4")) DrawHowToPlay(scale);
+    }
+
+    private static GUIStyle Style(int size, float scale, bool bold) =>
+        new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = Mathf.RoundToInt(size * scale), fontStyle = bold ? FontStyle.Bold : FontStyle.Normal, wordWrap = false };
+
+    // One line saying what has to happen before the battle can start.
+    private string RoomStatus(out bool ready)
+    {
+        ready = false;
+        if (GlobalHandlerScript.playersJoined == 0) return "Press Start (Enter) to join - up to 4 players";
+        string unlocked = "";
+        for (int slot = 0; slot < 4; slot++)
+            if (IsJoined(slot) && !IsLocked(slot)) unlocked += (unlocked.Length > 0 ? ", " : "") + "P" + (slot + 1);
+        if (unlocked.Length > 0) return "Waiting for " + unlocked + " to pick a wizard (A or Space)";
+        if (TeamsUnbalanced()) return "Both teams need at least one player";
+        ready = true;
+        return GlobalHandlerScript.playersJoined == 1 ? "Press Start to fight the computer wizard!" : "Press Start to fight!";
+    }
+
+    // Under each joined player's preview: picking or locked in, their team, and once
+    // a wizard is locked, what each button does with it.
+    private void DrawSlots(float scale)
+    {
         GameObject[] previews = { p1, p2, p3, p4 };
-        GUIStyle teamStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 20 };
+        Color previous = GUI.color;
+        float width = 260f * scale, line = 22f * scale;
         for (int slot = 0; slot < 4; slot++)
         {
             if (!IsJoined(slot) || previews[slot] == null) continue;
-            Vector3 screen = Camera.main.WorldToScreenPoint(previews[slot].transform.position + Vector3.down * 1.3f);
-            int team = GlobalHandlerScript.GetTeam(slot);
-            Color previous = GUI.color;
-            GUI.color = Teams.Colour(team);
-            // The previews sit near the bottom edge, so keep the label on screen.
-            float y = Mathf.Min(Screen.height - screen.y - 14f, Screen.height - 32f);
-            GUI.Label(new Rect(screen.x - 60f, y, 120f, 28f), Teams.Name(team).ToUpper(), teamStyle);
+            Vector3 screen = Camera.main.WorldToScreenPoint(new Vector3(previews[slot].transform.position.x, -5.2f, 0f));
+            float x = screen.x - width / 2f;
+            float y = Screen.height - screen.y;
+            // Keep the whole block on screen whatever the aspect ratio.
+            y = Mathf.Min(y, Screen.height - line * 7.2f);
+
+            bool locked = IsLocked(slot);
+            GUI.color = locked ? Done : Waiting;
+            GUI.Label(new Rect(x, y, width, line), locked ? "LOCKED IN" : "PICK A WIZARD", Style(18, scale, true));
+            y += line;
+            if (GlobalHandlerScript.teamsMode)
+            {
+                int team = GlobalHandlerScript.GetTeam(slot);
+                GUI.color = Teams.Colour(team);
+                GUI.Label(new Rect(x, y, width, line), Teams.Name(team).ToUpper() + " TEAM", Style(18, scale, true));
+                y += line;
+            }
+            GUI.color = previous;
+
+            string[] kit = locked && selections[slot] != null ? KitFor(selections[slot].name) : null;
+            if (kit == null) continue;
+            // Player 1 can be on the keyboard, so show both.
+            string[] buttons = slot == 0 ? new[] { "RT / 1", "LT / 2", "RB / 3", "X / 5" } : new[] { "RT", "LT", "RB", "X" };
+            GUIStyle row = Style(14, scale, false);
+            row.alignment = TextAnchor.MiddleLeft;
+            GUI.Box(new Rect(x, y + 2f, width, line * 4f + 6f), GUIContent.none);
+            for (int i = 0; i < 4; i++)
+            {
+                GUI.color = i == 3 ? new Color(1f, 0.85f, 0.2f) : Color.white;
+                GUI.Label(new Rect(x + 10f * scale, y + 4f + line * i, width - 20f * scale, line), buttons[i] + "    " + kit[i + 1], row);
+            }
             GUI.color = previous;
         }
+    }
+
+    private static string[] KitFor(string wizardName)
+    {
+        foreach (string[] kit in Kits) if (kit[0] == wizardName) return kit;
+        return null;
+    }
+
+    private static readonly string[] HowToPlay =
+    {
+        "Move with the left stick (WASD). Aim with the right stick (arrow keys).",
+        "Basic attack: RT (1). It is free; you can always fire it.",
+        "Second and third: LT (2) and RB (3). They cost energy - the blue bar.",
+        "Ultimate: X (5) once the gold bar is full. It fills as you fight and as you get hit.",
+        "The pips under your bars show cooldowns. A red flash means not enough energy.",
+        "Free-for-All: last wizard standing wins.",
+        "Teams: knock out the other team. Your spells never hurt your teammates.",
+        "Playing alone? You face a computer-controlled wizard.",
+    };
+
+    private void DrawHowToPlay(float scale)
+    {
+        float width = 760f * scale, line = 30f * scale;
+        float height = line * (HowToPlay.Length + 2f);
+        Rect panel = new Rect((Screen.width - width) / 2f, (Screen.height - height) / 2f, width, height);
+        Color previous = GUI.color;
+        GUI.color = new Color(1f, 1f, 1f, 0.95f);
+        GUI.Box(panel, GUIContent.none);
+        GUI.Box(panel, GUIContent.none);
+        GUI.color = previous;
+        GUI.Label(new Rect(panel.x, panel.y + line * 0.3f, width, line), "HOW TO PLAY", Style(24, scale, true));
+        GUIStyle row = Style(17, scale, false);
+        row.alignment = TextAnchor.MiddleLeft;
+        for (int i = 0; i < HowToPlay.Length; i++)
+            GUI.Label(new Rect(panel.x + 30f * scale, panel.y + line * (i + 1.5f), width - 60f * scale, line), HowToPlay[i], row);
     }
 
     private GameObject FindCharacter(GameObject cursorObject, GameObject previous)

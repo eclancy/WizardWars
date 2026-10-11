@@ -238,7 +238,8 @@ public class PlayerStats : MonoBehaviour
         Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position);
         screenPos.y = Screen.height - screenPos.y - 75f;
         screenPos.x -= size.x / 2f - 3f;
-        if (transform.root.name == "AI(Clone)") { screenPos.y -= Screen.height / 50f; screenPos.x -= 2f; }
+        // The old target dummy draws taller than a wizard, so its bars sit higher.
+        if (transform.root.name == "AI(Clone)" && GetComponent<WizardAI>() == null) { screenPos.y -= Screen.height / 50f; screenPos.x -= 2f; }
         GUI.BeginGroup(new Rect(screenPos.x, screenPos.y, size.x, size.y));
 
         GUI.Box(new Rect(0f, 0f, size.x, 10f), healthBarEmpty);

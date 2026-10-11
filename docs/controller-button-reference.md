@@ -31,9 +31,10 @@ Each player slot (1-4) maps to a controller (Joystick 1-4) in `ProjectSettings/I
 | Basic Attack | Right Trigger | 1 |
 | Second Attack | Left Trigger | 2 |
 | Third Attack | RB (Button 5) | 3 |
-| Fourth Attack | LB (Button 4) | 4 |
 | Ultimate | X (Button 2) | 5 |
 | Start Menu | Start (Button 7) | Return |
+| Toggle Free-for-All / Teams (Character Select) | Back/View (Button 6) | Tab |
+| Switch team (Character Select, Teams mode) | Y (Button 3) | T |
 
 ### Player 2-4 (Joystick 2-4)
 
@@ -46,9 +47,10 @@ Each player slot (1-4) maps to a controller (Joystick 1-4) in `ProjectSettings/I
 | Basic Attack | Right Trigger |
 | Second Attack | Left Trigger |
 | Third Attack | RB (Button 5) |
-| Fourth Attack | LB (Button 4) |
 | Ultimate | X (Button 2) |
 | Start Menu | Start (Button 7) |
+| Toggle Free-for-All / Teams (Character Select) | Back/View (Button 6) |
+| Switch team (Character Select, Teams mode) | Y (Button 3) |
 
 ## Menu Flow
 
@@ -61,6 +63,9 @@ Each player slot (1-4) maps to a controller (Joystick 1-4) in `ProjectSettings/I
 - **Select wizard**: Press A (Space for P1, Button 0 for P2-4)
 - **Unselect**: Press B (Backspace for P1, Button 1 for P2-4)
 - **Join**: Each player presses Start to enter the selection area
+- **Mode**: Back/View (Tab for P1) toggles Free-for-All and Teams
+- **Team**: In Teams mode, Y (T for P1) switches between Red and Blue
+- **How to play**: Hold RS (H for P1) to show the rules and controls panel
 
 ### Stage Select
 - **Move cursor**: Left/Right/Up/Down with Left Stick or Arrow Keys
@@ -69,10 +74,11 @@ Each player slot (1-4) maps to a controller (Joystick 1-4) in `ProjectSettings/I
 ### Battle
 - **Move**: Left Stick or W/A/S/D
 - **Aim**: Right Stick or Arrow Keys
-- **Basic Attack**: Trigger down (LT/RT)
-- **Secondary Attack**: Trigger opposite direction
-- **Special (Third) Attack**: RB or E key
-- **Ultimate**: LB or Q key
+- **Basic Attack**: Right Trigger or 1
+- **Second Attack**: Left Trigger or 2
+- **Third Attack**: RB or 3
+- **Ultimate**: X or 5
+- LB does nothing: the fourth ability slot was cut from every wizard.
 
 ## Testing Checklist
 

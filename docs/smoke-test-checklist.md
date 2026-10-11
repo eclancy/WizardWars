@@ -74,7 +74,7 @@ This checklist describes the validation steps once Wizard Wars is loaded in the 
 
 - [ ] Players can move (left stick / WASD)
 - [ ] Players can aim (right stick / arrow keys)
-- [ ] Players can attack (triggers / Q/E, LB / buttons, RB / buttons)
+- [ ] Players can attack: triggers or 1/2 (basic/second), RB or 3 (third), X or 5 (ultimate)
 - [ ] Health bars decrease on hits
 - [ ] Status effects apply (burn, stun, slow, speed)
 - [ ] Attacks visually appear and hit correctly
@@ -141,7 +141,10 @@ Debug.Log("Player 1 RB: " + state.RB);
 
 - [ ] Title → Character Select → 4 players join → lock wizards → Stage Select → Battle → Winner → Character Select
 - [ ] Rematch: from Character Select, 2 players join different wizards → lock → stage → battle → winner → back
-- [ ] Solo mode: 1 player joins → AI opponent spawns → battle proceeds normally
+- [ ] Solo mode: 1 player joins → a computer wizard (not the human's wizard) spawns, moves, dodges and casts all its abilities
+- [ ] Solo mode: losing shows "THE COMPUTER WINS" and returns to Character Select
+- [ ] Character Select: the top status line tracks join / pick / ready; each player shows PICK A WIZARD or LOCKED IN, and a locked player's ability list
+- [ ] Character Select: holding RS (or H) shows the how-to-play panel; releasing hides it
 - [ ] Teams: Tab or Back/View toggles the mode banner; Y or T flips a joined player between RED and BLUE
 - [ ] Teams: with every player on one team, Start is blocked and "Both teams need at least one player" shows
 - [ ] Teams 2v2: teammates spawn together with matching ground markers and HUD strips
