@@ -1,252 +1,154 @@
 # CLAUDE.md — Wizard Wars
 
-Authoritative working notes for agents in this repo. If this file and another doc
-disagree, this file wins; fix the other doc.
+Authoritative working notes for agents in this repo. If this file and another doc disagree,
+this file wins; fix the other doc.
 
-## Current state (verified 2026-09-07)
+Wizard Wars is a 1–4 player local arena battler in **Godot 4.5 C#**. It was a Unity game
+until 2026-10-11. The Unity project is gone from this branch; it survives at the git tag
+**`unity-final`**. Check out that tag to see how something worked in Unity. Never restore
+Unity files here. `docs/GODOT_PORT_PLAN.md` records how and why it was ported.
 
-- Unity **2022.3.62f3** (`ProjectSettings/ProjectVersion.txt`). The project was
-  originally Unity 2018.2.10f1; that upgrade is **done**, not pending.
-- Gameplay is **C# under `Assets/Scripts/`**. The UnityScript-to-C# migration is
-  **done**: every scene and prefab `m_Script` reference resolves to a C# GUID, and
-  no scene or prefab still references a legacy `.js` GUID.
-- The legacy `.js` files under `Assets/StandardAssets/Scripts/`,
-  `Assets/Resources/ControllerScript.js`, and `Assets/Resources/PlayerStats.js` are
-  **dead reference copies**. Unity 2022 does not compile them. Read them to compare
-  original behavior; do not treat them as live code, and do not "fix" them.
-- Build scenes (`ProjectSettings/EditorBuildSettings.asset`): `Title Screen`,
-  `Character Select`, `Stage Select`, `Park`.
-- There is no automated test suite. Validate in the Editor using
-  `docs/smoke-test-checklist.md`.
+## Status
 
-## Compile check without opening the Editor
+The game is **feature-complete**. It has:
+- the title screen and Character Select: join by device, Free-for-All/Teams, team
+  switching, kit lists, how-to-play
+- Stage Select and all four stages
+- all four wizards with all 16 abilities and their telegraphs
+- the HUD and a computer opponent
+- the countdown, results, rematch, and a Windows export
 
-Unity is installed at `C:\Program Files\Unity\Hub\Editor\2022.3.62f3`. With the
-Editor **closed**, run:
+Every automated check passes.
+
+**Open:**
+- Human playtesting: `docs/playtest-checklist.md`.
+- Tuning: matches are short because the free 20-damage bolts dominate (carried over
+  unchanged from Unity), so ultimates rarely come up.
+
+**Public repo:** `eclancy/WizardWars` is public, so every push publishes. Add only assets with
+a licence that allows that, and record their credits (see `assets/music/CREDITS.md`).
+
+## Stack
+
+- Godot **4.5.1 .NET** (mono), C#: `Godot.NET.Sdk/4.5.1`, `net9.0`, `Nullable=annotations`.
+- GL Compatibility renderer, 1920×1080, stretch `canvas_items` / `expand`, 2D gravity 0.
+- Godot binary: `$GODOT_BIN`, or by default
+  `C:/Program Files (x86)/Godot_v4.5.1-stable_mono_win64/Godot_v4.5.1-stable_mono_win64_console.exe`.
+  Use the **console** exe so output reaches the terminal.
+
+## Verify every change
 
 ```bash
-bash tools/compile-check.sh
+bash tools/check.sh
 ```
 
-It runs Unity in batch mode, reports C# error and warning counts, and exits non-zero
-if anything failed. It takes roughly 30 seconds warm. Batch mode needs an exclusive
-lock on `Library/`, so it fails while the Editor is open.
+It runs, and fails on the first failure:
 
-Do this after any non-trivial script edit. It catches compile breaks and broken GUID
-references, but it cannot catch runtime or gameplay regressions — those still need the
-Editor and `docs/smoke-test-checklist.md`.
+1. `dotnet build`.
+2. A headless `--import`.
+3. `--checks`: `RegressionChecks`. This covers settings, every wizard, ability and stage
+   resource, stage geometry, the status-effect rules, friendly fire, and ultimate charge.
+4. `--flowtest`: `FlowTest` drives two scripted pads through every menu and a Teams battle,
+   back to Character Select.
+5. `--abilities`: `AbilityTest` casts all 16 abilities at an enemy (each must do its job) and
+   at a teammate (each must do nothing). Afterwards the arena must be empty.
+6. `--soak`: `SoakTest` plays computer-only matches, Free-for-All and Teams, faster than real
+   time. After each one, no effect node, modifier or ultimate lock may be left behind.
 
-**With the Editor open**, use the lighter check instead:
+Run the steps after `dotnet build` with
+`--headless --fixed-fps 60 --path . res://scenes/Main.tscn -- <flag>`.
+
+`dotnet build` alone is **not** verification. A change to feel or visuals also needs a look:
 
 ```bash
-bash tools/syntax-check.sh
+"$GODOT_BIN" --path . --resolution 1920x1080 res://scenes/Main.tscn -- --screen=demo --shot=C:/tmp/shot.png --shot-after=8
 ```
 
-It runs Unity's own Roslyn over `Assets/Scripts/` against Unity's assemblies without
-opening the project, so it needs no `Library/` lock. It reports the same C# errors and
-warnings, but it does not import assets, so it cannot catch broken GUID references.
+`--screen` takes `title`, `select`, `stage`, `battle` or `demo` (four computer wizards; add
+`--teams` for 2v2).
 
-Baseline as of 2026-09-07: **0 errors, 0 warnings**.
+Export: `"$GODOT_BIN" --headless --path . --export-release "Windows Desktop" build/windows/WizardWars.exe`.
+`build/` is not committed. The exported exe accepts the same flags.
 
 ## Architecture
 
-- `GlobalHandler.cs` — persistent (`DontDestroyOnLoad`) join/lock/alive/stage state
-  for the legacy flow. It mirrors its state into the newer runtime via
-  `LegacyGlobalStateBridge`.
-- `Assets/Scripts/LocalMultiplayer/` — the newer state layer: `LocalPlayerManager`,
-  `MatchManager`, `MatchConfig`, `PlayerSlotState`, `InputProvider`, reached through
-  the static `LocalMultiplayerRuntime` and spawned by `LocalMultiplayerBootstrap`.
-  Free-for-All is the default; Teams mode is implemented (see **Teams mode** below).
-- Two systems hold match state at once. When you change join/lock/alive/stage
-  behavior, update **both** the `GlobalHandler` field and the bridge sync, or the
-  two will drift.
-- `ControllerScript.cs` — movement, aiming, targeter, and dispatch to wizard
-  attacks. `PlayerStats.cs` — health, energy, HUD bars, burn/stun, death,
-  `ultimateCharge`/`TryUseUltimate()`.
-- `ParkBattle.cs` — spawns joined players, swaps the stage background by selected
-  stage, scatters rock/cactus obstacles, runs the countdown, adds an AI when one
-  player joined.
-- `WizardAI.cs` — the solo opponent. `ParkBattle.SpawnWizardAI` instantiates a player
-  template, renames it `AI(Clone)` before any script reads the name (so it maps to no
-  input suffix and `GlobalHandler.kill` still recognises it), strips any human wizard
-  left on the template, gives it a wizard the human is not playing, and adds
-  `WizardAI`, which moves it and casts through the same `SendMessage` entry points a
-  human uses. It plays deliberately imperfectly: there's a reaction delay, aim error,
-  a dodge chance, and abilities held back at random. Fire never uses the
-  flamethrower, because that ability reads a held button through `Input`, which the
-  AI has no axis for. The wizard portraits come from `WizardRoster`, which
-  `CharacterSelect` fills from its `Character` objects. When Park is opened directly
-  in the Editor the roster is empty, and the old target-dummy `AI` prefab spawns
-  instead.
-- Wizards: `FireWizard.cs`, `FrostWizard.cs`, `EarthWizard.cs`,
-  `ElectricityWizard.cs`. Each exposes `basicAttack`, `secondAttack`, `thirdAttack`,
-  `ultimateAttack`, still invoked by `SendMessage`. There is no `fourthAttack`:
-  `ControllerScript` still dispatches it on LB, which is now a harmless no-op.
-- `ProceduralFx.cs` — runtime-generated sprites (ice shard, flame, ring outline)
-  built from `Texture2D` pixels and cached statically. Abilities that are animated in
-  code rather than authored as art use these, so they add no files to `Resources/`.
-  It also owns `IsInsideSolid`, the shared "is this point in a wall or obstacle" test.
+- **`GameRoot`** (on `Main.tscn`) swaps screens as children: `TitleScreen`,
+  `CharacterSelectScreen`, `StageSelectScreen`, `Battle`. It polls `Devices` once per
+  **physics** step. Menus and wizards read input in `_PhysicsProcess` too, so a press is seen
+  exactly once.
+- **Input.** `IInputSource.Poll() → InputState`:
+  - `KeyboardInputSource` (P1 keys as in Unity) and `GamepadInputSource` (read by device id).
+  - `DeviceInputSource` reads a joined player's device.
+  - `CpuInputSource` is the AI, ported from Unity's `WizardAI`.
 
-### Abilities animated in code
+  A player joins a slot with whichever device presses Start, and keeps it.
+- **`Session`** is the single source of truth: slots (joined, locked, device, wizard, team),
+  `TeamsMode` and `StageIndex`. It replaces Unity's GlobalHandler, the LocalMultiplayer
+  runtime and the bridge between them.
+- **Data:** `data/abilities/*.tres` (`AbilityData`), `data/wizards/*.tres` (`WizardData`),
+  `data/stages/*.tres` (`StageData`), loaded through `Content`.
+  - Tuning lives **only** there.
+  - `tools/gen-data.sh` records where every starting number came from in Unity. It
+    regenerates the files and **overwrites editor tuning**, so only run it on purpose.
+- **`Battle`** builds the arena, spawns from a `BattleSetup` (`FromSession`, or by hand in
+  tests), runs the countdown, and decides the result. It keeps the registries effects
+  query: `Wizards`, `Projectiles`, `Patches`, `FireSources`, `RockWalls`. It answers
+  `IsInsideSolid` with a physics shape query on the solids layer. Effects reach it through
+  `Battle.Current`.
+- **`Wizard`** (`CharacterBody2D`) owns health, energy, ultimate charge, burn, stun,
+  movement, aim, and ability dispatch, and reads one `IInputSource`.
+- **Abilities** are plain C# (`Ability`, `Ultimate`, built by `AbilityFactory` from the
+  ability id). What they create is an **effect node** owned by the battle, not the wizard:
+  `Projectile`, `FireSource`, `FlameJet`, `Meteor`/`MeteorStorm`, `IcePatch`/`MudPatch`
+  (`GroundPatch`), `IceWave`, `Aura` (Absolute Zero, Earthquake), `RockWall`,
+  `LightningRod`, `Overcharge`, `SpeedTrail`. Effects outlive their caster correctly and
+  clean up after themselves.
+- **Hits use geometry, not physics callbacks.** Hit tests are circle against body box,
+  ellipse for patches. Physics is only for walking into walls, obstacles, rock walls and
+  rods. That keeps headless runs identical and removes collision masks as a source of bugs.
+- **Friendly fire:** `Combat.CanAffect(caster, casterTeam, target, hitsCaster)`. Effects
+  record the caster's team when cast. Patches and rods hit their own caster, as in Unity.
+  Teammates are never hit by anything. Any new hostile effect must use this check.
+- **Status effects:** `StatusEffects` holds modifiers (slow, haste, no-regen, slide) keyed
+  by the source node. `Prune` drops any whose source was freed, so effects cannot leak the
+  way Unity's additive `slow()`/`removeSlow()` did.
+- **`ProceduralFx`** is Unity's pixel generators ported (rows flipped, because Godot images
+  are top-down), plus `AreaDisc` for showing ultimate radii.
+- **`Units`:** every Unity distance or position goes through `Units.U(...)` (90 px per Unity
+  unit; Unity +y is Godot up). `Units.SpriteScale` converts a Unity transform scale for the
+  100-ppu art.
 
-Ice Wave (`FrostWizard.SpawnIceWave`) and Ring of Fire (`FireWizard.SpawnRingOfFire`)
-are no longer single sprites that move. Each is assembled at cast time from many small
-objects and driven by a coroutine:
+## Deliberate differences from the Unity version
 
-- Ice Wave spawns nine `IceWaveShard` pieces on an arc that sweeps outward, widening
-  and fading. All shards of one cast share a hit set so a player is stunned once.
-- Ring of Fire places `FireSource` flames straight onto the circle with no telegraph.
-  Each grows up out of the ground and stutters as it catches, then cycles the six
-  generated flame frames at its own rate and offset. Each source lives independently —
-  one that lands in a wall, obstacle, or mud patch is put out by itself and the rest
-  keep burning.
-- Earthquake is the Earth ultimate: shockwave rings ripple out to `quakeRadius` while
-  anyone inside is slowed by `quakeSlow`. The slow is applied and removed exactly once
-  per player via a tracked set, because `ControllerScript.slow` is additive.
-- Meteor Storm is the Fire ultimate: `meteorStormCount` meteors rain on random points
-  inside `meteorStormArea`, several in the air at once. Each is a shadow that tightens
-  and turns fiery as it falls, then a blast disc sized to `meteorBlastRadius`, with
-  damage interpolating from `meteorCentreDamage` to `meteorEdgeDamage` at the rim. It
-  leaves no fire behind, and never damages the caster.
-- `FireSource` finds players with `Physics2D.OverlapCircleAll` on a slow tick instead
-  of trigger callbacks, so a source needs no collider or `Rigidbody2D`. This means
-  trigger-based interactions elsewhere cannot see it: cross-ability reactions that
-  used to match the object name `ringOfFire(Clone)` now live inside `FireSource`.
-- Both ground patches have a formation telegraph before they take effect.
-  `FrostWizard.FormIcePatch` gathers generated puddles inward and glosses them into
-  the sheet; `EarthWizard.FormMudPatch` spurts clods of earth up and lets the patch
-  spread from where they land. In both cases the prefab is instantiated only at the
-  end, and its `PolygonCollider2D` stays disabled while it grows, so the patch cannot
-  slip or slow anyone during the telegraph. Final size is set in code
-  (`FrostWizard.icePatchScale`, `EarthWizard.mudPatchScale`), not by the prefab.
+- **Not a leak or a bug:** status effects cannot leak, a big slow can never run you
+  backwards, and a stun no longer hides an ongoing burn.
+- **New feedback:**
+  - A hit flashes the wizard red.
+  - P1–P4/CPU labels sit over each wizard.
+  - Ultimates show a faint disc at their real radius. Unity's overlay image ended up a third
+    of a unit wide.
+  - The HUD drops below a wizard standing at the top wall.
+- **Projectiles keep the last aim direction** when the stick is released (Unity always fired
+  right). Placed abilities still land at your feet with the stick released, as in Unity.
+- **The computer can hold the flamethrower.** It has no targeter shown.
+- **Rematch is faster:** players stay joined and locked after a match, so Start goes again.
+  Unity made everyone rejoin.
+- **Stage Select:** any joined player can drive it. Unity picked one at random.
+- **Not ported:** the LB "fourth" slot, Unity's GlobalHandler/bridge split, and the
+  target-dummy AI.
 
-`iceWave.prefab` and `ringOfFire.prefab` still exist in `Resources/` but nothing loads
-them. Leave them there; they are the fallback if a rework needs reverting.
+## Known Godot gotchas
 
-## Controls
-
-Left stick moves, right stick aims, triggers fire basic/second, RB third, X ultimate.
-Every wizard has four abilities; the LB (fourth) slot was cut.
-
-Input names carry `_1`..`_4` suffixes and live in
-`ProjectSettings/InputManager.asset`; `ControllerScript` picks the suffix from the
-clone name. Ultimates are gated by `PlayerStats.ultimateCharge`, and
-`ControllerScript.ultimateActive` blocks all other ability input while an ultimate
-coroutine runs.
-
-Player 1 can play without a controller: WASD moves, arrow keys aim, and `1`, `2`, `3`
-and `5` fire basic / second / third / ultimate; `4` is bound but does nothing.
-Menu keys are Enter to join/start, Backspace to leave, Space to confirm, Tab to toggle
-Teams mode, T to switch team, and H (any player's RS) to hold up the how-to-play panel.
-Players 2-4 are controller-only.
-
-Keyboard bindings are added as **extra entries reusing the same axis name** rather than
-by editing the joystick entries — Unity allows duplicate axis names and `GetAxis` /
-`GetButtonDown` consider all of them. That is why `InputManager.asset` contains several
-entries called `L_XAxis_1`, `RB_1`, and so on. Add keyboard support that way; do not
-overwrite a joystick binding.
-
-Note the Y-axis polarity trap: Unity joystick vertical axes report **up as -1**, and the
-aim code negates `yAim` (`ControllerScript.cs`, targeter position and `Atan2`). A keyboard
-axis standing in for a stick therefore needs `invert: 1`, or up and down come out
-backwards.
-
-## Resources
-
-Energy is 100 with a 20/s regen. The basic attack is free on a cooldown; the other
-abilities cost 20-35 and are bound by their own cooldowns, so energy limits dumping the
-whole kit at once rather than limiting the default action. Ability costs are serialized
-fields on each wizard (`basicCost`, `ringCost`, `icePatchCost`, and so on).
-
-Ultimate charge is earned: a slow passive trickle plus charge per energy spent and per
-damage taken. `PlayerStats.AddUltimateCharge` is the single entry point.
-
-The HUD shows health, energy, an ultimate meter and three cooldown pips. Wizards expose
-readiness through `IWizardAbilities`, which `PlayerStats` resolves lazily because
-`CharacterSelect` adds the wizard component at runtime. Note that an interface-typed
-reference does not get Unity's overloaded `== null`, so a destroyed wizard has to be
-detected by casting to `MonoBehaviour`.
-
-Watch the prefab-override trap here. `Player1` and `Player2` pinned `ultimateChargeRate`
-while `Player3`, `Player4` and the AI did not, so changing the code default alone would
-have given players 1 and 2 a 3.3x faster ultimate than everyone else. After changing any
-tuning default, grep the prefabs for that field name.
-
-## Teams mode
-
-Character Select has a Free-for-All / Teams toggle: any player's Back/View button, or
-Tab on the keyboard. In Teams mode each joined player switches between Red and Blue
-with Y, or T on the keyboard. Players 1 and 3 start on Red, and players 2 and 4 on
-Blue. A team choice resets when the player leaves, and because every player is
-un-joined on returning to Character Select, teams are picked again for each match.
-The mode itself carries over between matches.
-
-- State lives on `GlobalHandler` (`teamsMode`, `player1Team`..`player4Team`,
-  `teamsActive`) and is mirrored by `LegacyGlobalStateBridge` into
-  `MatchManager.SelectedTeamMode` / `MatchConfig.TeamMode` and `PlayerSlotState.Team`.
-  All of it is `[NonSerialized]`, so the scene cannot pin a default.
-- With two or more players, the match will not start until both teams have at least
-  one player. A lone player in Teams mode plays the AI in Free-for-All as usual.
-  `GlobalHandler.TeamsPlayable()` holds that rule.
-- `ParkBattle` calls `GlobalHandler.BeginMatch()`, which settles `teamsActive`. In a
-  Teams match, Red takes the player 1 and 3 spawns and Blue the player 2 and 4 spawns.
-  Each player gets a team through `PlayerStats.SetTeam`, which also adds a coloured
-  ground marker. The HUD shows a team-coloured strip.
-- The win condition is that one team is left standing. `GlobalHandler.kill` ends the
-  match once, guarded by `matchOver`. There is no authored "team wins" art, so
-  `GlobalHandler.OnGUI` draws the banner.
-
-Friendly fire is off. `Teams.cs` holds the rule, and every hostile effect checks it:
-
-- Projectiles: each wizard's `IgnoreSelf` calls `Teams.IgnoreFriendlyCollisions`,
-  which ignores collisions with the caster and every teammate, so a shot passes
-  through allies instead of popping on them.
-- Overlap or trigger effects: Fire Source, Flamethrower, Ice Wave shards, Ice Patch,
-  Mud Patch and Lightning Rod store `ownerTeam` when cast, so they still spare
-  teammates if the caster has died. Meteor Storm, Absolute Zero and Earthquake run on
-  the caster and skip `Teams.AreAllies`.
-- Patches and rods still affect their own caster, exactly as in Free-for-All. Only
-  teammates are spared. Ice and mud still put out a teammate's fire.
-
-Any new damaging, slowing or stunning effect must apply the same check. In
-Free-for-All every player is `Teams.NoTeam`, which nothing treats as an ally, so the
-check costs nothing there.
-
-## Contracts that are not type-checked — preserve them
-
-- Clone names (`Player1(Clone)`), tags (`Player`, `destroyableAttack`), and scene
-  object names are load-bearing. Renaming one silently breaks input mapping or
-  collision handling.
-- `Resources.Load("...")` uses exact prefab/sprite names under `Assets/Resources/`.
-- `SendMessage` targets method names by string.
-- Serialized field names and asset GUIDs bind scenes and prefabs to scripts. Never
-  rename or move a `.meta` file, and never rename a serialized public field without
-  updating every scene and prefab that stores it.
-- After any script edit, grep for `SendMessage`, `Resources.Load`, and `GameObject.Find`
-  call sites that reference what you touched.
-
-## Working style
-
-- Keep changes minimal and local; match the surrounding style.
-- Prefer script fixes over scene or prefab rewrites — scene YAML diffs are large
-  and easy to corrupt.
-- Scene loading uses `SceneManager` in the C# code. Do not reintroduce
-  `Application.LoadLevel`.
-- Watch operator precedence when editing `if` conditions that mix `&&` and `||`;
-  parenthesize.
-- Do not commit or edit `Library/`, `Logs/`, `UserSettings/`, or generated
-  `.csproj`/`.sln`.
-- Unity rewrites `.meta`, scene, and prefab files on import, so re-read a file
-  before patching it rather than trusting an earlier read.
-
-## Companion docs
-
-- `CLAUDE_HANDOFF.md` — migration record, ability design intent, generated art
-  inventory, open risks.
-- `GAME_COMPLETION_PLAN.md` — current milestone plan.
-- `docs/GODOT_PORT_PLAN.md` — the Godot 4.5 C# rewrite in `godot/`. It is feature-complete
-  and awaiting the side-by-side playtest. Until Unity is retired, Unity is the frozen
-  reference: bug fixes only, no gameplay changes. Work in `godot/` follows `godot/CLAUDE.md`.
-- `AGENTS.md` / `.github/copilot-instructions.md` — same guidance for other agents.
-- `docs/` — architecture, input mapping, controller reference, smoke checklist,
-  local-multiplayer roadmap.
+- **Script classes:** a C# **node** class must live in a file of the same name, or Godot never
+  attaches it and `_PhysicsProcess` silently never runs. Plain C# classes can share files.
+- **Unimported assets:** "Unrecognized UID" or "Failed loading resource" before the first
+  import means "not imported yet". A new PNG is `null` from `GD.Load` until imported.
+- **Committed files:** `.uid` and `.import` sidecars are committed; `.godot/`, `bin/`, `obj/`
+  and `build/` are not. Never read or edit `.godot/`.
+- **Line endings:** `.gitattributes` pins LF. This machine's git runs `core.autocrlf`, which
+  would otherwise check files out with CRLF and break `tools/check.sh` in bash.
+- **Positioning UI:** setting `Position` on a centre-anchored Control places it from the
+  parent's corner. Centre with a `CenterContainer` instead (see `Battle.Centred`).
+- **Shell:** heredocs on this machine mangle quotes. Write generator scripts as files.
+- **Music:** both tracks are CC0, credited in `assets/music/CREDITS.md`. Check the licence
+  of any new audio on its own page before adding it, and record it there.
