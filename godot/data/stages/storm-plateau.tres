@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StageData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/StageData.cs" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/art/stages/storm-plateau.png" id="2_background"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "storm-plateau"
+DisplayName = "Storm Plateau"
+Background = ExtResource("2_background")
+Spawns = PackedVector2Array(-8, 4.5, 8, 4.5, -8, -4.5, 8, -4.5)
+ComputerSpawn = 3
+Rocks = PackedVector2Array(-4, 0, 4, 0)
+Cacti = PackedVector2Array()

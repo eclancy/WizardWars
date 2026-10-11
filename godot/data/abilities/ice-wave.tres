@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/icewave.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "ice-wave"
+DisplayName = "Ice Wave"
+Description = "A fan of ice sweeps outward and freezes anyone it touches solid."
+Cost = 35.0
+Cooldown = 4.0
+Count = 9
+Range = 7.0
+Duration = 0.55
+Duration2 = 1.5
+Damage = 8.0
+Radius = 0.4
+Sound = ExtResource("2_sound")

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WizardData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/WizardData.cs" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/art/wizards/electricity.png" id="2_portrait"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/targeter-yellow.png" id="3_targeter"]
+[ext_resource type="Resource" path="res://data/abilities/electricity-ball.tres" id="4_basic"]
+[ext_resource type="Resource" path="res://data/abilities/lightning-rod.tres" id="5_second"]
+[ext_resource type="Resource" path="res://data/abilities/speed-up.tres" id="6_third"]
+[ext_resource type="Resource" path="res://data/abilities/overcharge.tres" id="7_ultimate"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "ElectricityWizard"
+DisplayName = "Electricity Wizard"
+Portrait = ExtResource("2_portrait")
+Targeter = ExtResource("3_targeter")
+Colour = Color(1, 0.9, 0.3, 1)
+Basic = ExtResource("4_basic")
+Second = ExtResource("5_second")
+Third = ExtResource("6_third")
+Ultimate = ExtResource("7_ultimate")

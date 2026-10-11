@@ -1,0 +1,102 @@
+using System.Collections.Generic;
+using Godot;
+
+/// <summary>
+/// Plays computer-only matches back to back and checks nothing leaks. Run headless with
+/// --fixed-fps so it goes faster than real time (tools/check.sh does).
+///
+/// After each match ends it lets the arena settle for longer than any effect lives, then
+/// requires that every effect node is gone, that the surviving wizards carry no modifiers, and
+/// that no ultimate lock is stuck on - the failure class behind Unity's Absolute Zero and
+/// Earthquake leaks. A match that runs past the time limit fails too: the AI should always
+/// finish a fight.
+/// </summary>
+public partial class SoakTest : Node
+{
+	const double MatchTimeLimit = 240.0;
+	const double SettleSeconds = 8.0;
+
+	readonly int matches;
+	readonly bool teams;
+	int played, failures;
+	Battle battle;
+	double settleUntil = -1.0;
+	readonly RandomNumberGenerator rng = new();
+
+	public SoakTest() { }
+
+	public SoakTest(int matches, bool teams)
+	{
+		this.matches = matches;
+		this.teams = teams;
+		Name = "SoakTest";
+	}
+
+	public override void _Ready()
+	{
+		rng.Seed = 12345;
+		GD.Seed(12345);
+		StartMatch();
+	}
+
+	void StartMatch()
+	{
+		BattleSetup setup = new() { Stage = Content.Stages[played % Content.Stages.Length], TeamsActive = teams };
+		List<string> names = new();
+		for (int i = 0; i < 4; i++)
+		{
+			// Cycle the wizards so every one plays every stage across the run.
+			WizardData wizard = Content.Wizards[(i + played) % Content.Wizards.Length];
+			names.Add(wizard.DisplayName);
+			setup.Fighters.Add(new Fighter { Wizard = wizard, Slot = -1, Spawn = i, Label = "CPU" + (i + 1), Team = teams ? Teams.DefaultForSlot(i) : Teams.NoTeam });
+		}
+		battle = Battle.Create(setup);
+		battle.SkipCountdown = true;
+		AddChild(battle);
+		settleUntil = -1.0;
+		GD.Print($"Soak: match {played + 1}/{matches} on {setup.Stage.DisplayName}{(teams ? " (teams)" : "")}: {string.Join(", ", names)}");
+	}
+
+	public override void _PhysicsProcess(double delta)
+	{
+		if (battle == null) return;
+
+		if (!battle.Over)
+		{
+			if (battle.Time < MatchTimeLimit) return;
+			Fail($"match {played + 1} still running after {MatchTimeLimit:0}s");
+			FinishMatch();
+			return;
+		}
+
+		if (settleUntil < 0.0) settleUntil = battle.Time + SettleSeconds;
+		if (battle.Time < settleUntil) return;
+
+		if (battle.EffectCount > 0) Fail($"match {played + 1}: {battle.EffectCount} effect node(s) still alive {SettleSeconds:0}s after the result ({battle.DescribeEffects()})");
+		foreach (Wizard wizard in battle.Wizards)
+		{
+			if (!wizard.Alive) continue;
+			if (wizard.Status.Count > 0) Fail($"match {played + 1}: {wizard.Label} still carries {wizard.Status.Count} modifier(s)");
+			if (wizard.UltimateActive) Fail($"match {played + 1}: {wizard.Label} is stuck with an ultimate active");
+			if (wizard.Status.SpeedMultiplier != 1.0f) Fail($"match {played + 1}: {wizard.Label} speed multiplier is {wizard.Status.SpeedMultiplier}");
+		}
+		GD.Print($"Soak: match {played + 1} result {battle.Result} at {battle.Time:0.0}s");
+		FinishMatch();
+	}
+
+	void Fail(string message)
+	{
+		failures++;
+		GD.PrintErr("Soak: FAIL " + message);
+	}
+
+	void FinishMatch()
+	{
+		played++;
+		battle.QueueFree();
+		battle = null;
+		if (played < matches) { CallDeferred(MethodName.StartMatch); return; }
+		GD.Print($"Soak: {played} matches, {failures} failure(s)");
+		GetTree().Quit(failures == 0 ? 0 : 1);
+	}
+}

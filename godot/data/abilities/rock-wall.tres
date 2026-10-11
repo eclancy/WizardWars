@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/rockwall.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "rock-wall"
+DisplayName = "Rock Wall"
+Description = "Raises a wall that blocks movement and stops projectiles."
+Cost = 20.0
+Cooldown = 4.0
+Duration = 3.0
+Sound = ExtResource("2_sound")

@@ -27,12 +27,29 @@ echo "== headless import"
 "$GODOT_BIN" --headless --path . --import > /tmp/wizardwars-godot-import.log 2>&1
 grep -E "ERROR|SCRIPT ERROR" /tmp/wizardwars-godot-import.log | grep -v "Unrecognized UID" | head -20
 
-echo "== regression checks"
-"$GODOT_BIN" --headless --path . res://scenes/Main.tscn -- --checks > /tmp/wizardwars-godot-checks.log 2>&1
-status=$?
-grep -E "RegressionChecks:|ERROR|SCRIPT ERROR" /tmp/wizardwars-godot-checks.log
-if [ $status -ne 0 ]; then
-	echo "Checks failed (exit $status). Full log: /tmp/wizardwars-godot-checks.log"
-	exit 1
-fi
+# Runs one headless pass of the game with the given flags. --fixed-fps makes matches run
+# faster than real time. Fails on a non-zero exit or any script error in the log. The
+# "resources still in use at exit" line is the static texture caches and is ignored.
+run() {
+	local name=$1 log=/tmp/wizardwars-godot-$1.log
+	shift
+	echo "== $name"
+	"$GODOT_BIN" --headless --fixed-fps 60 --path . res://scenes/Main.tscn -- "$@" > "$log" 2>&1
+	local status=$?
+	grep -E "$FILTER" "$log" | grep -v "resources still in use at exit"
+	if [ $status -ne 0 ] || grep -E "SCRIPT ERROR|Unhandled exception|NullReferenceException" "$log" > /dev/null; then
+		echo "$name failed (exit $status). Full log: $log"
+		exit 1
+	fi
+}
+
+FILTER="FAIL|passed, |ERROR"
+run checks --checks
+FILTER="FlowTest: FAIL|steps, |ERROR"
+run flowtest --flowtest
+FILTER="AbilityTest: FAIL|casts, |ERROR"
+run abilities --abilities
+FILTER="Soak: FAIL|Soak: [0-9]+ matches|result|ERROR"
+run soak --soak=4
+run soak-teams --soak=2 --teams
 echo "All checks passed."

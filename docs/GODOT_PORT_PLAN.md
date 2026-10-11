@@ -1,6 +1,20 @@
 # Wizard Wars: Godot Port Plan
 
-Status: **Phase 0 done** (2026-10-11): `godot/` builds and passes `godot/tools/check.sh`. Next: Phase 1, the vertical slice.
+Status (2026-10-11): **Phases 0–5 done.** The Godot version is feature-complete and exports
+to Windows. `godot/tools/check.sh` passes:
+- the build and import
+- 74 regression checks
+- a scripted flow test through every menu and a Teams battle
+- all 16 abilities cast at an enemy and at a teammate
+- six leak-checked computer matches
+
+**Remaining: Phase 6.** A human playtest side by side with Unity, then retiring Unity. The
+Unity Editor licence must be renewed in Unity Hub first. Current state, architecture and
+the deliberate differences from Unity are in `godot/CLAUDE.md`.
+
+The phase gates that asked for a human playtest (Phase 1's feel check, and Phases 2–4) were
+replaced by automated tests and screenshots while the port was built in one pass. The feel
+check is still owed, and is part of Phase 6.
 
 ## Decisions
 

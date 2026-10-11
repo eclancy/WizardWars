@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StageData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/StageData.cs" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/art/stages/woodland.png" id="2_background"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "woodland"
+DisplayName = "Woodland"
+Background = ExtResource("2_background")
+Spawns = PackedVector2Array(-7, 4, 7, 4, -7, -4, 7, -4)
+ComputerSpawn = 3
+Rocks = PackedVector2Array()
+Cacti = PackedVector2Array()

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/rodlightning.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "lightning-rod"
+DisplayName = "Lightning Rod"
+Description = "Plants a rod that shocks everyone nearby, you included, every half second."
+Cost = 30.0
+Cooldown = 3.5
+Duration = 6.0
+Interval = 0.5
+Radius = 1.8
+Damage = 3.0
+Sound = ExtResource("2_sound")

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/flamethrower.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "flamethrower"
+DisplayName = "Flamethrower"
+Description = "Hold to breathe fire. Drains energy while held and slows you a little."
+Cost = 10.0
+Drain = 10.0
+SlowPercent = 15.0
+Duration2 = 1.5
+Range = 2.5
+Damage = 3.0
+Interval = 1.0
+Duration = 2.0
+Damage2 = 1.0
+Sound = ExtResource("2_sound")

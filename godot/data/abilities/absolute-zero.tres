@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "absolute-zero"
+DisplayName = "Absolute Zero"
+Description = "Enemies near you are slowed and their energy stops recharging."
+Radius = 8.0
+SlowPercent = 35.0
+Duration = 5.0

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/icicle.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "icicle"
+DisplayName = "Icicle"
+Description = "A fast shard of ice. Free to cast."
+Cooldown = 0.55
+Damage = 20.0
+Speed = 9.0
+Duration = 2.0
+Sound = ExtResource("2_sound")

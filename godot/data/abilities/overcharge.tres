@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "overcharge"
+DisplayName = "Overcharge"
+Description = "Sprays lightning in every direction and scatters short-lived rods around you."
+Duration = 4.0
+Interval = 0.3
+Range = 5.0
+Duration2 = 2.5

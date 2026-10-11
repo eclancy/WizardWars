@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/ringoffire.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "ring-of-fire"
+DisplayName = "Ring of Fire"
+Description = "Twelve flames burst up in a ring at the target. Anyone touching one catches fire."
+Cost = 35.0
+Cooldown = 4.0
+Radius = 2.6
+Count = 12
+Duration = 4.0
+Duration2 = 6.0
+Damage2 = 3.0
+Sound = ExtResource("2_sound")

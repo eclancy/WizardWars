@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "meteor-storm"
+DisplayName = "Meteor Storm"
+Description = "Meteors rain across the whole arena. They never hit you or your team."
+Count = 10
+Interval = 0.45
+Range = 9.0
+Radius = 3.0
+Damage = 28.0
+Damage2 = 5.0
+Duration = 0.9

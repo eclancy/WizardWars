@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/icepatch.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "ice-patch"
+DisplayName = "Ice Patch"
+Description = "Freezes the ground at the target. Anyone moving on it slides and cannot steer."
+Cost = 30.0
+Cooldown = 4.83
+Duration = 2.0
+Radius = 0.95
+Sound = ExtResource("2_sound")

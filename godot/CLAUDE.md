@@ -1,15 +1,20 @@
 # CLAUDE.md — Wizard Wars (Godot port)
 
-Working notes for agents in `godot/`. The plan, phases and design decisions live in
-`../docs/GODOT_PORT_PLAN.md`; read it before starting a phase. The Unity project in the
-repo root is the **reference** for behaviour and tuning until parity sign-off. Read its
-code and `../CLAUDE.md` to learn what a feature does, and do not change Unity gameplay
-while the port runs.
+Working notes for agents in `godot/`. The plan and design decisions live in
+`../docs/GODOT_PORT_PLAN.md`. The Unity project in the repo root is the **reference** for
+behaviour and tuning until the side-by-side sign-off. Read its code and `../CLAUDE.md` to
+learn what a feature did, and do not change Unity gameplay while the port runs.
 
 ## Status
 
-Phase 0 (scaffolding) is done. The project builds and passes the headless checks. There
-is no gameplay yet; `Main.tscn` shows a placeholder label.
+The port is **feature-complete**. It has the title, Character Select (join by device,
+Free-for-All/Teams, team switching, kit lists, how-to-play), Stage Select, all four stages,
+all four wizards with all 16 abilities and their telegraphs, the HUD, a computer opponent,
+the countdown, results and rematch, and a Windows export. Every automated check passes.
+
+**Not yet done:**
+- A human playtest, compared side by side with Unity (Phase 6 of the plan).
+- Tuning: matches are short because free 20-damage bolts dominate, exactly as in Unity.
 
 ## Stack
 
@@ -25,50 +30,112 @@ is no gameplay yet; `Main.tscn` shows a placeholder label.
 bash tools/check.sh
 ```
 
-1. `dotnet build` — C# compiles.
-2. Headless `--import` — assets import and `.uid` files are generated.
-3. A headless run of `Main.tscn -- --checks` — `RegressionChecks` prints
-   `RegressionChecks: PASS|FAIL …` lines and the exit code is the failure count.
+It runs, and fails on the first failure:
 
-`dotnet build` alone is **not** verification: it cannot see scene wiring, resource paths
-or signals. Gameplay still needs an Editor playtest at each phase gate.
+1. `dotnet build`.
+2. A headless `--import`.
+3. `--checks`: `RegressionChecks`. This covers settings, every wizard, ability and stage
+   resource, stage geometry, the status-effect rules, friendly fire, and ultimate charge.
+4. `--flowtest`: `FlowTest` drives two scripted pads through every menu and a Teams battle,
+   back to Character Select.
+5. `--abilities`: `AbilityTest` casts all 16 abilities at an enemy (each must do its job) and
+   at a teammate (each must do nothing). Afterwards the arena must be empty.
+6. `--soak`: `SoakTest` plays computer-only matches, Free-for-All and Teams, faster than real
+   time. After each one, no effect node, modifier or ultimate lock may be left behind.
 
-When a rule is easy to break silently (a tuning invariant, a resource path, a physics
-layer, friendly fire), add a check to `scripts/RegressionChecks.cs`.
+Run the steps after `dotnet build` with
+`--headless --fixed-fps 60 --path . res://scenes/Main.tscn -- <flag>`.
 
-## Known Godot gotchas (from DrawFight and Wizard Survivors)
+`dotnet build` alone is **not** verification. A change to feel or visuals also needs a look:
 
-- "Unrecognized UID" or "Failed loading resource" before the first import means the asset
-  has not been imported yet, not that something is broken. Run `tools/check.sh` (it
-  imports) after adding any art.
-- A new PNG is `null` from `GD.Load` until it has been imported, and that fails silently.
-- `.uid` and `.import` sidecar files are committed. `.godot/`, `bin/`, `obj/` and
-  `build/` are not. Never read or edit `.godot/`.
-- Calling `Call("Method", …)` from C# must pass every argument, including ones with C#
-  defaults, or it fails silently.
-- Use `ResourceLoader.Load` with the default cache mode. `CacheMode.Replace` returned blank
-  instances on first load in Wizard Survivors.
-- Menus built in code must grab focus, or a gamepad cannot use them.
-- Collision bugs are usually mask mismatches. Use the named layers below.
-- C# Godot cannot export to the web. The target is Windows desktop.
-- Exporting needs the exact mono export templates in
-  `%APPDATA%\Godot\export_templates\4.5.1.stable.mono\`.
+```bash
+"$GODOT_BIN" --path . --resolution 1920x1080 res://scenes/Main.tscn -- --screen=demo --shot=C:/tmp/shot.png --shot-after=8
+```
 
-## Conventions
+`--screen` takes `title`, `select`, `stage`, `battle` or `demo` (four computer wizards; add
+`--teams` for 2v2).
 
-- Flat `scripts/` and `scenes/`; data resources in `data/`; art, sound and music in `assets/`.
-  Debug and probe scenes are prefixed `_`.
-- `public partial class` for nodes, `[Export]` auto-properties, tabs, and comments that
-  explain *why*.
-- **Units:** every Unity distance, radius, speed or position goes through `Units.U(...)`
-  (90 px per Unity unit; Unity +y is Godot up). Tuning values can then be copied
-  straight from the Unity docs.
-- **Physics layers** (named in `project.godot`, checked by `RegressionChecks`):
-  1 `solids`, 2 `wizards`, 3 `projectiles`, 4 `zones`.
-- **Input:** poll devices directly through `IInputSource` (the DrawFight pattern), not the
-  InputMap. The AI is an `IInputSource` too.
-- **Tuning** lives only in `.tres` data resources, never duplicated in scenes.
-- One source of truth for match state (`Session`). Do not recreate Unity's
-  GlobalHandler/bridge split.
-- Every hostile effect goes through `Combat.Apply(hit, target)`, which owns the
-  friendly-fire rule. Status effects are keyed by their source, so they cannot leak.
+Export: `"$GODOT_BIN" --headless --path . --export-release "Windows Desktop" build/windows/WizardWars.exe`.
+`build/` is not committed. The exported exe accepts the same flags.
+
+## Architecture
+
+- **`GameRoot`** (on `Main.tscn`) swaps screens as children: `TitleScreen`,
+  `CharacterSelectScreen`, `StageSelectScreen`, `Battle`. It polls `Devices` once per
+  **physics** step. Menus and wizards read input in `_PhysicsProcess` too, so a press is seen
+  exactly once.
+- **Input.** `IInputSource.Poll() → InputState`:
+  - `KeyboardInputSource` (P1 keys as in Unity) and `GamepadInputSource` (read by device id).
+  - `DeviceInputSource` reads a joined player's device.
+  - `CpuInputSource` is the AI, ported from Unity's `WizardAI`.
+
+  A player joins a slot with whichever device presses Start, and keeps it.
+- **`Session`** is the single source of truth: slots (joined, locked, device, wizard, team),
+  `TeamsMode` and `StageIndex`. It replaces Unity's GlobalHandler, the LocalMultiplayer
+  runtime and the bridge between them.
+- **Data:** `data/abilities/*.tres` (`AbilityData`), `data/wizards/*.tres` (`WizardData`),
+  `data/stages/*.tres` (`StageData`), loaded through `Content`.
+  - Tuning lives **only** there.
+  - `tools/gen-data.sh` records where every starting number came from in Unity. It
+    regenerates the files and **overwrites editor tuning**, so only run it on purpose.
+- **`Battle`** builds the arena, spawns from a `BattleSetup` (`FromSession`, or by hand in
+  tests), runs the countdown, and decides the result. It keeps the registries effects
+  query: `Wizards`, `Projectiles`, `Patches`, `FireSources`, `RockWalls`. It answers
+  `IsInsideSolid` with a physics shape query on the solids layer. Effects reach it through
+  `Battle.Current`.
+- **`Wizard`** (`CharacterBody2D`) owns health, energy, ultimate charge, burn, stun,
+  movement, aim, and ability dispatch, and reads one `IInputSource`.
+- **Abilities** are plain C# (`Ability`, `Ultimate`, built by `AbilityFactory` from the
+  ability id). What they create is an **effect node** owned by the battle, not the wizard:
+  `Projectile`, `FireSource`, `FlameJet`, `Meteor`/`MeteorStorm`, `IcePatch`/`MudPatch`
+  (`GroundPatch`), `IceWave`, `Aura` (Absolute Zero, Earthquake), `RockWall`,
+  `LightningRod`, `Overcharge`, `SpeedTrail`. Effects outlive their caster correctly and
+  clean up after themselves.
+- **Hits use geometry, not physics callbacks.** Hit tests are circle against body box,
+  ellipse for patches. Physics is only for walking into walls, obstacles, rock walls and
+  rods. That keeps headless runs identical and removes collision masks as a source of bugs.
+- **Friendly fire:** `Combat.CanAffect(caster, casterTeam, target, hitsCaster)`. Effects
+  record the caster's team when cast. Patches and rods hit their own caster, as in Unity.
+  Teammates are never hit by anything. Any new hostile effect must use this check.
+- **Status effects:** `StatusEffects` holds modifiers (slow, haste, no-regen, slide) keyed
+  by the source node. `Prune` drops any whose source was freed, so effects cannot leak the
+  way Unity's additive `slow()`/`removeSlow()` did.
+- **`ProceduralFx`** is Unity's pixel generators ported (rows flipped, because Godot images
+  are top-down), plus `AreaDisc` for showing ultimate radii.
+- **`Units`:** every Unity distance or position goes through `Units.U(...)` (90 px per Unity
+  unit; Unity +y is Godot up). `Units.SpriteScale` converts a Unity transform scale for the
+  100-ppu art.
+
+## Deliberate differences from Unity
+
+- **Not a leak or a bug:** status effects cannot leak, a big slow can never run you
+  backwards, and a stun no longer hides an ongoing burn.
+- **New feedback:**
+  - A hit flashes the wizard red.
+  - P1–P4/CPU labels sit over each wizard.
+  - Ultimates show a faint disc at their real radius. Unity's overlay image ended up a third
+    of a unit wide.
+  - The HUD drops below a wizard standing at the top wall.
+- **Projectiles keep the last aim direction** when the stick is released (Unity always fired
+  right). Placed abilities still land at your feet with the stick released, as in Unity.
+- **The computer can hold the flamethrower.** It has no targeter shown.
+- **Rematch is faster:** players stay joined and locked after a match, so Start goes again.
+  Unity made everyone rejoin.
+- **Stage Select:** any joined player can drive it. Unity picked one at random.
+- **Not ported:** the LB "fourth" slot, Unity's GlobalHandler/bridge split, and the
+  target-dummy AI.
+
+## Known Godot gotchas
+
+- **Script classes:** a C# **node** class must live in a file of the same name, or Godot never
+  attaches it and `_PhysicsProcess` silently never runs. Plain C# classes can share files.
+- **Unimported assets:** "Unrecognized UID" or "Failed loading resource" before the first
+  import means "not imported yet". A new PNG is `null` from `GD.Load` until imported.
+- **Committed files:** `.uid` and `.import` sidecars are committed; `.godot/`, `bin/`, `obj/`
+  and `build/` are not. Never read or edit `.godot/`.
+- **Line endings:** `godot/.gitattributes` pins LF, because the repo root uses `core.autocrlf`.
+- **Positioning UI:** setting `Position` on a centre-anchored Control places it from the
+  parent's corner. Centre with a `CenterContainer` instead (see `Battle.Centred`).
+- **Shell:** heredocs on this machine mangle quotes. Write generator scripts as files.
+- **Music:** the battle and title tracks are commercial soundtracks. They are fine privately
+  but **must be replaced before any public release**.

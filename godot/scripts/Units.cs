@@ -26,4 +26,13 @@ public static class Units
 	/// so y is flipped; both use the screen centre as the origin here.
 	/// </summary>
 	public static Vector2 U(float x, float y) => new(x * PixelsPerUnit, -y * PixelsPerUnit);
+
+	/// <summary>A Unity position vector (+y up) as a Godot position.</summary>
+	public static Vector2 U(Vector2 unity) => U(unity.X, unity.Y);
+
+	/// <summary>
+	/// Godot sprite scale for imported art shown at a Unity transform scale. Unity imported
+	/// this project's PNGs at 100 pixels per unit.
+	/// </summary>
+	public static float SpriteScale(float unityScale, float unityPixelsPerUnit = 100.0f) => unityScale * PixelsPerUnit / unityPixelsPerUnit;
 }

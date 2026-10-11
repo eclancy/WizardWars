@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WizardData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/WizardData.cs" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/art/wizards/frost.png" id="2_portrait"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/targeter-blue.png" id="3_targeter"]
+[ext_resource type="Resource" path="res://data/abilities/icicle.tres" id="4_basic"]
+[ext_resource type="Resource" path="res://data/abilities/ice-patch.tres" id="5_second"]
+[ext_resource type="Resource" path="res://data/abilities/ice-wave.tres" id="6_third"]
+[ext_resource type="Resource" path="res://data/abilities/absolute-zero.tres" id="7_ultimate"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "FrostWizard"
+DisplayName = "Frost Wizard"
+Portrait = ExtResource("2_portrait")
+Targeter = ExtResource("3_targeter")
+Colour = Color(0.45, 0.75, 1, 1)
+Basic = ExtResource("4_basic")
+Second = ExtResource("5_second")
+Third = ExtResource("6_third")
+Ultimate = ExtResource("7_ultimate")

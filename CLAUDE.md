@@ -244,8 +244,9 @@ check costs nothing there.
 - `CLAUDE_HANDOFF.md` — migration record, ability design intent, generated art
   inventory, open risks.
 - `GAME_COMPLETION_PLAN.md` — current milestone plan.
-- `docs/GODOT_PORT_PLAN.md` — planned Godot 4.5 C# rewrite in `godot/`. While it runs,
-  Unity is the frozen reference: bug fixes only, no gameplay changes.
+- `docs/GODOT_PORT_PLAN.md` — the Godot 4.5 C# rewrite in `godot/`. It is feature-complete
+  and awaiting the side-by-side playtest. Until Unity is retired, Unity is the frozen
+  reference: bug fixes only, no gameplay changes. Work in `godot/` follows `godot/CLAUDE.md`.
 - `AGENTS.md` / `.github/copilot-instructions.md` — same guidance for other agents.
 - `docs/` — architecture, input mapping, controller reference, smoke checklist,
   local-multiplayer roadmap.
