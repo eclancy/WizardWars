@@ -200,6 +200,16 @@ public class FrostWizard : MonoBehaviour, IWizardAbilities
         controllerScript.ultimateActive = true;
         StartCoroutine(AbsoluteZero());
     }
+    // Absolute Zero slows enemies within the radius and stops their energy regen for
+    // as long as they stay inside. slow()/removeSlow() are additive, so — as with
+    // Earthquake — each player carries this slow at most once: `frozen` records who
+    // has it, leaving the radius releases it, and the ultimate ending (or the caster
+    // dying) releases everyone still caught. It used to add another 35% every tick and
+    // never take it off, which left anyone it touched stuck for the rest of the match.
+    private const float AbsoluteZeroSlow = 35f;
+    private const float AbsoluteZeroRadius = 8f;
+    private readonly HashSet<GameObject> frozen = new HashSet<GameObject>();
+
     private IEnumerator AbsoluteZero()
     {
         if (attack4 != null) attack4.SetActive(true);
@@ -210,26 +220,45 @@ public class FrostWizard : MonoBehaviour, IWizardAbilities
             foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
             {
                 if (player == gameObject || Teams.AreAllies(gameObject, player)) continue;
-                ControllerScript c = player.GetComponent<ControllerScript>();
-                PlayerStats p = player.GetComponent<PlayerStats>();
-                if (c != null && p != null && (player.transform.position - transform.position).sqrMagnitude <= 64f)
-                {
-                    c.slow(35);
-                    p.noRecharge();
-                }
+                bool inside = (player.transform.position - transform.position).sqrMagnitude <= AbsoluteZeroRadius * AbsoluteZeroRadius;
+                if (inside && !frozen.Contains(player)) Freeze(player);
+                else if (!inside && frozen.Contains(player)) Thaw(player);
             }
-            elapsed += 0.5f;
-            yield return new WaitForSeconds(0.5f);
+            elapsed += 0.1f;
+            yield return new WaitForSeconds(0.1f);
         }
-        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
-        {
-            PlayerStats p = player.GetComponent<PlayerStats>();
-            if (p != null) p.recharge();
-        }
+        ThawAll();
         controllerScript.ultimateActive = false;
         allow4 = true;
         if (attack4 != null) attack4.SetActive(false);
     }
+
+    private void Freeze(GameObject player)
+    {
+        ControllerScript c = player.GetComponent<ControllerScript>();
+        PlayerStats p = player.GetComponent<PlayerStats>();
+        if (c == null || p == null) return;
+        c.slow(AbsoluteZeroSlow);
+        p.noRecharge();
+        frozen.Add(player);
+    }
+
+    private void Thaw(GameObject player)
+    {
+        frozen.Remove(player);
+        if (player == null) return;
+        player.GetComponent<ControllerScript>()?.removeSlow(AbsoluteZeroSlow);
+        player.GetComponent<PlayerStats>()?.recharge();
+    }
+
+    private void ThawAll()
+    {
+        foreach (GameObject player in new List<GameObject>(frozen)) Thaw(player);
+        frozen.Clear();
+    }
+
+    // The coroutine dies with the caster, so release anyone still frozen here too.
+    private void OnDestroy() => ThawAll();
 
     private IEnumerator PulseAreaVisual(GameObject visual, float minScale, float maxScale, float duration)
     {

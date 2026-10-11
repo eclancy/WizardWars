@@ -71,7 +71,11 @@ Current kits:
 - Fire ultimate: Meteor Storm rains `meteorStormCount` meteors on random points inside
   `meteorStormArea`, several in the air at once, damage falling off from
   `meteorCentreDamage` to `meteorEdgeDamage`. It leaves no fire.
-- Frost ultimate: Absolute Zero slows enemies and disables their energy recharge; no stun.
+- Frost ultimate: Absolute Zero slows enemies within 8 units by 35% and stops their
+  energy recharge while they stay inside; no stun. Like Earthquake, the slow is applied
+  once per player and released on leaving, when the ultimate ends, or if the caster
+  dies. It used to add another 35% every half second and never remove it, which left
+  anyone it touched frozen or moving backwards for the rest of the match.
 - Earth ultimate: Earthquake shakes the ground around the caster and slows anyone inside
   `quakeRadius` by `quakeSlow` for as long as they stay in it. The caster is not slowed.
 - Electricity ultimate: Overcharge rapidly fires electricity balls and randomly places

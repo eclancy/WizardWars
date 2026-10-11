@@ -117,14 +117,15 @@ public class EarthWizard : MonoBehaviour, IWizardAbilities
     //
     // slow()/removeSlow() are additive, so every slow applied has to be matched
     // exactly once. `slowed` tracks who is currently carrying this quake's slow, so
-    // leaving the radius or the quake ending always removes it.
+    // leaving the radius, the quake ending, or the caster dying always removes it.
+    private readonly HashSet<ControllerScript> slowed = new HashSet<ControllerScript>();
+
     private IEnumerator Earthquake()
     {
         if (attack4 != null) attack4.SetActive(true);
         StartCoroutine(PulseAreaVisual(attack4, 1.0f, 1.25f, quakeDuration));
         StartCoroutine(Shockwaves(quakeDuration));
 
-        HashSet<ControllerScript> slowed = new HashSet<ControllerScript>();
         float elapsed = 0f;
         while (elapsed < quakeDuration)
         {
@@ -140,14 +141,23 @@ public class EarthWizard : MonoBehaviour, IWizardAbilities
             elapsed += 0.1f;
             yield return new WaitForSeconds(0.1f);
         }
-        // Release anyone still caught, including players destroyed mid-quake.
-        foreach (ControllerScript c in slowed) if (c != null) c.removeSlow(quakeSlow);
+        ReleaseQuakeSlow();
 
         if (controllerScript != null) controllerScript.ultimateActive = false;
         if (attack4 != null) attack4.SetActive(false);
         yield return new WaitForSeconds(2f);
         allow4 = true;
     }
+
+    // Release anyone still caught, including players destroyed mid-quake.
+    private void ReleaseQuakeSlow()
+    {
+        foreach (ControllerScript c in slowed) if (c != null) c.removeSlow(quakeSlow);
+        slowed.Clear();
+    }
+
+    // The quake coroutine dies with the caster, so release its slow here too.
+    private void OnDestroy() => ReleaseQuakeSlow();
 
     private IEnumerator Shockwaves(float duration)
     {
