@@ -68,7 +68,12 @@ Run the steps after `dotnet build` with
 `--teams` for 2v2).
 
 Export: `"$GODOT_BIN" --headless --path . --export-release "Windows Desktop" build/windows/WizardWars.exe`.
-`build/` is not committed. The exported exe accepts the same flags.
+`build/` is not committed. The exported exe accepts the same flags, plus `--no-update`.
+
+**Releases:** `bash tools/release/release.sh X.Y.Z` (on `master`, clean tree) exports, packages
+and publishes a GitHub Release; every downloaded copy updates itself from it via `UpdateScreen`,
+the first screen of an exported Windows build. Read `docs/releasing.md` before touching the
+export preset, `UpdateScreen` or `tools/release/`.
 
 ## Architecture
 

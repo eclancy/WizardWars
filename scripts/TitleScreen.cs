@@ -39,6 +39,10 @@ public partial class TitleScreen : Control
 			AddChild(line);
 		}
 
+		Label version = Ui.Label($"v{UpdateScreen.CurrentVersion}", 22, new Color(1, 1, 1, 0.55f), HorizontalAlignment.Right);
+		Ui.Place(version, 1640, 1030, 250, 36);
+		AddChild(version);
+
 		Sfx.Music("res://assets/music/title.mp3");
 	}
 

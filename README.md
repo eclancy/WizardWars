@@ -57,6 +57,8 @@ To make a Windows build (the Godot 4.5.1 mono export templates must be installed
 godot --headless --path . --export-release "Windows Desktop" build/windows/WizardWars.exe
 ```
 
+To publish a release that every downloaded copy updates itself to, see `docs/releasing.md`.
+
 ## Credits
 
 The music is CC0, from OpenGameArt; see `assets/music/CREDITS.md`.

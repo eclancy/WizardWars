@@ -15,6 +15,7 @@ using Godot;
 ///   --teams               with --soak or --demo: 2v2 Teams
 ///   --screen=NAME         start on title | select | stage | battle | demo
 ///   --shot=PATH           save a screenshot to PATH after --shot-after seconds (default 3), then quit
+///   --no-update           an exported Windows build skips its update check (see docs/releasing.md)
 /// </summary>
 public partial class GameRoot : Node2D
 {
@@ -57,7 +58,11 @@ public partial class GameRoot : Node2D
 			case "stage": DemoJoin(); ShowStageSelect(); break;
 			case "battle": DemoJoin(); ShowBattle(); break;
 			case "demo": ShowDemo(flags.ContainsKey("teams")); break;
-			default: ShowTitle(); break;
+			// A downloaded copy checks ecec.dev for a newer version before anything else.
+			default:
+				if (UpdateScreen.ShouldCheck()) Swap(new UpdateScreen { Name = "Update" }, true);
+				else ShowTitle();
+				break;
 		}
 	}
 
