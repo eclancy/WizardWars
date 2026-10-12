@@ -63,8 +63,13 @@ reported itself up to date. With the server down it went straight to the title, 
 ## Making a release
 
 ```sh
-bash tools/release/release.sh 0.2.0
+bash tools/release/release.sh 0.2.0 "New stage: the Volcano. Ice Patch lasts a little longer."
 ```
+
+The quoted text is optional: it is what players see under "What's new" on
+`ecec.dev/games/wizard-wars`, so write it for them. Leave it out and the release just says how to
+download. The script puts it above the download instructions, which always start with
+"Download **" because the site strips the paragraph that starts that way.
 
 Run it on `master` with a clean working tree. The script sets the version, builds, exports,
 packages, commits "Release v0.2.0", tags it, pushes master and the tag, and runs
