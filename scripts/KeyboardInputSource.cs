@@ -20,7 +20,8 @@ public class KeyboardInputSource : IInputSource
 		Vector2 move = new(Axis(Key.A, Key.D), Axis(Key.W, Key.S));
 		Vector2 aim = new(Axis(Key.Left, Key.Right), Axis(Key.Up, Key.Down));
 		bool third = Down(Key.Key3), ultimate = Down(Key.Key5);
-		bool start = Down(Key.Enter) || Down(Key.KpEnter), confirm = Down(Key.Space), back = Down(Key.Backspace);
+		// Alt+Enter toggles fullscreen (GameRoot), so it is not also a menu Start.
+		bool start = (Down(Key.Enter) || Down(Key.KpEnter)) && !Down(Key.Alt), confirm = Down(Key.Space), back = Down(Key.Backspace);
 		bool mode = Down(Key.Tab), team = Down(Key.T);
 
 		// Menus step on WASD or the arrows.

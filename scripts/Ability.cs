@@ -61,6 +61,7 @@ public abstract class Ultimate : Ability
 	{
 		if (Owner.UltimateActive || !Owner.TryUseUltimate()) return false;
 		Owner.UltimateActive = true;
+		Battle.UltimatesCast++;
 		Sfx.Play(Data.Sound);
 		Cast();
 		return true;

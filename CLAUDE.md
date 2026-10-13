@@ -22,8 +22,11 @@ Every automated check passes.
 
 **Open:**
 - Human playtesting: `docs/playtest-checklist.md`.
-- Tuning: matches are short because the free 20-damage bolts dominate (carried over
-  unchanged from Unity), so ultimates rarely come up.
+- Tuning beyond the first pass. On 2026-10-13 health went from 100 to 250 and ultimate charge
+  was raised, because fights ended in about 10 s, before anyone's ultimate filled. Computer
+  matches now last about 30 s with an ultimate in every one: 3 per duel, 5.6 per four-way.
+  Measure any balance change with
+  `--soak=12 --players=2` (and `--players=4`), which prints a balance line.
 
 **Public repo:** `eclancy/WizardWars` is public, so every push publishes. Add only assets with
 a licence that allows that, and record their credits (see `assets/music/CREDITS.md`).
@@ -32,6 +35,10 @@ a licence that allows that, and record their credits (see `assets/music/CREDITS.
 
 - Godot **4.5.1 .NET** (mono), C#: `Godot.NET.Sdk/4.5.1`, `net9.0`, `Nullable=annotations`.
 - GL Compatibility renderer, 1920×1080, stretch `canvas_items` / `expand`, 2D gravity 0.
+- **On-screen text names only gamepad controls.** The keyboard still works for player 1
+  (keys in `KeyboardInputSource` and the README), but no screen mentions a key.
+- Starts **fullscreen** (`window/size/mode=3`). F11 or Alt+Enter toggles a window
+  (`GameRoot._UnhandledInput`). Alt+Enter is not also a menu Start.
 - Godot binary: `$GODOT_BIN`, or by default
   `C:/Program Files (x86)/Godot_v4.5.1-stable_mono_win64/Godot_v4.5.1-stable_mono_win64_console.exe`.
   Use the **console** exe so output reaches the terminal.
@@ -61,8 +68,11 @@ Run the steps after `dotnet build` with
 `dotnet build` alone is **not** verification. A change to feel or visuals also needs a look:
 
 ```bash
-"$GODOT_BIN" --path . --resolution 1920x1080 res://scenes/Main.tscn -- --screen=demo --shot=C:/tmp/shot.png --shot-after=8
+"$GODOT_BIN" --path . res://scenes/Main.tscn -- --screen=demo --shot=C:/tmp/shot.png --shot-after=8
 ```
+
+`--shot` forces a 1920×1080 window, because the game otherwise starts fullscreen at the
+monitor's resolution.
 
 `--screen` takes `title`, `select`, `stage`, `battle` or `demo` (four computer wizards; add
 `--teams` for 2v2).
@@ -91,8 +101,10 @@ export preset, `UpdateScreen` or `tools/release/`.
   `TeamsMode` and `StageIndex`. It replaces Unity's GlobalHandler, the LocalMultiplayer
   runtime and the bridge between them.
 - **Data:** `data/abilities/*.tres` (`AbilityData`), `data/wizards/*.tres` (`WizardData`),
-  `data/stages/*.tres` (`StageData`), loaded through `Content`.
+  `data/stages/*.tres` (`StageData`), and `data/balance.tres` (`BalanceData`: health, energy,
+  speed and ultimate charge for every wizard), all loaded through `Content`.
   - Tuning lives **only** there.
+  - `gen-data.sh` does not write `balance.tres`; it is edited by hand or in the inspector.
   - `tools/gen-data.sh` records where every starting number came from in Unity. It
     regenerates the files and **overwrites editor tuning**, so only run it on purpose.
 - **`Battle`** builds the arena, spawns from a `BattleSetup` (`FromSession`, or by hand in

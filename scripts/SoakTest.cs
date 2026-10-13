@@ -18,17 +18,22 @@ public partial class SoakTest : Node
 
 	readonly int matches;
 	readonly bool teams;
+	readonly int players = 4;
 	int played, failures;
+	// Balance report: how long fights last and whether ultimates come up.
+	double totalSeconds;
+	int totalUltimates, matchesWithUltimate;
 	Battle battle;
 	double settleUntil = -1.0;
 	readonly RandomNumberGenerator rng = new();
 
 	public SoakTest() { }
 
-	public SoakTest(int matches, bool teams)
+	public SoakTest(int matches, bool teams, int players = 4)
 	{
 		this.matches = matches;
 		this.teams = teams;
+		this.players = teams ? 4 : Mathf.Clamp(players, 2, 4);
 		Name = "SoakTest";
 	}
 
@@ -43,7 +48,7 @@ public partial class SoakTest : Node
 	{
 		BattleSetup setup = new() { Stage = Content.Stages[played % Content.Stages.Length], TeamsActive = teams };
 		List<string> names = new();
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < players; i++)
 		{
 			// Cycle the wizards so every one plays every stage across the run.
 			WizardData wizard = Content.Wizards[(i + played) % Content.Wizards.Length];
@@ -80,7 +85,10 @@ public partial class SoakTest : Node
 			if (wizard.UltimateActive) Fail($"match {played + 1}: {wizard.Label} is stuck with an ultimate active");
 			if (wizard.Status.SpeedMultiplier != 1.0f) Fail($"match {played + 1}: {wizard.Label} speed multiplier is {wizard.Status.SpeedMultiplier}");
 		}
-		GD.Print($"Soak: match {played + 1} result {battle.Result} at {battle.Time:0.0}s");
+		GD.Print($"Soak: match {played + 1} result {battle.Result} after {battle.EndedAt:0.0}s, {battle.UltimatesCast} ultimate(s)");
+		totalSeconds += battle.EndedAt;
+		totalUltimates += battle.UltimatesCast;
+		if (battle.UltimatesCast > 0) matchesWithUltimate++;
 		FinishMatch();
 	}
 
@@ -96,7 +104,12 @@ public partial class SoakTest : Node
 		battle.QueueFree();
 		battle = null;
 		if (played < matches) { CallDeferred(MethodName.StartMatch); return; }
+		if (played > 0)
+			GD.Print($"Soak: balance - average match {totalSeconds / played:0.0}s, {(float)totalUltimates / played:0.0} ultimates per match, ultimates in {matchesWithUltimate}/{played} matches");
 		GD.Print($"Soak: {played} matches, {failures} failure(s)");
-		GetTree().Quit(failures == 0 ? 0 : 1);
+		// Quit a moment later, so the last battle is actually freed first; quitting in the same
+		// frame as its QueueFree reports its collision shapes as leaked at exit.
+		int exitCode = failures == 0 ? 0 : 1;
+		GetTree().CreateTimer(0.2).Timeout += () => GetTree().Quit(exitCode);
 	}
 }

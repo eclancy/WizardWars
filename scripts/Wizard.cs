@@ -5,23 +5,17 @@ using Godot;
 /// charge, burn and stun, moves itself, and dispatches its four abilities. It reads a single
 /// <see cref="IInputSource"/> and cannot tell a pad, the keyboard or the AI apart.
 ///
-/// Numbers come from the Unity PlayerStats / ControllerScript and are in Unity units where
-/// they are distances (see <see cref="Units"/>).
+/// Health, energy, speed and ultimate charge come from data/balance.tres (<see cref="BalanceData"/>);
+/// distances are in Unity units (see <see cref="Units"/>).
 /// </summary>
 public partial class Wizard : CharacterBody2D
 {
-	public const float MaxHealth = 100.0f;
-	public const float MaxEnergy = 100.0f;
-	const float EnergyRegen = 20.0f;
-	const float BaseSpeed = 4.0f;            // Unity units per second
 	const float TargeterRange = 4.5f;        // Unity units
 	const float SpriteUnityScale = 0.15f;    // the scale ParkBattle spawned players at
 
-	// The ultimate is mostly earned: a slow trickle, plus charge for spending energy
-	// (fighting) and for taking damage (a way back in for whoever is losing).
-	const float UltimateChargeRate = 1.2f;
-	const float UltimateChargePerEnergy = 0.3f;
-	const float UltimateChargePerDamage = 0.3f;
+	static BalanceData Balance => Content.Balance;
+	public static float MaxHealth => Balance.MaxHealth;
+	public static float MaxEnergy => Balance.MaxEnergy;
 
 	/// <summary>Body hit box, from the Unity player collider (0.9 x 1.41 units at spawn scale).</summary>
 	public static readonly Vector2 BodySize = new(Units.U(0.9f), Units.U(1.41f));
@@ -142,7 +136,7 @@ public partial class Wizard : CharacterBody2D
 			return false;
 		}
 		Energy -= amount;
-		AddUltimateCharge(amount * UltimateChargePerEnergy);
+		AddUltimateCharge(amount * Balance.UltimateChargePerEnergy);
 		return true;
 	}
 
@@ -150,7 +144,7 @@ public partial class Wizard : CharacterBody2D
 	{
 		if (!Alive || amount <= 0.0f) return;
 		Health -= amount;
-		AddUltimateCharge(amount * UltimateChargePerDamage);
+		AddUltimateCharge(amount * Balance.UltimateChargePerDamageTaken);
 		hurtFlash = 0.18f;
 		if (Health <= 0.0f) Die();
 	}
@@ -254,8 +248,8 @@ public partial class Wizard : CharacterBody2D
 		TickBurn(dt);
 		if (!Alive) return;
 
-		if (!Status.NoRegen) Energy = Mathf.Min(MaxEnergy, Energy + EnergyRegen * dt);
-		if (fighting) AddUltimateCharge(UltimateChargeRate * dt);
+		if (!Status.NoRegen) Energy = Mathf.Min(MaxEnergy, Energy + Balance.EnergyRegen * dt);
+		if (fighting) AddUltimateCharge(Balance.UltimateChargeRate * dt);
 
 		// A brief red flash on every hit, so damage reads even without numbers.
 		hurtFlash = Mathf.Max(0.0f, hurtFlash - dt);
@@ -320,7 +314,7 @@ public partial class Wizard : CharacterBody2D
 		if (Status.Sliding && slideDirection != Vector2.Zero) direction = slideDirection;
 		else slideDirection = direction;
 
-		Velocity = direction * Units.U(BaseSpeed) * Status.SpeedMultiplier;
+		Velocity = direction * Units.U(Balance.MoveSpeed) * Status.SpeedMultiplier;
 		MoveAndSlide();
 		// Walls stop a slide rather than pinning you against them for the patch's lifetime.
 		if (GetSlideCollisionCount() > 0 && Status.Sliding) slideDirection = Vector2.Zero;

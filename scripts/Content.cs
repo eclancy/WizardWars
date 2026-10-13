@@ -25,8 +25,14 @@ public static class Content
 		"res://data/stages/storm-plateau.tres",
 	};
 
+	public const string BalancePath = "res://data/balance.tres";
+
 	static WizardData[] wizards;
 	static StageData[] stages;
+	static BalanceData balance;
+
+	/// <summary>Match-wide tuning. Falls back to the built-in defaults if the file is missing.</summary>
+	public static BalanceData Balance => balance ??= ResourceLoader.Load<BalanceData>(BalancePath) ?? new BalanceData();
 
 	// Default cache mode on purpose: Wizard Survivors found CacheMode.Replace returned blank
 	// instances on first load.

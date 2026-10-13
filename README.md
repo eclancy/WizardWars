@@ -28,6 +28,7 @@ version is preserved at the git tag [`unity-final`](../../tree/unity-final).
 | Free-for-All or Teams | Back/View | Tab |
 | Switch team | Y | T |
 | How to play (hold) | Right stick click | H |
+| Fullscreen / window | | F11 or Alt+Enter |
 
 ### The wizards
 

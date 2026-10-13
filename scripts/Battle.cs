@@ -73,6 +73,10 @@ public partial class Battle : Node2D
 	/// <summary>False during the countdown and after the result: wizards ignore input.</summary>
 	public bool Fighting { get; private set; }
 	public bool Over { get; private set; }
+	/// <summary>Ultimates cast this battle, for the soak test's balance report.</summary>
+	public int UltimatesCast { get; set; }
+	/// <summary>When the result came, in battle seconds (0 while fighting).</summary>
+	public double EndedAt => Over ? resultAt : 0.0;
 
 	public readonly List<Wizard> Wizards = new();
 	public readonly List<Projectile> Projectiles = new();
@@ -94,6 +98,7 @@ public partial class Battle : Node2D
 	TextureRect countdownImage;
 	readonly List<Projectile> spentProjectiles = new();
 	CircleShape2D probe;
+	PhysicsShapeQueryParameters2D query;
 
 	/// <summary>Skip the 3-2-1 (tests and soak runs).</summary>
 	public bool SkipCountdown;
@@ -109,6 +114,10 @@ public partial class Battle : Node2D
 	public override void _ExitTree()
 	{
 		if (Current == this) Current = null;
+		query?.Dispose();
+		probe?.Dispose();
+		query = null;
+		probe = null;
 	}
 
 	public override void _Ready()
@@ -171,16 +180,13 @@ public partial class Battle : Node2D
 	/// </summary>
 	public bool IsInsideSolid(Vector2 point, float radius)
 	{
+		// One probe shape and query per battle, reused for every call (this runs many times a
+		// frame) and released in _ExitTree. Leaving them to the .NET garbage collector meant
+		// their physics shapes could still be alive at exit.
 		probe ??= new CircleShape2D();
+		query ??= new PhysicsShapeQueryParameters2D { Shape = probe, CollisionMask = 1u << 0, CollideWithBodies = true, CollideWithAreas = false };
 		probe.Radius = Mathf.Max(1.0f, radius);
-		PhysicsShapeQueryParameters2D query = new()
-		{
-			Shape = probe,
-			Transform = new Transform2D(0.0f, point),
-			CollisionMask = 1u << 0,
-			CollideWithBodies = true,
-			CollideWithAreas = false,
-		};
+		query.Transform = new Transform2D(0.0f, point);
 		return GetWorld2D().DirectSpaceState.IntersectShape(query, 1).Count > 0;
 	}
 

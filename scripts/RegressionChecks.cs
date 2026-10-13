@@ -29,6 +29,7 @@ public static class RegressionChecks
 		CheckFriendlyFire();
 		CheckUltimateCharge();
 		CheckMusic();
+		CheckBalance();
 
 		GD.Print($"RegressionChecks: {passed} passed, {failed} failed");
 		return failed;
@@ -172,6 +173,23 @@ public static class RegressionChecks
 		AudioStream battle = Content.Sound("res://assets/music/battle.wav");
 		Expect(title is AudioStreamMP3 { Loop: true }, "title music loads and loops");
 		Expect(battle is AudioStreamWav { LoopMode: AudioStreamWav.LoopModeEnum.Forward }, "battle music loads and loops");
+	}
+
+	/// <summary>
+	/// The balance file must load (a missing file would silently fall back to the old Unity
+	/// numbers, where fights ended before anyone's ultimate filled), and the game starts
+	/// fullscreen.
+	/// </summary>
+	static void CheckBalance()
+	{
+		BalanceData balance = ResourceLoader.Load<BalanceData>(Content.BalancePath);
+		Expect(balance != null, "data/balance.tres loads");
+		if (balance == null) return;
+		Expect(balance.MaxHealth > 0 && balance.MaxEnergy > 0 && balance.MoveSpeed > 0, "balance values are positive");
+		// The passive trickle alone must fill the meter well inside a fight's length.
+		Expect(balance.UltimateChargeRate > 0 && 100.0f / balance.UltimateChargeRate < 60.0f, "the passive charge alone fills the ultimate within a minute", $"{100.0f / balance.UltimateChargeRate:0}s");
+		int mode = (int)ProjectSettings.GetSetting("display/window/size/mode", 0);
+		Expect(mode == (int)DisplayServer.WindowMode.Fullscreen, "the game starts fullscreen", $"window mode {mode}");
 	}
 
 	static void CheckUltimateCharge()

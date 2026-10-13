@@ -147,7 +147,7 @@ public partial class CharacterSelectScreen : Control
 	void Refresh()
 	{
 		modeLabel.Text = Session.TeamsMode ? "Mode: TEAMS" : "Mode: FREE-FOR-ALL";
-		hintLabel.Text = "Back/View or Tab: change mode" + (Session.TeamsMode ? "     Y or T: switch team" : "") + "     Hold RS or H: how to play";
+		hintLabel.Text = "View: change mode" + (Session.TeamsMode ? "     Y: switch team" : "") + "     Hold the right stick in: how to play";
 		statusLabel.Text = RoomStatus();
 		statusLabel.AddThemeColorOverride("font_color", EveryoneReady ? Ui.Done : Ui.Waiting);
 
@@ -180,16 +180,15 @@ public partial class CharacterSelectScreen : Control
 
 	static string RoomStatus()
 	{
-		if (Session.JoinedCount == 0) return "Press Start (Enter) to join - up to 4 players";
+		if (Session.JoinedCount == 0) return "Press Start to join - up to 4 players";
 		List<string> picking = new();
 		foreach (PlayerSlot slot in Session.Slots) if (slot.Joined && !slot.Locked) picking.Add(slot.Label);
-		if (picking.Count > 0) return "Waiting for " + string.Join(", ", picking) + " to pick a wizard (A or Space)";
+		if (picking.Count > 0) return "Waiting for " + string.Join(", ", picking) + " to pick a wizard (A)";
 		if (Session.TeamsUnbalanced) return "Both teams need at least one player";
 		return Session.JoinedCount == 1 ? "Press Start to fight the computer wizard!" : "Press Start to fight!";
 	}
 
 	static readonly string[] PadButtons = { "RT", "LT", "RB", "X" };
-	static readonly string[] KeyButtons = { "1", "2", "3", "5" };
 
 	static void DrawSlot(PlayerSlot slot, Control area)
 	{
@@ -230,32 +229,31 @@ public partial class CharacterSelectScreen : Control
 
 		if (!slot.Locked)
 		{
-			Label hint = Ui.Label("Left / right to choose\nA or Space to lock in", 20, new Color(1, 1, 1, 0.7f));
+			Label hint = Ui.Label("Left / right to choose\nA to lock in", 20, new Color(1, 1, 1, 0.7f));
 			Ui.Place(hint, 0, y, CardWidth, 64);
 			area.AddChild(hint);
 			return;
 		}
 
-		// The kit by button. Keyboard players see the number keys.
-		string[] buttons = slot.Device == Devices.Keyboard ? KeyButtons : PadButtons;
+		// The kit by pad button. Only pad controls are shown on screen.
 		AbilityData[] abilities = wizard.Abilities;
 		for (int i = 0; i < 4; i++)
 		{
-			Label row = Ui.Label($"{buttons[i],-3}  {abilities[i].DisplayName}", 21, i == 3 ? new Color(1.0f, 0.85f, 0.2f) : Colors.White, HorizontalAlignment.Left);
+			Label row = Ui.Label($"{PadButtons[i],-3}  {abilities[i].DisplayName}", 21, i == 3 ? new Color(1.0f, 0.85f, 0.2f) : Colors.White, HorizontalAlignment.Left);
 			Ui.Place(row, 40, y + i * 34, CardWidth - 60, 32);
 			area.AddChild(row);
 		}
-		Label back = Ui.Label("B or Backspace to change", 17, new Color(1, 1, 1, 0.5f));
+		Label back = Ui.Label("B to change", 17, new Color(1, 1, 1, 0.5f));
 		Ui.Place(back, 0, SlotHeight - 40, CardWidth, 30);
 		area.AddChild(back);
 	}
 
 	static readonly string[] HowToPlay =
 	{
-		"Move with the left stick (WASD). Aim with the right stick (arrow keys).",
-		"Basic attack: RT (1). It is free; you can always fire it.",
-		"Second and third: LT (2) and RB (3). They cost energy - the blue bar.",
-		"Ultimate: X (5) once the gold bar is full. It fills as you fight and as you get hit.",
+		"Move with the left stick. Aim with the right stick.",
+		"Basic attack: RT. It is free; you can always fire it.",
+		"Second and third: LT and RB. They cost energy - the blue bar.",
+		"Ultimate: X once the gold bar is full. It fills as you fight and as you get hit.",
 		"The pips under your bars show cooldowns. A red flash means not enough energy.",
 		"Free-for-All: last wizard standing wins.",
 		"Teams: knock out the other team. Your spells never hurt your teammates.",

@@ -12,6 +12,8 @@ That is what this list is for. Run the game with F5 in the editor, or from an ex
 - [ ] Holding a trigger (or 1 / 2) repeats the ability whenever it is off cooldown.
 - [ ] The flamethrower burns while RB (3) is held and stops on release or when energy runs out.
 - [ ] Four pads at once: each controls only its own wizard.
+- [ ] The game opens fullscreen. F11 or Alt+Enter switches to a window and back, and
+      Alt+Enter does not also press Start in a menu.
 
 ## Menus
 
@@ -35,5 +37,6 @@ That is what this list is for. Run the game with F5 in the editor, or from an ex
 
 ## Balance notes to collect
 
-- How long do matches last? Do ultimates ever come up?
+- How long do matches last? Does everyone get to use an ultimate? Computer matches now run
+  about 30 s with ultimates in every match, since health went from 100 to 250.
 - Is any wizard or ability clearly too strong or too weak?

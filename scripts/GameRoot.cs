@@ -13,6 +13,7 @@ using Godot;
 ///   --flowtest            drive every menu and a Teams match with scripted pads, asserting each step
 ///   --abilities           cast all 16 abilities at an enemy and at a teammate, checking each
 ///   --teams               with --soak or --demo: 2v2 Teams
+///   --players=N           with --soak: 2-4 computer wizards in Free-for-All (default 4)
 ///   --screen=NAME         start on title | select | stage | battle | demo
 ///   --shot=PATH           save a screenshot to PATH after --shot-after seconds (default 3), then quit
 ///   --no-update           an exported Windows build skips its update check (see docs/releasing.md)
@@ -49,8 +50,21 @@ public partial class GameRoot : Node2D
 
 		if (flags.ContainsKey("flowtest")) { ShowTitle(); AddChild(new FlowTest()); return; }
 		if (flags.ContainsKey("abilities")) { AddChild(new AbilityTest()); return; }
-		if (flags.ContainsKey("soak")) { AddChild(new SoakTest(flags.TryGetValue("soak", out string n) && int.TryParse(n, out int count) ? count : 6, flags.ContainsKey("teams"))); return; }
-		if (flags.TryGetValue("shot", out string shotPath)) ScheduleScreenshot(shotPath, flags.TryGetValue("shot-after", out string after) ? after.ToFloat() : 3.0f);
+		if (flags.ContainsKey("soak"))
+		{
+			int count = flags.TryGetValue("soak", out string n) && int.TryParse(n, out int parsed) ? parsed : 6;
+			int players = flags.TryGetValue("players", out string p) && int.TryParse(p, out int parsedPlayers) ? parsedPlayers : 4;
+			AddChild(new SoakTest(count, flags.ContainsKey("teams"), players));
+			return;
+		}
+		if (flags.TryGetValue("shot", out string shotPath))
+		{
+			// Screenshots are always a 1920x1080 window, whatever the monitor: the game itself
+			// starts fullscreen, which would capture at the screen's own resolution.
+			DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
+			DisplayServer.WindowSetSize(new Vector2I(1920, 1080));
+			ScheduleScreenshot(shotPath, flags.TryGetValue("shot-after", out string after) ? after.ToFloat() : 3.0f);
+		}
 
 		switch (flags.TryGetValue("screen", out string screen) ? screen : "title")
 		{
@@ -67,6 +81,17 @@ public partial class GameRoot : Node2D
 	}
 
 	public override void _PhysicsProcess(double delta) => Devices.Update();
+
+	// The game starts fullscreen (project setting). F11 or Alt+Enter flips to a window and back.
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (@event is not InputEventKey { Pressed: true, Echo: false } key) return;
+		bool toggle = key.PhysicalKeycode == Key.F11 || (key.PhysicalKeycode == Key.Enter && key.AltPressed);
+		if (!toggle) return;
+		bool fullscreen = DisplayServer.WindowGetMode() is DisplayServer.WindowMode.Fullscreen or DisplayServer.WindowMode.ExclusiveFullscreen;
+		DisplayServer.WindowSetMode(fullscreen ? DisplayServer.WindowMode.Windowed : DisplayServer.WindowMode.Fullscreen);
+		GetViewport().SetInputAsHandled();
+	}
 
 	// ---- Screens ----
 

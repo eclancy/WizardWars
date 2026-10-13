@@ -18,19 +18,19 @@ public partial class TitleScreen : Control
 
 		AddChild(Ui.Image(Content.Texture("res://assets/art/ui/title.png"), new Rect2(300, 10, 1320, 936)));
 
-		prompt = Ui.Label("Press Start or Enter", 44, new Color(1.0f, 0.95f, 0.7f));
+		prompt = Ui.Label("Press Start", 44, new Color(1.0f, 0.95f, 0.7f));
 		Ui.Place(prompt, 0, 990, 1920, 70);
 		AddChild(prompt);
 
 		AddChild(Ui.Panel(new Rect2(30, 820, 520, 230)));
 		string[] lines =
 		{
-			"Keyboard (player 1)",
-			"Move: W A S D      Aim: arrow keys",
-			"Abilities: 1  2  3   Ultimate: 5",
-			"Join / start: Enter      Back: Backspace",
-			"Pads: triggers, RB, X for the ultimate",
-			"Character Select: Tab mode, T team, H help",
+			"Controls",
+			"Move: left stick      Aim: right stick",
+			"Abilities: RT  LT  RB      Ultimate: X",
+			"Join / start: Start      Back: B",
+			"Character Select: View for mode, Y for team",
+			"Hold the right stick in for help",
 		};
 		for (int i = 0; i < lines.Length; i++)
 		{
