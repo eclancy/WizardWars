@@ -179,6 +179,13 @@ public class CpuInputSource : IInputSource
 			desired = toward * rangeError + strafe * 0.8f;
 		}
 
+		// Lava in the way: cross on a bridge rather than duel across the river forever.
+		if (target != null && RouteWaypoint() is Vector2 waypoint)
+		{
+			Vector2 toWaypoint = waypoint - self.Feet;
+			if (toWaypoint.LengthSquared() > 1.0f) desired = toWaypoint.Normalized();
+		}
+
 		ScanForIncomingShots();
 		if (Now < dodgeUntil) desired = dodge;
 		desired += StayInside();
@@ -191,6 +198,70 @@ public class CpuInputSource : IInputSource
 			strafe = -strafe;
 		}
 		return AvoidHazard(move);
+	}
+
+	double routeUntil;
+
+	/// <summary>
+	/// Where to walk to reach the target over a bridge, or null. It routes when the target is
+	/// beyond its preferred range or out of sight across the lava, and once it has set off it
+	/// keeps going for a couple of seconds, so it does not dither at the bank.
+	/// </summary>
+	Vector2? RouteWaypoint()
+	{
+		StageData stage = Battle.Hazard?.Stage;
+		if (stage == null) return null;
+		bool wantToCross = Now < routeUntil || Distance > U(PreferredRange) || !Battle.HasLineOfSight(self.GlobalPosition, target.GlobalPosition);
+		if (!wantToCross) return null;
+		Vector2? waypoint = Route(stage, Units.ToUnity(self.Feet), Units.ToUnity(target.Feet));
+		if (waypoint == null) return null;
+		if (Now >= routeUntil) routeUntil = Now + 2.0;
+		return Units.U(waypoint.Value);
+	}
+
+	/// <summary>
+	/// The route planner, in Unity units, on the stage's own geometry (so RegressionChecks can
+	/// test it). If lava lies on the straight line from <paramref name="from"/> to
+	/// <paramref name="to"/>, it picks the bridge with the shortest walk:
+	/// - from the bank, the bridge's near end
+	/// - on or at the bridge, its far end
+	/// Null when the way is clear or there is no bridge.
+	/// </summary>
+	public static Vector2? Route(StageData stage, Vector2 from, Vector2 to)
+	{
+		if (stage.HazardKind != "lava" || stage.Bridges.Length < 2 || !Crosses(stage, from, to)) return null;
+		Vector2? best = null;
+		float bestCost = float.MaxValue;
+		for (int i = 0; i + 1 < stage.Bridges.Length; i += 2)
+		{
+			Vector2 centre = stage.Bridges[i], half = stage.Bridges[i + 1];
+			// A bridge runs along its longer side; its ends are just past that, on solid ground.
+			Vector2 axis = half.X >= half.Y ? Vector2.Right : Vector2.Up;
+			float reach = Mathf.Max(half.X, half.Y) + 0.5f;
+			Vector2 a = centre + axis * reach, b = centre - axis * reach;
+			// In at the end nearer us, out at the end nearer the target (which also settles which way
+			// to go when standing mid-bridge).
+			Vector2 exit = to.DistanceTo(a) < to.DistanceTo(b) ? a : b, entry = exit == a ? b : a;
+			bool onBridge = Mathf.Abs(from.X - centre.X) <= half.X + 0.2f && Mathf.Abs(from.Y - centre.Y) <= half.Y + 0.2f;
+			bool atEntry = from.DistanceTo(entry) < 0.45f;
+			float cost = onBridge || atEntry
+				? from.DistanceTo(exit) + exit.DistanceTo(to)
+				: from.DistanceTo(entry) + entry.DistanceTo(exit) + exit.DistanceTo(to);
+			// An entry that is itself across the lava is no use from here.
+			if (!onBridge && !atEntry && Crosses(stage, from, entry)) cost += 100.0f;
+			if (cost >= bestCost) continue;
+			bestCost = cost;
+			best = onBridge || atEntry ? exit : entry;
+		}
+		return best;
+	}
+
+	/// <summary>Whether the straight line between two points passes over the hazard.</summary>
+	static bool Crosses(StageData stage, Vector2 from, Vector2 to)
+	{
+		int steps = Mathf.Max(1, (int)(from.DistanceTo(to) / 0.25f));
+		for (int s = 1; s < steps; s++) if (stage.InHazard(from.Lerp(to, s / (float)steps))) return true;
+		return false;
 	}
 
 	/// <summary>

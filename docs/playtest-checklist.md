@@ -57,7 +57,8 @@ That is what this list is for. Run the game with F5 in the editor, or from an ex
 - [ ] Best of 3: a round banner and scoreboard between rounds, "ROUND 2" at the next start,
       and the match result with the final score.
 - [ ] Rumble: hits, freezes, quake jolts and your own ultimate going off are felt on the pad.
-- [ ] Volcano: lava burns and hurts, the bridges are safe, and the computer keeps out of it.
+- [ ] Volcano: lava burns and hurts, the bridges are safe, and the computer keeps out of the
+      lava and crosses on the bridges to reach you.
       Swamp: bog slows you and stops your energy, and lifts the moment you step out.
 - [ ] Easy, Normal and Hard computers feel clearly different.
 - [ ] Results: "P1 wins" art, "THE COMPUTER WINS", "GREEN/PINK TEAM WINS", or "DRAW". Then

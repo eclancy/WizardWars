@@ -31,6 +31,7 @@ public static class RegressionChecks
 		CheckOneWizardPerPlayer();
 		CheckMatch();
 		CheckDifficulty();
+		CheckBridgeRoutes();
 		CheckSettings();
 		CheckUltimateCharge();
 		CheckMusic();
@@ -263,6 +264,24 @@ public static class RegressionChecks
 	{
 		match.Record(result);
 		return match.Decided && match.Winner == result;
+	}
+
+	/// <summary>
+	/// The computer's route over the Volcano's lava: from one bank to the other it heads for a
+	/// bridge's near end, then its far end; on the same bank it needs no route.
+	/// </summary>
+	static void CheckBridgeRoutes()
+	{
+		StageData volcano = System.Array.Find(Content.Stages, s => s.Id == "volcano");
+		if (volcano == null) { Expect(false, "the Volcano exists"); return; }
+		Vector2? start = CpuInputSource.Route(volcano, new Vector2(-6, 0), new Vector2(7, 0));
+		Expect(start is Vector2 s1 && s1.X < -1.5f && Mathf.Abs(Mathf.Abs(s1.Y) - 3.0f) < 0.1f, "across the lava, head for a bridge on this bank", $"{start}");
+		Vector2? across = CpuInputSource.Route(volcano, new Vector2(-2.2f, 3.0f), new Vector2(7, 0));
+		Expect(across is Vector2 s2 && s2.X > 1.5f, "at the bridge, cross to the far end", $"{across}");
+		Vector2? middle = CpuInputSource.Route(volcano, new Vector2(0.0f, -3.0f), new Vector2(-7, 4));
+		Expect(middle is Vector2 s3 && s3.X < -1.5f, "mid-bridge, carry on toward the target's side", $"{middle}");
+		Expect(CpuInputSource.Route(volcano, new Vector2(-6, 4), new Vector2(-6, -4)) == null, "on the same bank, no route is needed");
+		Expect(CpuInputSource.Route(Content.Stages[0], new Vector2(-6, 0), new Vector2(7, 0)) == null, "a stage without lava needs no route");
 	}
 
 	/// <summary>Easy is slower and looser than Normal, and Hard sharper.</summary>

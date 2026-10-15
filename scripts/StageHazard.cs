@@ -36,6 +36,9 @@ public partial class StageHazard : Node2D
 	Battle battle;
 	/// <summary>Total lava damage dealt this battle, for the soak test's report.</summary>
 	public float DamageDealt { get; private set; }
+	/// <summary>Times a wizard got from one bank of the lava to the other (the soak test reports it).</summary>
+	public int Crossings { get; private set; }
+	readonly Dictionary<Wizard, int> banks = new();
 	float time;
 	readonly List<(Vector2 at, float phase, float size)> bubbles = new();
 
@@ -59,6 +62,8 @@ public partial class StageHazard : Node2D
 		return hazard;
 	}
 
+	public StageData Stage => stage;
+
 	/// <summary>Whether a point in the arena (pixels) is somewhere to keep out of.</summary>
 	public bool Contains(Vector2 point) => stage.InHazard(Units.ToUnity(point));
 
@@ -72,6 +77,7 @@ public partial class StageHazard : Node2D
 			bool inside = active && Contains(wizard.Feet);
 			if (stage.HazardKind == "lava")
 			{
+				if (!inside) CountCrossing(wizard);
 				if (!inside) continue;
 				wizard.TakeDamage(stage.HazardDamage * dt);
 				DamageDealt += stage.HazardDamage * dt;
@@ -80,6 +86,16 @@ public partial class StageHazard : Node2D
 			else if (inside) wizard.Status.Set(this, new Modifier { Slow = stage.HazardSlow, NoRegen = true });
 			else wizard.Status.Remove(this);
 		}
+	}
+
+	/// <summary>Which bank of the first lava area a wizard is on, across its narrow side.</summary>
+	void CountCrossing(Wizard wizard)
+	{
+		Vector2 feet = Units.ToUnity(wizard.Feet), centre = stage.Hazards[0], half = stage.Hazards[1];
+		int bank = half.X <= half.Y ? Mathf.Sign(feet.X - centre.X) : Mathf.Sign(feet.Y - centre.Y);
+		if (bank == 0) return;
+		if (banks.TryGetValue(wizard, out int was) && was != bank) Crossings++;
+		banks[wizard] = bank;
 	}
 
 	public override void _Process(double delta)

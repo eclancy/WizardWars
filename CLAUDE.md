@@ -209,8 +209,9 @@ export preset, `UpdateScreen` or `tools/release/`.
   centre and half-size pairs, and `InHazard`. `StageHazard` draws them live and applies them
   to feet: lava hurts (`HazardDamage` per second) and sets you burning, and bog slows and
   stops regen (a modifier keyed to the hazard). The AI steers out of and around hazards
-  (`CpuInputSource.AvoidHazard`); it does not path over bridges, so on the Volcano it mostly
-  duels across the river. `HazardPreview` draws them on Stage Select tiles.
+  (`CpuInputSource.AvoidHazard`), and when lava lies between it and a target that is out of
+  range or out of sight, it walks over the bridge with the shortest route
+  (`CpuInputSource.Route`, tested in `RegressionChecks`). The soak reports bridge crossings. `HazardPreview` draws them on Stage Select tiles.
 - **Computer skill:** `CpuInputSource(Difficulty)` sets reaction, aim error, dodging, how
   often it thinks, how readily it spends abilities, and how fast it wiggles out of ice.
   Normal is the default constructor, which the soak measures.
