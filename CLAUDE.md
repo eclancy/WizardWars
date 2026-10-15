@@ -89,8 +89,10 @@ changes, and update `TitleScreen.GlowOrigin` with the position it prints.
 
 `--make-icon` rebuilds `icon.png` and `icon.ico` (a "WW" cut from the title art above a
 fireball, `IconTool`). `--make-stages` repaints the Frost Tundra, Scorched Canyon and Storm
-Plateau floors and paints the bush-like tufts out of Woodland's (`StageArtTool`). All three
-write committed PNGs; run them on purpose, then a headless `--import`.
+Plateau floors and paints the bush-like tufts out of Woodland's (`StageArtTool`). `--make-sounds`
+synthesises the newer sound effects (ultimate charge and release, ground crack, ice break and
+chip) into `assets/sfx` (`SoundTool`). All four write committed files; run them on purpose,
+then a headless `--import`.
 
 Export: `"$GODOT_BIN" --headless --path . --export-release "Windows Desktop" build/windows/WizardWars.exe`.
 `build/` is not committed. The exported exe accepts the same flags, plus `--no-update`.
@@ -232,4 +234,5 @@ export preset, `UpdateScreen` or `tools/release/`.
   parent's corner. Centre with a `CenterContainer` instead (see `Battle.Centred`).
 - **Shell:** heredocs on this machine mangle quotes. Write generator scripts as files.
 - **Music:** both tracks are CC0, credited in `assets/music/CREDITS.md`. Check the licence
-  of any new audio on its own page before adding it, and record it there.
+  of any new audio on its own page before adding it, and record it there. Prefer synthesising
+  new sound effects in `SoundTool`: nothing to license.

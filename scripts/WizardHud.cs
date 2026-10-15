@@ -36,7 +36,7 @@ public partial class WizardHud : Node2D
 		Position = new Vector2(-Width * 0.5f, -Units.U(1.3f));
 	}
 
-	public override void _Ready() => font = ThemeDB.FallbackFont;
+	public override void _Ready() => font = Ui.HeadingFont;
 
 	public override void _Process(double delta)
 	{
@@ -53,7 +53,9 @@ public partial class WizardHud : Node2D
 		float y = 0.0f;
 
 		Color labelColour = wizard.Team != Teams.NoTeam ? Teams.Colour(wizard.Team) : Colors.White;
-		DrawString(font, new Vector2(0.0f, -4.0f), wizard.Label, HorizontalAlignment.Center, Width, 16, labelColour);
+		// A dark outline keeps the label readable on any floor, snow included.
+		DrawStringOutline(font, new Vector2(0.0f, -4.0f), wizard.Label, HorizontalAlignment.Center, Width, 17, 6, new Color(Ui.Ink, 0.9f));
+		DrawString(font, new Vector2(0.0f, -4.0f), wizard.Label, HorizontalAlignment.Center, Width, 17, labelColour);
 
 		Bar(y, wizard.Health / Wizard.MaxHealth, HealthColour);
 		y += BarHeight + Gap;
@@ -82,7 +84,10 @@ public partial class WizardHud : Node2D
 		}
 
 		if (wizard.Team != Teams.NoTeam)
-			DrawRect(new Rect2(-6.0f, 0.0f, 4.0f, y + pipHeight), Teams.Colour(wizard.Team));
+			{
+			DrawRect(new Rect2(-8.0f, -1.0f, 7.0f, y + pipHeight + 2.0f), new Color(Ui.Ink, 0.9f));
+			DrawRect(new Rect2(-7.0f, 0.0f, 5.0f, y + pipHeight), Teams.Colour(wizard.Team));
+		}
 	}
 
 	void Bar(float y, float fraction, Color colour)

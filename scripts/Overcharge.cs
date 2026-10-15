@@ -25,7 +25,7 @@ public partial class Overcharge : Node2D
 			onFinished = onFinished,
 			ZIndex = 10,
 		};
-		overcharge.icon = new Sprite2D { Texture = Content.Texture("res://assets/art/ultimates/overcharge.png"), Position = new Vector2(0, -Units.U(1.4f)) };
+		overcharge.icon = new Sprite2D { Texture = Content.Texture("res://assets/art/ultimates/overcharge.png"), Position = new Vector2(-Units.U(1.25f), -Units.U(0.45f)) };
 		overcharge.AddChild(overcharge.icon);
 		return overcharge;
 	}
@@ -60,7 +60,7 @@ public partial class Overcharge : Node2D
 		elapsed += (float)delta;
 		GlobalPosition = caster.GlobalPosition;
 		float wave = (Mathf.Sin(elapsed * 12.0f) + 1.0f) * 0.5f;
-		icon.Scale = Vector2.One * Units.SpriteScale(Mathf.Lerp(0.5f, 0.7f, wave));
+		icon.Scale = Vector2.One * Units.SpriteScale(Mathf.Lerp(0.34f, 0.46f, wave));
 
 		if (elapsed >= nextPulse)
 		{

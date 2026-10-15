@@ -35,6 +35,7 @@ public partial class Tremor : Node2D
 
 		caster.Battle.AddEffect(GroundCracks.Create(caster.GlobalPosition + new Vector2(0.0f, Units.U(0.55f)), tremor.radius, 8, 8.0f, 0.18f, 0.5f, 0.45f));
 		caster.Battle.Shake(8.0f, 0.3f);
+		Sfx.Play("res://assets/sfx/ground-crack.wav", -2.0f);
 
 		// The stagger lands on the stamp itself; the visuals follow it out.
 		int team = caster.Team;

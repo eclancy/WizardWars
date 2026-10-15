@@ -4,8 +4,8 @@ using Godot;
 /// Team identity for Teams mode. In Free-for-All every wizard is on <see cref="NoTeam"/>.
 ///
 /// The teams are Green and Pink, colours no wizard wears: Fire is orange-red, Frost light blue,
-/// Earth brown and Electricity yellow. Unity's Red and Blue teams looked like "the Fire side" and
-/// "the Frost side", so a team colour said nothing certain about who was on it.
+/// Earth brown and Electricity violet (its robe). Unity's Red and Blue teams looked like "the
+/// Fire side" and "the Frost side", so a team colour said nothing certain about who was on it.
 /// </summary>
 public static class Teams
 {

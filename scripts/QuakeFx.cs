@@ -36,6 +36,7 @@ public partial class QuakeFx : Node2D
 		Battle battle = Battle.Current;
 		battle.AddEffect(GroundCracks.Create(aura.GlobalPosition + new Vector2(0.0f, Units.U(0.55f)), aura.Radius * 0.85f, 7, 10.0f, 0.22f, interval * 0.9f, 0.5f));
 		battle.Shake(7.0f, 0.3f);
+		Sfx.Play("res://assets/sfx/ground-crack.wav", -5.0f);
 		foreach (Wizard wizard in battle.Wizards) if (aura.Holds(wizard)) wizard.Jolt(0.3f);
 	}
 

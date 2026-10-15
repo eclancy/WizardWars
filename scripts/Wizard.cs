@@ -105,13 +105,8 @@ public partial class Wizard : CharacterBody2D
 
 		if (Team != Teams.NoTeam)
 		{
-			// A disc in the team colour under the wizard, so sides read in the arena.
-			Sprite2D marker = ProceduralFx.Shadow.NewSprite(0.55f);
-			Color colour = Teams.Colour(Team);
-			marker.Modulate = new Color(colour.R, colour.G, colour.B, 0.75f);
-			marker.Position = new Vector2(0.0f, Units.U(0.75f));
-			marker.ZIndex = -1;
-			AddChild(marker);
+			// A bold ring in the team colour round the wizard's feet, so sides read in the arena.
+			AddChild(new TeamMarker(Teams.Colour(Team)) { Position = new Vector2(0.0f, Units.U(0.72f)), ZIndex = -1 });
 		}
 
 		targeter = new Sprite2D
@@ -318,13 +313,14 @@ public partial class Wizard : CharacterBody2D
 		StunRemaining -= WiggleBreak;
 		joltLeft = 0.12f;
 		wiggleHint?.Nudge();
+		Sfx.Play("res://assets/sfx/ice-chip.wav", -9.0f);
 		if (StunRemaining <= 0.0f) Thaw();
 	}
 
 	void Thaw()
 	{
 		StunRemaining = 0.0f;
-		if (frozen) Sfx.Play("res://assets/sfx/icepatch.wav", -10.0f);
+		if (frozen) Sfx.Play("res://assets/sfx/ice-break.wav", -3.0f);
 		frozen = false;
 		iceCube?.QueueFree();
 		iceCube = null;

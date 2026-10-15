@@ -86,6 +86,12 @@ needed, unpacked into `%APPDATA%\Godot\export_templates\<version>.stable.mono\`.
 fails with "No export template found" until they are there. `package.py` reads the engine version
 from the name of `$GODOT_BIN` (default: the path in `CLAUDE.md`), and runs on Python 2.7 or 3.
 
+For the exe to carry the game's icon in Explorer, also download `rcedit-x64.exe` from the
+`electron/rcedit` GitHub releases (MIT) to somewhere outside the repo, and set Godot's editor
+setting `export/windows/rcedit` to it (on this machine: `C:/Users/ericc/tools/rcedit-x64.exe`).
+Without it the export still works, but the exe shows Godot's icon. The game window uses
+`icon.ico` either way (`config/windows_native_icon`).
+
 **Testing an update without publishing:**
 
 1. Set `config/version` in `project.godot` to an older number, export to `build/test/`, and put

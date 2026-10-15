@@ -58,7 +58,7 @@ public partial class UltimateBuildUp : Node2D
 		buildUp.AddChild(buildUp.title);
 		buildUp.title.CreateTween().TweenProperty(buildUp.title, "scale", Vector2.One, 0.22).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
 
-		Sfx.Play("res://assets/sfx/speedup.wav", -4.0f);
+		Sfx.Play("res://assets/sfx/ultimate-charge.wav", -3.0f);
 		return buildUp;
 	}
 
@@ -78,6 +78,7 @@ public partial class UltimateBuildUp : Node2D
 			{
 				released = true;
 				Battle.Current?.Shake(10.0f, 0.35f);
+				Sfx.Play("res://assets/sfx/ultimate-release.wav", -1.0f);
 				release?.Invoke();
 			}
 		}

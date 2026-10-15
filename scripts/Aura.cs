@@ -37,7 +37,8 @@ public partial class Aura : Node2D
 			ZIndex = 1,
 		};
 		aura.AddChild(look);
-		aura.icon = new Sprite2D { Texture = Content.Texture(iconPath), ZIndex = 10, Position = new Vector2(0, -Units.U(1.4f)) };
+		// The icon sits beside the caster, clear of the name and bars over their head.
+		aura.icon = new Sprite2D { Texture = Content.Texture(iconPath), ZIndex = 10, Position = new Vector2(-Units.U(1.25f), -Units.U(0.45f)) };
 		aura.AddChild(aura.icon);
 		return aura;
 	}
@@ -56,7 +57,7 @@ public partial class Aura : Node2D
 
 		// Pulse the icon, as Unity's PulseAreaVisual did.
 		float wave = (Mathf.Sin(elapsed * 8.0f) + 1.0f) * 0.5f;
-		icon.Scale = Vector2.One * Units.SpriteScale(Mathf.Lerp(0.5f, 0.62f, wave));
+		icon.Scale = Vector2.One * Units.SpriteScale(Mathf.Lerp(0.34f, 0.42f, wave));
 
 		foreach (Wizard wizard in Battle.Current.Wizards)
 		{

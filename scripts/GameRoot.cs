@@ -12,6 +12,7 @@ using Godot;
 ///   --make-title-glow     rebuild assets/art/ui/title-start-glow.png from title.png (see TitleGlowTool)
 ///   --make-icon           rebuild icon.png and icon.ico: a "WW" from the logo above a fireball (see IconTool)
 ///   --make-stages         repaint the Frost Tundra, Scorched Canyon and Storm Plateau floors (see StageArtTool)
+///   --make-sounds         synthesise the newer sound effects into assets/sfx (see SoundTool)
 ///   --soak[=N]            play N computer-only matches headless (default 6) and check for leaks
 ///   --flowtest            drive every menu and a Teams match with scripted pads, asserting each step
 ///   --abilities           cast all 16 abilities at an enemy and at a teammate, checking each
@@ -46,6 +47,7 @@ public partial class GameRoot : Node2D
 		if (flags.ContainsKey("make-title-glow")) { GetTree().Quit(TitleGlowTool.Run()); return; }
 		if (flags.ContainsKey("make-icon")) { GetTree().Quit(IconTool.Run()); return; }
 		if (flags.ContainsKey("make-stages")) { GetTree().Quit(StageArtTool.Run()); return; }
+		if (flags.ContainsKey("make-sounds")) { GetTree().Quit(SoundTool.Run()); return; }
 		if (flags.ContainsKey("checks"))
 		{
 			int failures = RegressionChecks.RunAll();

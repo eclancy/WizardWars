@@ -101,7 +101,7 @@ wizard() {
 wizard fire FireWizard "Fire Wizard" fire red "0.95, 0.4, 0.15, 1" fireball ring-of-fire flamethrower meteor-strike meteor-storm
 wizard frost FrostWizard "Frost Wizard" frost blue "0.45, 0.75, 1, 1" icicle ice-patch ice-wave deep-freeze absolute-zero
 wizard earth EarthWizard "Earth Wizard" earth green "0.6, 0.45, 0.25, 1" mudball mud-patch rock-wall tremor earthquake
-wizard electricity ElectricityWizard "Electricity Wizard" electricity yellow "1, 0.9, 0.3, 1" electricity-ball lightning-rod speed-up chain-lightning overcharge
+wizard electricity ElectricityWizard "Electricity Wizard" electricity yellow "0.72, 0.5, 1, 1" electricity-ball lightning-rod speed-up chain-lightning overcharge
 
 # Spawns from ParkBattle.ConfigureStageVariant (Unity units, +y up). Unity also scattered small
 # rocks and cacti that looked solid but blocked nothing; they are gone. The cover (kind and
