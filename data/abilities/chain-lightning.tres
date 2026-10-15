@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/rodlightning.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "chain-lightning"
+DisplayName = "Chain Lightning"
+Description = "Lightning leaps from enemy to enemy, up to three of them."
+Cost = 35.0
+Cooldown = 4.5
+Range = 6.0
+Radius = 4.0
+Count = 3
+Interval = 0.1
+Damage = 18.0
+Sound = ExtResource("2_sound")

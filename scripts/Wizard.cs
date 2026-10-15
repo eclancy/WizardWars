@@ -52,11 +52,19 @@ public partial class Wizard : CharacterBody2D
 
 	public float StunRemaining { get; private set; }
 	public bool Stunned => StunRemaining > 0.0f;
+	/// <summary>Stunned inside a block of ice (Ice Wave, Deep Freeze): wiggling the stick breaks out sooner.</summary>
+	public bool Frozen => Stunned && frozen;
+
+	/// <summary>Seconds of freeze each wiggle of the stick (a change of direction) breaks off.</summary>
+	public const float WiggleBreak = 0.2f;
 	public bool OnFire => burnRemaining > 0.0f;
 
-	float burnRemaining, burnDamage, burnTick, hurtFlash;
+	float burnRemaining, burnDamage, burnTick, hurtFlash, joltLeft;
+	bool frozen;
+	int lastWiggle;
 	Vector2 slideDirection;
 	Sprite2D body, targeter, fireSprite, iceCube;
+	WiggleHint wiggleHint;
 	double fireFlipAt;
 
 	Battle battle;
@@ -185,11 +193,27 @@ public partial class Wizard : CharacterBody2D
 		fireSprite = null;
 	}
 
-	/// <summary>Frozen solid: no movement or casting. Unlike Unity, a stun does not hide a burn.</summary>
-	public void Stun(float seconds)
+	/// <summary>
+	/// No movement or casting for a while. Frozen is a block of ice you can wiggle out of (a
+	/// joystick wiggles beside it to say so); Staggered is a short knock that just shakes you.
+	/// Unlike Unity, a stun does not hide a burn.
+	/// </summary>
+	public void Stun(float seconds, StunKind kind = StunKind.Frozen)
 	{
 		if (!Alive) return;
 		StunRemaining = Mathf.Max(StunRemaining, seconds);
+		if (kind == StunKind.Staggered)
+		{
+			Jolt(0.25f);
+			return;
+		}
+		if (!frozen) lastWiggle = 0;
+		frozen = true;
+		if (wiggleHint == null)
+		{
+			wiggleHint = new WiggleHint { Position = new Vector2(Units.U(1.6f), -Units.U(0.1f)), ZIndex = 3 };
+			AddChild(wiggleHint);
+		}
 		if (iceCube == null)
 		{
 			iceCube = new Sprite2D
@@ -240,6 +264,7 @@ public partial class Wizard : CharacterBody2D
 
 		InputState input = Controller.Poll();
 		bool fighting = battle.Fighting;
+		if (Frozen && fighting) WiggleFree(input.Move);
 		if (!fighting || Stunned) input = InputState.None;
 		CurrentInput = input;
 
@@ -262,16 +287,49 @@ public partial class Wizard : CharacterBody2D
 		foreach (Ability ability in Abilities) ability.Tick(dt, input);
 	}
 
+	/// <summary>Shakes the wizard where they stand for a moment: a stagger, an earthquake's jolt.</summary>
+	public void Jolt(float seconds) => joltLeft = Mathf.Max(joltLeft, seconds);
+
 	void TickStun(float dt)
 	{
+		// A knock or a wiggle shakes the body (and the ice round it) for a moment.
+		joltLeft = Mathf.Max(0.0f, joltLeft - dt);
+		Vector2 shake = joltLeft > 0.0f ? new Vector2((float)GD.RandRange(-1.0, 1.0), (float)GD.RandRange(-1.0, 1.0)) * 5.0f * Mathf.Min(1.0f, joltLeft / 0.25f) : Vector2.Zero;
+		body.Position = shake;
+		if (iceCube != null) iceCube.Position = new Vector2(0.0f, Units.U(0.1f)) + shake;
+
 		if (StunRemaining <= 0.0f) return;
 		StunRemaining -= dt;
-		if (StunRemaining <= 0.0f)
-		{
-			StunRemaining = 0.0f;
-			iceCube?.QueueFree();
-			iceCube = null;
-		}
+		if (StunRemaining <= 0.0f) Thaw();
+	}
+
+	/// <summary>
+	/// Each change of stick direction while frozen (left, right, up, down) chips <see cref="WiggleBreak"/>
+	/// off the freeze: mashing the stick from side to side breaks out in about half the time.
+	/// </summary>
+	public void WiggleFree(Vector2 move)
+	{
+		if (move.LengthSquared() < 0.25f) return;
+		int side = Mathf.Abs(move.X) >= Mathf.Abs(move.Y) ? (move.X > 0 ? 1 : 2) : (move.Y > 0 ? 3 : 4);
+		if (side == lastWiggle) return;
+		bool first = lastWiggle == 0;
+		lastWiggle = side;
+		if (first) return;
+		StunRemaining -= WiggleBreak;
+		joltLeft = 0.12f;
+		wiggleHint?.Nudge();
+		if (StunRemaining <= 0.0f) Thaw();
+	}
+
+	void Thaw()
+	{
+		StunRemaining = 0.0f;
+		if (frozen) Sfx.Play("res://assets/sfx/icepatch.wav", -10.0f);
+		frozen = false;
+		iceCube?.QueueFree();
+		iceCube = null;
+		wiggleHint?.QueueFree();
+		wiggleHint = null;
 	}
 
 	// Burn ticks every half second, as Unity did.
@@ -323,9 +381,19 @@ public partial class Wizard : CharacterBody2D
 	void CastAbilities(InputState input)
 	{
 		if (UltimateActive) return;
-		if (input.BasicHeld) Abilities[0].TryCast();
-		if (input.SecondHeld) Abilities[1].TryCast();
-		if (input.ThirdPressed) Abilities[2].TryCast();
-		if (input.UltimatePressed) Abilities[3].TryCast();
+		if (input.BasicHeld) Abilities[WizardData.BasicSlot].TryCast();
+		if (input.SecondHeld) Abilities[WizardData.SecondSlot].TryCast();
+		if (input.ThirdPressed) Abilities[WizardData.ThirdSlot].TryCast();
+		if (input.FourthPressed) Abilities[WizardData.FourthSlot].TryCast();
+		if (input.UltimatePressed) Abilities[WizardData.UltimateSlot].TryCast();
 	}
+}
+
+/// <summary>What a stun looks like, and whether it can be wiggled out of (see <see cref="Wizard.Stun"/>).</summary>
+public enum StunKind
+{
+	/// <summary>Encased in ice: the stick wiggles you free sooner.</summary>
+	Frozen,
+	/// <summary>A short knock (Tremor): the wizard shakes; there is nothing to break out of.</summary>
+	Staggered,
 }

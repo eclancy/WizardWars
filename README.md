@@ -1,7 +1,8 @@
 # Wizard Wars
 
 A local multiplayer arena battler for 1–4 players. Pick a wizard of fire, frost, earth or
-electricity and fight to be the last one standing, or team up in Red vs Blue. Playing alone?
+electricity (each wizard can be played by one player at a time) and fight to be the last one
+standing, or team up in Green vs Pink. Playing alone?
 You face a computer-controlled wizard.
 
 Built with **Godot 4.5 (.NET / C#)**. It started life as a Unity game. The last Unity
@@ -21,6 +22,7 @@ version is preserved at the git tag [`unity-final`](../../tree/unity-final).
 | Basic attack (free) | RT | 1 |
 | Second ability | LT | 2 |
 | Third ability | RB | 3 |
+| Fourth ability | LB | 4 |
 | Ultimate (when the gold bar is full) | X | 5 |
 | Join / start | Start | Enter |
 | Confirm / lock in | A | Space |
@@ -32,12 +34,15 @@ version is preserved at the git tag [`unity-final`](../../tree/unity-final).
 
 ### The wizards
 
-| Wizard | Basic | Second | Third | Ultimate |
-|---|---|---|---|---|
-| Fire | Fireball | Ring of Fire | Flamethrower | Meteor Storm |
-| Frost | Icicle | Ice Patch | Ice Wave | Absolute Zero |
-| Earth | Mudball | Mud Patch | Rock Wall | Earthquake |
-| Electricity | Electricity Ball | Lightning Rod | Speed Up | Overcharge |
+| Wizard | Basic | Second | Third | Fourth | Ultimate |
+|---|---|---|---|---|---|
+| Fire | Fireball | Ring of Fire | Flamethrower | Meteor Strike | Meteor Storm |
+| Frost | Icicle | Ice Patch | Ice Wave | Deep Freeze | Absolute Zero |
+| Earth | Mudball | Mud Patch | Rock Wall | Tremor | Earthquake |
+| Electricity | Electricity Ball | Lightning Rod | Speed Up | Chain Lightning | Overcharge |
+
+Every stage has its own cover to hide behind: tree stumps, ice crystals, saguaro cacti
+and rune obelisks. They stop shots. Anything that casts a shadow is solid; the rest is floor.
 
 ## Develop
 

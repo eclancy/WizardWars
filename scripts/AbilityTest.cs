@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Godot;
 
 /// <summary>
-/// Casts every one of the 16 abilities at a standing target and checks it does what it should,
+/// Casts every one of the 20 abilities at a standing target and checks it does what it should,
 /// then casts it again at a teammate and checks it does nothing at all. Afterwards the arena
 /// must empty: no effect nodes, no modifiers, no stuck ultimate lock.
 ///
@@ -32,14 +32,14 @@ public partial class AbilityTest : Node
 
 	// What the target went through while being watched.
 	float lowestHealth;
-	bool sawSlow, sawSlide, sawNoRegen, sawStun, sawBurn, sawCasterHaste, sawCasterUltimate;
+	bool sawSlow, sawSlide, sawNoRegen, sawStun, sawBurn, sawCasterHaste, sawCasterUltimate, touchedInBuildUp;
 	int maxEffects, sawFireSources, sawRockWalls, sawMeteors, sawRods;
 
 	public override void _Ready()
 	{
 		Name = "AbilityTest";
 		foreach (WizardData wizard in Content.Wizards)
-			for (int slot = 0; slot < 4; slot++)
+			for (int slot = 0; slot < WizardData.SlotCount; slot++)
 			{
 				cases.Add((wizard, slot, false));
 				cases.Add((wizard, slot, true));
@@ -59,21 +59,37 @@ public partial class AbilityTest : Node
 		}
 
 		(WizardData wizard, int slot, bool ally) = cases[index];
-		BattleSetup setup = new() { Stage = Content.Stages[0], TeamsActive = true };
+		BattleSetup setup = new() { Stage = OpenGround, TeamsActive = true };
 		aimer = new Aimer();
-		setup.Fighters.Add(new Fighter { Wizard = wizard, Slot = 0, Spawn = 0, Label = "P1", Team = Teams.Red, Input = aimer });
+		setup.Fighters.Add(new Fighter { Wizard = wizard, Slot = 0, Spawn = 0, Label = "P1", Team = Teams.Green, Input = aimer });
 		// A standing target that never acts. The Earth wizard is used unless he is the caster,
 		// so there is always a different wizard to hit.
 		WizardData dummy = wizard.Id == "EarthWizard" ? Content.Wizards[0] : Content.Wizards[2];
-		setup.Fighters.Add(new Fighter { Wizard = dummy, Slot = 1, Spawn = 1, Label = "P2", Team = ally ? Teams.Red : Teams.Blue, Input = InputState.NoneSource });
+		setup.Fighters.Add(new Fighter { Wizard = dummy, Slot = 1, Spawn = 1, Label = "P2", Team = ally ? Teams.Green : Teams.Pink, Input = InputState.NoneSource });
 		battle = Battle.Create(setup);
 		battle.SkipCountdown = true;
 		AddChild(battle);
 
 		cast = observed = false;
 		lowestHealth = Wizard.MaxHealth;
-		sawSlow = sawSlide = sawNoRegen = sawStun = sawBurn = sawCasterHaste = sawCasterUltimate = false;
+		sawSlow = sawSlide = sawNoRegen = sawStun = sawBurn = sawCasterHaste = sawCasterUltimate = touchedInBuildUp = false;
 		maxEffects = sawFireSources = sawRockWalls = sawMeteors = sawRods = 0;
+	}
+
+	/// <summary>
+	/// Woodland with its cover taken out. Abilities are measured on open ground: a stump on Ring
+	/// of Fire's circle rightly puts flames out, but that is the cover working, not the ring.
+	/// </summary>
+	static StageData openGround;
+	static StageData OpenGround
+	{
+		get
+		{
+			if (openGround != null) return openGround;
+			openGround = (StageData)Content.Stages[0].Duplicate();
+			openGround.Cover = System.Array.Empty<Vector2>();
+			return openGround;
+		}
 	}
 
 	string CaseName => $"{cases[index].wizard.Abilities[cases[index].slot].Id} at {(cases[index].ally ? "a teammate" : "an enemy")}";
@@ -96,8 +112,8 @@ public partial class AbilityTest : Node
 		int slot = cases[index].slot;
 		if (!cast)
 		{
-			if (slot == 3) caster.AddUltimateCharge(100.0f);
-			if (slot == 2 && cases[index].wizard.Id == "FireWizard") aimer.State.ThirdHeld = true;
+			if (slot == WizardData.UltimateSlot) caster.AddUltimateCharge(100.0f);
+			if (slot == WizardData.ThirdSlot && cases[index].wizard.Id == "FireWizard") aimer.State.ThirdHeld = true;
 			if (!caster.Abilities[slot].TryCast()) Fail("the cast was refused");
 			cast = true;
 			castAt = battle.Time;
@@ -105,7 +121,7 @@ public partial class AbilityTest : Node
 		}
 
 		double since = battle.Time - castAt;
-		if (since < Observe) { Watch(); return; }
+		if (since < Observe) { Watch(since); return; }
 		if (!observed)
 		{
 			observed = true;
@@ -126,10 +142,13 @@ public partial class AbilityTest : Node
 		CallDeferred(MethodName.Next);
 	}
 
-	void Watch()
+	void Watch(double since)
 	{
 		if (GodotObject.IsInstanceValid(target) && target.Alive)
 		{
+			// An ultimate must leave everyone alone until its build-up is over.
+			if (cases[index].slot == WizardData.UltimateSlot && since < UltimateBuildUp.Duration - 0.05)
+				touchedInBuildUp |= target.Health < Wizard.MaxHealth || target.Status.Count > 0 || target.Stunned;
 			// Keep the target standing still where it was put, so patches and auras stay on it.
 			lowestHealth = Mathf.Min(lowestHealth, target.Health);
 			sawSlow |= target.Status.SpeedMultiplier < 0.99f;
@@ -174,7 +193,10 @@ public partial class AbilityTest : Node
 			case "speed-up": Expect(sawCasterHaste, "the caster sped up"); break;
 			case "absolute-zero":
 			case "earthquake": Expect(sawCasterUltimate, "the ultimate ran"); break;
+			case "meteor-strike": Expect(sawMeteors > 0 && !sawCasterUltimate, "a meteor fell without locking the ultimate"); break;
 		}
+
+		if (cases[index].slot == WizardData.UltimateSlot) Expect(!touchedInBuildUp, "nothing happened during the build-up");
 
 		if (ally)
 		{
@@ -194,6 +216,11 @@ public partial class AbilityTest : Node
 			case "mud-patch": Expect(sawSlow, "the target was slowed"); break;
 			case "earthquake": Expect(sawSlow, "the target was slowed"); break;
 			case "lightning-rod": Expect(hurt, "the rod shocked the target"); break;
+			// The fourth abilities.
+			case "meteor-strike": Expect(hurt && sawBurn, "the meteor hit and set the target burning"); break;
+			case "deep-freeze": Expect(sawStun && hurt, "the target was frozen solid"); break;
+			case "tremor": Expect(sawStun && hurt, "the target was hurt and staggered"); break;
+			case "chain-lightning": Expect(hurt, "the lightning struck the target"); break;
 			case "ring-of-fire": case "rock-wall": case "meteor-storm": case "overcharge": case "speed-up":
 				break; // placement or chance, checked above
 			default: Fail($"no expectation for {id}"); break;

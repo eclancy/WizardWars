@@ -68,23 +68,23 @@ public partial class UpdateScreen : Control
 	public override void _Ready()
 	{
 		SetAnchorsPreset(LayoutPreset.FullRect);
-		ColorRect black = new() { Color = Colors.Black };
-		black.SetAnchorsPreset(LayoutPreset.FullRect);
-		AddChild(black);
+		AddChild(new MagicBackdrop());
+		// Centred 1920 x 1080 layout, whatever the screen shape (see DesignFrame).
+		DesignFrame frame = DesignFrame.In(this);
 
 		title = Ui.Label("", 80, new Color(1.0f, 0.95f, 0.7f));
 		Ui.Place(title, 0, 360, 1920, 120);
-		AddChild(title);
+		frame.AddChild(title);
 
 		barFrame = Ui.Panel(new Rect2(560, 530, 800, 56), Ui.Waiting);
 		barFrame.Visible = false;
-		AddChild(barFrame);
+		frame.AddChild(barFrame);
 		barFill = new ColorRect { Color = Ui.Waiting, Position = new Vector2(566, 536), Size = new Vector2(0, 44), Visible = false };
-		AddChild(barFill);
+		frame.AddChild(barFill);
 
 		detail = Ui.Label("", 36, Colors.White);
 		Ui.Place(detail, 0, 640, 1920, 60);
-		AddChild(detail);
+		frame.AddChild(detail);
 
 		Task.Run(Work);
 	}

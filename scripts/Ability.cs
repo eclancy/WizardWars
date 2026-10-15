@@ -50,6 +50,10 @@ public abstract class Ability
 /// <summary>
 /// An ultimate: gated by the gold meter instead of energy, and while it runs the wizard's
 /// other abilities are locked out (Unity's ultimateActive).
+///
+/// Every ultimate winds up first (<see cref="UltimateBuildUp"/>, <see cref="UltimateBuildUp.Duration"/>
+/// seconds): its name and a gathering glow announce it, and only then does <see cref="Cast"/> run,
+/// so nothing is hurt or hindered until the build-up is over.
 /// </summary>
 public abstract class Ultimate : Ability
 {
@@ -62,8 +66,11 @@ public abstract class Ultimate : Ability
 		if (Owner.UltimateActive || !Owner.TryUseUltimate()) return false;
 		Owner.UltimateActive = true;
 		Battle.UltimatesCast++;
-		Sfx.Play(Data.Sound);
-		Cast();
+		Battle.AddEffect(UltimateBuildUp.Create(Owner, Data.DisplayName, Owner.Data.Colour, () =>
+		{
+			Sfx.Play(Data.Sound);
+			Cast();
+		}, Finish));
 		return true;
 	}
 
@@ -77,7 +84,7 @@ public static class AbilityFactory
 {
 	public static Ability[] Create(Wizard owner, WizardData data) => new[]
 	{
-		Make(owner, data.Basic), Make(owner, data.Second), Make(owner, data.Third), Make(owner, data.Ultimate),
+		Make(owner, data.Basic), Make(owner, data.Second), Make(owner, data.Third), Make(owner, data.Fourth), Make(owner, data.Ultimate),
 	};
 
 	static Ability Make(Wizard owner, AbilityData data) => data.Id switch
@@ -98,6 +105,11 @@ public static class AbilityFactory
 		"lightning-rod" => new LightningRodAbility(owner, data),
 		"speed-up" => new SpeedUpAbility(owner, data),
 		"overcharge" => new OverchargeAbility(owner, data),
+		// The fourth abilities, cut in Unity and restored (see FourthAbilities.cs).
+		"meteor-strike" => new MeteorStrikeAbility(owner, data),
+		"deep-freeze" => new DeepFreezeAbility(owner, data),
+		"tremor" => new TremorAbility(owner, data),
+		"chain-lightning" => new ChainLightningAbility(owner, data),
 		_ => throw new System.ArgumentException($"No ability behaviour for '{data.Id}'"),
 	};
 
@@ -107,5 +119,6 @@ public static class AbilityFactory
 		"fireball", "icicle", "mudball", "electricity-ball", "ring-of-fire", "flamethrower", "meteor-storm",
 		"ice-patch", "ice-wave", "absolute-zero", "mud-patch", "rock-wall", "earthquake",
 		"lightning-rod", "speed-up", "overcharge",
+		"meteor-strike", "deep-freeze", "tremor", "chain-lightning",
 	};
 }

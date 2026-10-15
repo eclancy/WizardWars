@@ -5,7 +5,7 @@ using Godot;
 /// InputMap, so four pads never fight over shared actions.
 ///
 /// Layout, as in the Unity game: left stick move, right stick aim, RT basic, LT second,
-/// RB third, X ultimate; Start, A confirm, B back, Back/View mode, Y team, RS help.
+/// RB third, LB fourth, X ultimate; Start, A confirm, B back, Back/View mode, Y team, RS help.
 /// Unlike Unity, Godot reports the triggers as two separate axes.
 /// </summary>
 public class GamepadInputSource : IInputSource
@@ -18,7 +18,7 @@ public class GamepadInputSource : IInputSource
 
 	public readonly int Device;
 
-	bool thirdWas, ultimateWas, startWas, confirmWas, backWas, modeWas, teamWas;
+	bool thirdWas, fourthWas, ultimateWas, startWas, confirmWas, backWas, modeWas, teamWas;
 	Vector2I navWas;
 
 	public GamepadInputSource(int device) => Device = device;
@@ -40,14 +40,14 @@ public class GamepadInputSource : IInputSource
 		// An unplugged pad reports nothing rather than freezing its last direction.
 		if (!IsConnected)
 		{
-			thirdWas = ultimateWas = startWas = confirmWas = backWas = modeWas = teamWas = false;
+			thirdWas = fourthWas = ultimateWas = startWas = confirmWas = backWas = modeWas = teamWas = false;
 			navWas = Vector2I.Zero;
 			return InputState.None;
 		}
 
 		Vector2 move = Stick(JoyAxis.LeftX, JoyAxis.LeftY);
 		Vector2 aim = Stick(JoyAxis.RightX, JoyAxis.RightY);
-		bool third = Button(JoyButton.RightShoulder), ultimate = Button(JoyButton.X);
+		bool third = Button(JoyButton.RightShoulder), fourth = Button(JoyButton.LeftShoulder), ultimate = Button(JoyButton.X);
 		bool start = Button(JoyButton.Start), confirm = Button(JoyButton.A), back = Button(JoyButton.B);
 		bool mode = Button(JoyButton.Back), team = Button(JoyButton.Y);
 
@@ -67,6 +67,7 @@ public class GamepadInputSource : IInputSource
 			SecondHeld = Input.GetJoyAxis(Device, JoyAxis.TriggerLeft) > TriggerThreshold,
 			ThirdPressed = third && !thirdWas,
 			ThirdHeld = third,
+			FourthPressed = fourth && !fourthWas,
 			UltimatePressed = ultimate && !ultimateWas,
 			StartPressed = start && !startWas,
 			ConfirmPressed = confirm && !confirmWas,
@@ -76,7 +77,7 @@ public class GamepadInputSource : IInputSource
 			HelpHeld = Button(JoyButton.RightStick),
 			NavPressed = nav != navWas ? nav : Vector2I.Zero,
 		};
-		thirdWas = third; ultimateWas = ultimate; startWas = start; confirmWas = confirm;
+		thirdWas = third; fourthWas = fourth; ultimateWas = ultimate; startWas = start; confirmWas = confirm;
 		backWas = back; modeWas = mode; teamWas = team; navWas = nav;
 		return state;
 	}

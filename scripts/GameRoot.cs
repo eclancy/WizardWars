@@ -9,13 +9,18 @@ using Godot;
 ///
 /// Command-line flags, passed after "--":
 ///   --checks              run RegressionChecks, exit with the failure count
+///   --make-title-glow     rebuild assets/art/ui/title-start-glow.png from title.png (see TitleGlowTool)
+///   --make-icon           rebuild icon.png and icon.ico: a "WW" from the logo above a fireball (see IconTool)
+///   --make-stages         repaint the Frost Tundra, Scorched Canyon and Storm Plateau floors (see StageArtTool)
 ///   --soak[=N]            play N computer-only matches headless (default 6) and check for leaks
 ///   --flowtest            drive every menu and a Teams match with scripted pads, asserting each step
 ///   --abilities           cast all 16 abilities at an enemy and at a teammate, checking each
-///   --teams               with --soak or --demo: 2v2 Teams
+///   --teams               with --soak, --screen=demo or --screen=select: Teams mode
 ///   --players=N           with --soak: 2-4 computer wizards in Free-for-All (default 4)
-///   --screen=NAME         start on title | select | stage | battle | demo
-///   --shot=PATH           save a screenshot to PATH after --shot-after seconds (default 3), then quit
+///   --screen=NAME         start on title | select | stage | battle | demo (--stage=0-3 picks its arena)
+///   --charged             with --screen=demo: every wizard starts with a full ultimate
+///   --shot=PATH           save a screenshot to PATH after --shot-after seconds (default 3), then quit;
+///                         --shot-size=WxH sets the window (default 1920x1080)
 ///   --no-update           an exported Windows build skips its update check (see docs/releasing.md)
 /// </summary>
 public partial class GameRoot : Node2D
@@ -25,6 +30,8 @@ public partial class GameRoot : Node2D
 	Node current;
 	public Node CurrentScreen => current;
 	CanvasLayer ui;
+	ColorRect fade;
+	Tween fadeTween;
 	readonly Dictionary<string, string> flags = new();
 
 	public override void _Ready()
@@ -36,6 +43,9 @@ public partial class GameRoot : Node2D
 			flags[parts[0]] = parts.Length > 1 ? parts[1] : "";
 		}
 
+		if (flags.ContainsKey("make-title-glow")) { GetTree().Quit(TitleGlowTool.Run()); return; }
+		if (flags.ContainsKey("make-icon")) { GetTree().Quit(IconTool.Run()); return; }
+		if (flags.ContainsKey("make-stages")) { GetTree().Quit(StageArtTool.Run()); return; }
 		if (flags.ContainsKey("checks"))
 		{
 			int failures = RegressionChecks.RunAll();
@@ -46,6 +56,12 @@ public partial class GameRoot : Node2D
 		Sfx.Attach(this);
 		ui = new CanvasLayer { Name = "UI", Layer = 5 };
 		AddChild(ui);
+		// Above everything: a black sheet that fades away each time the screen changes.
+		CanvasLayer fadeLayer = new() { Name = "Fade", Layer = 100 };
+		fade = new ColorRect { Color = Colors.Black, MouseFilter = Control.MouseFilterEnum.Ignore };
+		fade.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		fadeLayer.AddChild(fade);
+		AddChild(fadeLayer);
 		Devices.Update();
 
 		if (flags.ContainsKey("flowtest")) { ShowTitle(); AddChild(new FlowTest()); return; }
@@ -59,19 +75,23 @@ public partial class GameRoot : Node2D
 		}
 		if (flags.TryGetValue("shot", out string shotPath))
 		{
-			// Screenshots are always a 1920x1080 window, whatever the monitor: the game itself
-			// starts fullscreen, which would capture at the screen's own resolution.
+			// Screenshots are a 1920x1080 window by default, whatever the monitor: the game itself
+			// starts fullscreen, which would capture at the screen's own resolution. --shot-size
+			// picks another shape (1620x1080 is 3:2, 2520x1080 is 21:9) to check layouts on it.
+			Vector2I shotSize = new(1920, 1080);
+			if (flags.TryGetValue("shot-size", out string sizeText) && sizeText.Split('x') is [string w, string h] && int.TryParse(w, out int sw) && int.TryParse(h, out int sh))
+				shotSize = new Vector2I(sw, sh);
 			DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
-			DisplayServer.WindowSetSize(new Vector2I(1920, 1080));
+			DisplayServer.WindowSetSize(shotSize);
 			ScheduleScreenshot(shotPath, flags.TryGetValue("shot-after", out string after) ? after.ToFloat() : 3.0f);
 		}
 
 		switch (flags.TryGetValue("screen", out string screen) ? screen : "title")
 		{
-			case "select": DemoJoin(); ShowCharacterSelect(); break;
+			case "select": DemoJoin(); Session.TeamsMode = flags.ContainsKey("teams"); ShowCharacterSelect(); break;
 			case "stage": DemoJoin(); ShowStageSelect(); break;
 			case "battle": DemoJoin(); ShowBattle(); break;
-			case "demo": ShowDemo(flags.ContainsKey("teams")); break;
+			case "demo": ShowDemo(flags.ContainsKey("teams"), flags.TryGetValue("stage", out string stage) && int.TryParse(stage, out int s) ? s : 1); break;
 			// A downloaded copy checks ecec.dev for a newer version before anything else.
 			default:
 				if (UpdateScreen.ShouldCheck()) Swap(new UpdateScreen { Name = "Update" }, true);
@@ -99,7 +119,16 @@ public partial class GameRoot : Node2D
 	{
 		current?.QueueFree();
 		current = next;
+		// A screen must fill the real view. Its anchors are set before it enters the tree:
+		// setting them later, in its own _Ready, left the screen with zero size.
+		if (next is Control screen) screen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		if (onUi) ui.AddChild(next); else AddChild(next);
+
+		// Every new screen fades in from black.
+		fadeTween?.Kill();
+		fade.Modulate = Colors.White;
+		fadeTween = CreateTween();
+		fadeTween.TweenProperty(fade, "modulate:a", 0.0f, 0.35).SetTrans(Tween.TransitionType.Sine);
 	}
 
 	public void ShowTitle() => Swap(new TitleScreen { Name = "Title" }, true);
@@ -120,12 +149,14 @@ public partial class GameRoot : Node2D
 	}
 
 	/// <summary>A computer-only match for screenshots and attract mode.</summary>
-	void ShowDemo(bool teams)
+	void ShowDemo(bool teams, int stage)
 	{
-		BattleSetup setup = new() { Stage = Content.Stages[1], TeamsActive = teams };
+		BattleSetup setup = new() { Stage = Content.Stages[Mathf.Clamp(stage, 0, Content.Stages.Length - 1)], TeamsActive = teams };
 		for (int i = 0; i < 4; i++)
 			setup.Fighters.Add(new Fighter { Wizard = Content.Wizards[i], Slot = -1, Spawn = i, Label = "CPU" + (i + 1), Team = teams ? Teams.DefaultForSlot(i) : Teams.NoTeam });
-		StartBattle(setup, skipCountdown: false);
+		Battle battle = StartBattle(setup, skipCountdown: false);
+		// --charged: everyone starts with a full ultimate, to see them without a long wait.
+		if (flags.ContainsKey("charged")) foreach (Wizard wizard in battle.Wizards) wizard.AddUltimateCharge(100.0f);
 	}
 
 	/// <summary>For --screen shots of the menus: the keyboard joins as player 1 with the Fire wizard locked in.</summary>

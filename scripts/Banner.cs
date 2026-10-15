@@ -23,6 +23,7 @@ public static class Banner
 		};
 		label.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		label.Position = offset;
+		label.AddThemeFontOverride("font", Ui.HeadingFont);
 		label.AddThemeFontSizeOverride("font_size", 120);
 		label.AddThemeColorOverride("font_color", colour);
 		label.AddThemeConstantOverride("outline_size", 10);

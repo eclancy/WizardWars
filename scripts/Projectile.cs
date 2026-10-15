@@ -5,9 +5,9 @@ public enum ProjectileKind { Fireball, Icicle, Mudball, ElectricityBall }
 /// <summary>
 /// A basic-attack bolt. It flies straight, and stops at the first thing it meets:
 ///  - an enemy wizard (damage, gone);
-///  - another wizard's projectile (both gone - every element cancels every other, as in Unity);
-///  - anything solid: a wall, an obstacle, a rock wall, a lightning rod.
-/// It passes through its caster and the caster's teammates.
+///  - anything solid: a wall, stage cover, a rock wall, a lightning rod.
+/// It passes through its caster, the caster's teammates, and other bolts. (In Unity every
+/// element cancelled every other mid-air; that was removed on 2026-10-15 so shots trade.)
 ///
 /// Hits are tested with geometry each frame rather than physics callbacks, so they behave
 /// identically headless and there are no collision masks to get wrong.
@@ -97,18 +97,6 @@ public partial class Projectile : Node2D
 		{
 			if (!Combat.CanAffect(Caster, CasterTeam, wizard) || !wizard.HitTest(point, hitRadius)) continue;
 			wizard.TakeDamage(damage);
-			Vanish();
-			return;
-		}
-
-		foreach (Projectile other in battle.Projectiles)
-		{
-			if (other == this || other.spent || other.Caster == Caster) continue;
-			// A teammate's shot is not an enemy shot to cancel against.
-			if (Teams.Allied(CasterTeam, other.CasterTeam)) continue;
-			float reach = hitRadius + other.hitRadius;
-			if (point.DistanceSquaredTo(other.HitPoint) > reach * reach) continue;
-			other.Vanish();
 			Vanish();
 			return;
 		}

@@ -86,7 +86,7 @@ public partial class Battle : Node2D
 
 	/// <summary>Raised once when the result screen has finished, with the result text.</summary>
 	public event Action<string> Finished;
-	/// <summary>The result, once there is one: a label like "P2", "CPU", "RED", or "DRAW".</summary>
+	/// <summary>The result, once there is one: a label like "P2", "CPU", "GREEN", or "DRAW".</summary>
 	public string Result { get; private set; }
 
 	BattleSetup setup;
@@ -98,6 +98,8 @@ public partial class Battle : Node2D
 	TextureRect countdownImage;
 	readonly List<Projectile> spentProjectiles = new();
 	CircleShape2D probe;
+	Camera2D camera;
+	float shakeStrength, shakeLeft, shakeLength;
 	PhysicsShapeQueryParameters2D query;
 
 	/// <summary>Skip the 3-2-1 (tests and soak runs).</summary>
@@ -105,7 +107,9 @@ public partial class Battle : Node2D
 
 	public static Battle Create(BattleSetup setup)
 	{
-		Battle battle = new() { setup = setup, Name = "Battle" };
+		// Y-sorted, so wizards and cover pieces draw in depth order: stand behind a stump and
+		// the stump hides you.
+		Battle battle = new() { setup = setup, Name = "Battle", YSortEnabled = true };
 		return battle;
 	}
 
@@ -141,13 +145,15 @@ public partial class Battle : Node2D
 	void BuildArena()
 	{
 		StageData stage = setup.Stage;
-		AddChild(new Camera2D { Name = "Camera" });
+		camera = new Camera2D { Name = "Camera" };
+		AddChild(camera);
 
-		// Cover the whole screen (the window can be wider than 16:9 with "expand").
+		// The background covers the whole view for every common screen shape: with "expand" the
+		// view is 1920 wide up to 1440 tall (4:3), or 1080 tall up to 2560 wide (21:9). The
+		// scale is fixed rather than fitted to the window so the floor art sits in the same
+		// place on every screen, which is what cover placement relies on.
 		Sprite2D background = new() { Texture = stage.Background, ZIndex = -100 };
-		Vector2 size = stage.Background.GetSize();
-		float cover = Mathf.Max(Units.U(Units.ArenaSize.X) * 1.15f / size.X, Units.U(Units.ArenaSize.Y) * 1.15f / size.Y);
-		background.Scale = Vector2.One * cover;
+		background.Scale = Vector2.One * BackgroundScale(stage.Background.GetSize());
 		AddChild(background);
 
 		StaticBody2D walls = new() { Name = "Walls", CollisionLayer = 1u << 0, CollisionMask = 0 };
@@ -159,20 +165,31 @@ public partial class Battle : Node2D
 		AddWall(walls, new Vector2(half.X + thickness * 0.5f, 0), new Vector2(thickness, half.Y * 2 + thickness * 2));
 		AddChild(walls);
 
-		foreach (Vector2 rock in stage.Rocks) AddObstacle("res://assets/art/stages/rock.png", Units.U(rock), Units.U(0.55f), Units.U(0.05f));
-		foreach (Vector2 cactus in stage.Cacti) AddObstacle("res://assets/art/stages/cactus.png", Units.U(cactus), Units.U(0.5f), Units.U(0.1f));
+		// Outside the walls the floor is dimmed: on a 16:9 screen the arena almost fills the view, but
+		// a taller (16:10, 3:2) or wider one shows floor nobody can reach, and it should look it.
+		Color dim = new(0.02f, 0.01f, 0.05f, 0.55f);
+		Vector2 outer = CoveredView;
+		AddDim(new Rect2(-outer.X, -outer.Y, outer.X * 2, outer.Y - half.Y), dim);
+		AddDim(new Rect2(-outer.X, half.Y, outer.X * 2, outer.Y - half.Y), dim);
+		AddDim(new Rect2(-outer.X, -half.Y, outer.X - half.X, half.Y * 2), dim);
+		AddDim(new Rect2(half.X, -half.Y, outer.X - half.X, half.Y * 2), dim);
+
+		// The floors are only ground; each stage's cover is the one thing that blocks wizards and shots.
+		// Each piece gets its own variant (on Storm Plateau, its own rune).
+		for (int i = 0; i < stage.Cover.Length; i++) AddChild(Cover.Create(stage.CoverKind, Units.U(stage.Cover[i]), i));
 	}
+
+	/// <summary>The view the background must cover, in pixels: 21:9 wide and 4:3 tall at once.</summary>
+	public static readonly Vector2 CoveredView = new(2560, 1440);
+
+	/// <summary>Scale for a stage background so it covers <see cref="CoveredView"/>.</summary>
+	public static float BackgroundScale(Vector2 textureSize) => Mathf.Max(CoveredView.X / textureSize.X, CoveredView.Y / textureSize.Y);
+
+	void AddDim(Rect2 rect, Color colour) =>
+		AddChild(new Polygon2D { Polygon = new[] { rect.Position, new Vector2(rect.End.X, rect.Position.Y), rect.End, new Vector2(rect.Position.X, rect.End.Y) }, Color = colour, ZIndex = -90 });
 
 	static void AddWall(StaticBody2D body, Vector2 position, Vector2 size) =>
 		body.AddChild(new CollisionShape2D { Position = position, Shape = new RectangleShape2D { Size = size } });
-
-	void AddObstacle(string art, Vector2 position, float radius, float lowerBy)
-	{
-		StaticBody2D obstacle = new() { Position = position, CollisionLayer = 1u << 0, CollisionMask = 0, ZIndex = 2 };
-		obstacle.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius }, Position = new Vector2(0, lowerBy) });
-		obstacle.AddChild(new Sprite2D { Texture = Content.Texture(art), Scale = Vector2.One * Units.SpriteScale(1.0f) });
-		AddChild(obstacle);
-	}
 
 	/// <summary>
 	/// Whether a circle overlaps anything solid: an arena wall, an obstacle, a rock wall or a
@@ -188,6 +205,13 @@ public partial class Battle : Node2D
 		probe.Radius = Mathf.Max(1.0f, radius);
 		query.Transform = new Transform2D(0.0f, point);
 		return GetWorld2D().DirectSpaceState.IntersectShape(query, 1).Count > 0;
+	}
+
+	/// <summary>Whether nothing solid (cover, a rock wall, a rod) stands between two points.</summary>
+	public bool HasLineOfSight(Vector2 from, Vector2 to)
+	{
+		using PhysicsRayQueryParameters2D ray = PhysicsRayQueryParameters2D.Create(from, to, 1u << 0);
+		return GetWorld2D().DirectSpaceState.IntersectRay(ray).Count == 0;
 	}
 
 	// ---- Wizards ----
@@ -208,7 +232,7 @@ public partial class Battle : Node2D
 	}
 
 	/// <summary>
-	/// Teammates start together: Red takes the player 1 and 3 spawns and Blue the player 2 and 4
+	/// Teammates start together: Green takes the player 1 and 3 spawns and Pink the player 2 and 4
 	/// spawns; a team with more than two players spills into whatever the other side left.
 	/// </summary>
 	Vector2[] TeamSpawns(StageData stage)
@@ -218,7 +242,7 @@ public partial class Battle : Node2D
 		List<Fighter> overflow = new();
 		foreach (Fighter fighter in setup.Fighters)
 		{
-			List<Vector2> side = sides[fighter.Team == Teams.Red ? 0 : 1];
+			List<Vector2> side = sides[fighter.Team == Teams.Green ? 0 : 1];
 			if (side.Count == 0) { overflow.Add(fighter); continue; }
 			spawns[fighter.Spawn] = side[0];
 			side.RemoveAt(0);
@@ -283,6 +307,10 @@ public partial class Battle : Node2D
 		Control panel = new();
 		panel.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		overlay.AddChild(panel);
+		// Dim the arena behind the result so it stands out.
+		ColorRect dim = new() { Color = new Color(0, 0, 0, 0.45f), MouseFilter = Control.MouseFilterEnum.Ignore };
+		dim.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		panel.AddChild(dim);
 
 		// The four players have authored win art; the computer, teams and draws are drawn.
 		if (result.Length == 2 && result[0] == 'P')
@@ -297,8 +325,29 @@ public partial class Battle : Node2D
 			_ when result.StartsWith("CPU") => "THE COMPUTER WINS",
 			_ => result + " TEAM WINS",
 		};
-		Color colour = result == "RED" ? Teams.Colour(Teams.Red) : result == "BLUE" ? Teams.Colour(Teams.Blue) : new Color(0.85f, 0.55f, 1.0f);
+		Color colour = result == "GREEN" ? Teams.Colour(Teams.Green) : result == "PINK" ? Teams.Colour(Teams.Pink) : new Color(0.85f, 0.55f, 1.0f);
 		panel.AddChild(Banner.Create(text, colour));
+	}
+
+	// ---- Camera shake ----
+
+	/// <summary>
+	/// Shakes the view for a moment, strongest at the start: meteor impacts, ultimates going off,
+	/// an earthquake's jolts. A stronger shake overrides a weaker one still running.
+	/// </summary>
+	public void Shake(float pixels, float seconds)
+	{
+		if (shakeLeft > 0.0f && pixels * seconds < shakeStrength * shakeLeft) return;
+		shakeStrength = pixels;
+		shakeLeft = shakeLength = seconds;
+	}
+
+	public override void _Process(double delta)
+	{
+		if (camera == null) return;
+		shakeLeft = Mathf.Max(0.0f, shakeLeft - (float)delta);
+		float amount = shakeLeft > 0.0f ? shakeStrength * shakeLeft / shakeLength : 0.0f;
+		camera.Offset = new Vector2((float)GD.RandRange(-1.0, 1.0), (float)GD.RandRange(-1.0, 1.0)) * amount;
 	}
 
 	// ---- Frame ----

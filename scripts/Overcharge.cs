@@ -30,6 +30,29 @@ public partial class Overcharge : Node2D
 		return overcharge;
 	}
 
+	// Lightning crackles round the caster the whole time, and a charged ring flickers at their feet.
+	float nextArc;
+
+	public override void _Process(double delta)
+	{
+		if (finished) return;
+		if (elapsed >= nextArc)
+		{
+			nextArc = elapsed + 0.07f;
+			Vector2 reach = Vector2.FromAngle((float)GD.RandRange(0.0, Mathf.Tau)) * Units.U((float)GD.RandRange(0.9, 1.7));
+			AddChild(Bolt.Create(new Vector2(0.0f, -Units.U(0.2f)), reach, 0.12f));
+		}
+		QueueRedraw();
+	}
+
+	public override void _Draw()
+	{
+		float flicker = 0.5f + 0.5f * Mathf.Sin(elapsed * 40.0f);
+		DrawSetTransform(new Vector2(0.0f, Units.U(0.6f)), 0.0f, new Vector2(1.0f, 0.45f));
+		DrawArc(Vector2.Zero, Units.U(1.1f), 0.0f, Mathf.Tau, 48, new Color(1.0f, 0.9f, 0.3f, 0.45f + 0.4f * flicker), 6.0f, true);
+		DrawCircle(Vector2.Zero, Units.U(1.1f), new Color(1.0f, 0.95f, 0.5f, 0.12f + 0.1f * flicker));
+	}
+
 	public override void _PhysicsProcess(double delta)
 	{
 		if (finished) return;

@@ -25,6 +25,9 @@ public struct InputState
 	public bool ThirdPressed;
 	public bool ThirdHeld;
 
+	/// <summary>LB / 4. The fourth ability: the one restored from the Unity original.</summary>
+	public bool FourthPressed;
+
 	/// <summary>X / 5.</summary>
 	public bool UltimatePressed;
 

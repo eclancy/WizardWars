@@ -10,5 +10,5 @@ DisplayName = "Storm Plateau"
 Background = ExtResource("2_background")
 Spawns = PackedVector2Array(-8, 4.5, 8, 4.5, -8, -4.5, 8, -4.5)
 ComputerSpawn = 3
-Rocks = PackedVector2Array(-4, 0, 4, 0)
-Cacti = PackedVector2Array()
+CoverKind = "obelisk"
+Cover = PackedVector2Array(-2.5, 1.6, 2.5, 1.6, -2.5, -1.6, 2.5, -1.6)

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/rockwall.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "tremor"
+DisplayName = "Tremor"
+Description = "Stamp the ground: enemies close to you are hurt and staggered."
+Cost = 30.0
+Cooldown = 5.0
+Radius = 4.0
+Damage = 12.0
+Duration2 = 0.75
+Sound = ExtResource("2_sound")

@@ -27,6 +27,8 @@ public static class RegressionChecks
 		CheckStages();
 		CheckStatusEffects();
 		CheckFriendlyFire();
+		CheckFreezeWiggle();
+		CheckOneWizardPerPlayer();
 		CheckUltimateCharge();
 		CheckMusic();
 		CheckBalance();
@@ -69,7 +71,7 @@ public static class RegressionChecks
 		Expect(Units.U(1.0f, 1.0f).Y < 0.0f, "Unity +y maps to Godot up");
 	}
 
-	/// <summary>Every wizard loads with art and four abilities the factory knows how to build.</summary>
+	/// <summary>Every wizard loads with art and five abilities the factory knows how to build.</summary>
 	static void CheckWizards()
 	{
 		WizardData[] wizards = Content.Wizards;
@@ -81,18 +83,22 @@ public static class RegressionChecks
 			if (wizard == null) { Expect(false, "wizard loads"); continue; }
 			Expect(wizard.Portrait != null && wizard.Targeter != null, $"{wizard.Id} has portrait and targeter");
 			AbilityData[] abilities = wizard.Abilities;
-			for (int i = 0; i < 4; i++)
+			for (int i = 0; i < WizardData.SlotCount; i++)
 			{
 				AbilityData ability = abilities[i];
 				bool ok = ability != null && known.Contains(ability.Id) && ability.DisplayName.Length > 0;
-				Expect(ok, $"{wizard.Id} ability {i + 1}", ability == null ? "missing" : ability.Id);
+				Expect(ok, $"{wizard.Id} ability {i + 1} ({WizardData.PadButtons[i]})", ability == null ? "missing" : ability.Id);
 				if (ability != null) seen.Add(ability.Id);
 			}
-			// Basics are free and fast; everything else costs energy or the ultimate meter.
-			Expect(abilities[0] != null && abilities[0].Cost == 0.0f && abilities[0].Cooldown > 0.0f, $"{wizard.Id} basic attack is free with a cooldown");
-			Expect(abilities[0]?.Sound != null, $"{wizard.Id} basic attack has a sound");
+			// Basics are free and fast; the abilities between cost energy and have their own
+			// cooldown (Unity's fourths borrowed the third's); the ultimate costs only the meter.
+			AbilityData basic = abilities[WizardData.BasicSlot], fourth = abilities[WizardData.FourthSlot], ultimate = abilities[WizardData.UltimateSlot];
+			Expect(basic != null && basic.Cost == 0.0f && basic.Cooldown > 0.0f, $"{wizard.Id} basic attack is free with a cooldown");
+			Expect(basic?.Sound != null, $"{wizard.Id} basic attack has a sound");
+			Expect(fourth != null && fourth.Cost > 0.0f && fourth.Cost <= 40.0f && fourth.Cooldown > 0.0f, $"{wizard.Id} fourth ability costs 1-40 energy and has a cooldown", fourth == null ? "missing" : $"{fourth.Cost} energy");
+			Expect(ultimate != null && ultimate.Cost == 0.0f, $"{wizard.Id} ultimate costs no energy");
 		}
-		Expect(seen.Count == 16, "16 distinct abilities", $"{seen.Count}");
+		Expect(seen.Count == 20, "20 distinct abilities", $"{seen.Count}");
 	}
 
 	static bool InsideArena(Vector2 unity, float margin) =>
@@ -111,13 +117,25 @@ public static class RegressionChecks
 			bool spawnsInside = true;
 			foreach (Vector2 spawn in stage.Spawns) spawnsInside &= InsideArena(spawn, 0.7f);
 			Expect(spawnsInside, $"{stage.Id} spawns are inside the arena walls");
+			// The cover must keep clear of spawns, so nobody starts pinned behind (or against) it.
 			bool clear = true;
 			foreach (Vector2 spawn in stage.Spawns)
-			{
-				foreach (Vector2 rock in stage.Rocks) clear &= spawn.DistanceTo(rock) > 1.5f;
-				foreach (Vector2 cactus in stage.Cacti) clear &= spawn.DistanceTo(cactus) > 1.5f;
-			}
-			Expect(clear, $"{stage.Id} no spawn inside an obstacle");
+				foreach (Vector2 piece in stage.Cover) clear &= spawn.DistanceTo(piece) > 2.5f;
+			Expect(clear, $"{stage.Id} no spawn next to cover");
+
+			Expect(stage.Cover.Length >= 3, $"{stage.Id} has cover to hide behind", $"{stage.Cover.Length} pieces");
+			bool known = true;
+			try { CoverArt.For(stage.CoverKind); } catch (System.ArgumentException) { known = false; }
+			Expect(known, $"{stage.Id} cover kind '{stage.CoverKind}' has art");
+			bool coverInside = true;
+			foreach (Vector2 piece in stage.Cover) coverInside &= InsideArena(piece, 1.5f);
+			Expect(coverInside, $"{stage.Id} cover is inside the arena");
+			// Cover is for hiding behind, not for walling the arena in: there is always room to walk
+			// between two pieces.
+			float closest = float.MaxValue;
+			for (int a = 0; a < stage.Cover.Length; a++)
+				for (int b = a + 1; b < stage.Cover.Length; b++) closest = Mathf.Min(closest, stage.Cover[a].DistanceTo(stage.Cover[b]));
+			Expect(closest >= 3.0f, $"{stage.Id} cover pieces are spread out", $"closest pair {closest:0.0} units apart");
 		}
 	}
 
@@ -147,9 +165,9 @@ public static class RegressionChecks
 	static void CheckFriendlyFire()
 	{
 		WizardData data = Content.Wizards[0];
-		Wizard caster = Wizard.Create(null, data, 0, "P1", Teams.Red, InputState.NoneSource, Vector2.Zero);
-		Wizard ally = Wizard.Create(null, data, 2, "P3", Teams.Red, InputState.NoneSource, Vector2.Zero);
-		Wizard enemy = Wizard.Create(null, data, 1, "P2", Teams.Blue, InputState.NoneSource, Vector2.Zero);
+		Wizard caster = Wizard.Create(null, data, 0, "P1", Teams.Green, InputState.NoneSource, Vector2.Zero);
+		Wizard ally = Wizard.Create(null, data, 2, "P3", Teams.Green, InputState.NoneSource, Vector2.Zero);
+		Wizard enemy = Wizard.Create(null, data, 1, "P2", Teams.Pink, InputState.NoneSource, Vector2.Zero);
 		Wizard loner = Wizard.Create(null, data, 3, "P4", Teams.NoTeam, InputState.NoneSource, Vector2.Zero);
 
 		Expect(Combat.CanAffect(caster, caster.Team, enemy), "an enemy is hit");
@@ -161,6 +179,46 @@ public static class RegressionChecks
 		Expect(!Teams.Allied(Teams.NoTeam, Teams.NoTeam), "no-team players are not allies");
 
 		foreach (Wizard wizard in new[] { caster, ally, enemy, loner }) wizard.Free();
+	}
+
+	/// <summary>
+	/// A freeze can be wiggled out of: each change of stick direction breaks off
+	/// <see cref="Wizard.WiggleBreak"/> (holding one way does nothing), and enough wiggling frees
+	/// you. A Tremor stagger is not ice, so there is nothing to wiggle out of.
+	/// </summary>
+	static void CheckFreezeWiggle()
+	{
+		Wizard wizard = Wizard.Create(null, Content.Wizards[0], 0, "P1", Teams.NoTeam, InputState.NoneSource, Vector2.Zero);
+		wizard.Stun(1.5f);
+		Expect(wizard.Frozen, "Ice Wave's stun is a freeze");
+		wizard.WiggleFree(Vector2.Left);
+		wizard.WiggleFree(Vector2.Left);
+		Expect(Mathf.IsEqualApprox(wizard.StunRemaining, 1.5f), "holding the stick one way breaks nothing", $"{wizard.StunRemaining:0.00}s left");
+		wizard.WiggleFree(Vector2.Right);
+		wizard.WiggleFree(Vector2.Left);
+		Expect(Mathf.IsEqualApprox(wizard.StunRemaining, 1.5f - 2 * Wizard.WiggleBreak), "each wiggle breaks off some of the freeze", $"{wizard.StunRemaining:0.00}s left");
+		for (int i = 0; i < 20 && wizard.Stunned; i++) wizard.WiggleFree(i % 2 == 0 ? Vector2.Right : Vector2.Left);
+		Expect(!wizard.Stunned && !wizard.Frozen, "wiggling breaks out of the ice");
+		wizard.Stun(0.75f, StunKind.Staggered);
+		Expect(wizard.Stunned && !wizard.Frozen, "a stagger is not a freeze");
+		wizard.Free();
+	}
+
+	/// <summary>One player per wizard: cursors skip a wizard someone else has locked in.</summary>
+	static void CheckOneWizardPerPlayer()
+	{
+		Session.Reset();
+		PlayerSlot p1 = Session.Slots[0], p2 = Session.Slots[1];
+		p1.Joined = p2.Joined = true;
+		p1.WizardIndex = 0;
+		p1.Locked = true;
+		Expect(Session.LockedOn(0, p2) == p1 && Session.LockedOn(0, p1) == null, "a locked wizard is taken for everyone else");
+		Expect(Session.NextFree(1, -1, p2) == 3, "moving left skips a taken wizard", $"{Session.NextFree(1, -1, p2)}");
+		Expect(Session.FirstFree(0, p2) == 1, "a player on a taken wizard moves to the next free one");
+		p2.WizardIndex = 1;
+		p2.Locked = true;
+		Expect(Session.NextFree(3, 1, Session.Slots[2]) == 2, "two taken wizards are both skipped", $"{Session.NextFree(3, 1, Session.Slots[2])}");
+		Session.Reset();
 	}
 
 	/// <summary>

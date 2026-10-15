@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WizardData" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="WizardData" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/WizardData.cs" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/art/wizards/electricity.png" id="2_portrait"]
@@ -6,7 +6,8 @@
 [ext_resource type="Resource" path="res://data/abilities/electricity-ball.tres" id="4_basic"]
 [ext_resource type="Resource" path="res://data/abilities/lightning-rod.tres" id="5_second"]
 [ext_resource type="Resource" path="res://data/abilities/speed-up.tres" id="6_third"]
-[ext_resource type="Resource" path="res://data/abilities/overcharge.tres" id="7_ultimate"]
+[ext_resource type="Resource" path="res://data/abilities/chain-lightning.tres" id="7_fourth"]
+[ext_resource type="Resource" path="res://data/abilities/overcharge.tres" id="8_ultimate"]
 
 [resource]
 script = ExtResource("1_script")
@@ -18,4 +19,5 @@ Colour = Color(1, 0.9, 0.3, 1)
 Basic = ExtResource("4_basic")
 Second = ExtResource("5_second")
 Third = ExtResource("6_third")
-Ultimate = ExtResource("7_ultimate")
+Fourth = ExtResource("7_fourth")
+Ultimate = ExtResource("8_ultimate")

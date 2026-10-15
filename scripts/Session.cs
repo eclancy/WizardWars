@@ -59,6 +59,32 @@ public static class Session
 	}
 
 	/// <summary>
+	/// The player locked in on a wizard, other than <paramref name="except"/>, or null. Each
+	/// wizard can be played by one player at a time, so a wizard's colour is its player's colour.
+	/// </summary>
+	public static PlayerSlot LockedOn(int wizardIndex, PlayerSlot except = null)
+	{
+		foreach (PlayerSlot slot in Slots)
+			if (slot != except && slot.Joined && slot.Locked && slot.WizardIndex == wizardIndex) return slot;
+		return null;
+	}
+
+	/// <summary>The next wizard in a direction (+1 or -1) nobody else has locked in, or <paramref name="from"/> if none.</summary>
+	public static int NextFree(int from, int step, PlayerSlot slot)
+	{
+		int count = Content.Wizards.Length;
+		for (int k = 1; k <= count; k++)
+		{
+			int index = ((from + step * k) % count + count) % count;
+			if (LockedOn(index, slot) == null) return index;
+		}
+		return from;
+	}
+
+	/// <summary>The first wizard from <paramref name="from"/> onward nobody else has locked in.</summary>
+	public static int FirstFree(int from, PlayerSlot slot) => LockedOn(from, slot) == null ? from : NextFree(from, 1, slot);
+
+	/// <summary>
 	/// Teams needs two or more players with somebody on each side. A lone player in Teams
 	/// mode plays the computer in Free-for-All, as in Unity.
 	/// </summary>
@@ -67,13 +93,13 @@ public static class Session
 		get
 		{
 			if (!TeamsMode) return false;
-			bool red = false, blue = false;
+			bool green = false, pink = false;
 			foreach (PlayerSlot slot in Slots)
 			{
 				if (!slot.Joined) continue;
-				if (slot.Team == Teams.Red) red = true; else blue = true;
+				if (slot.Team == Teams.Green) green = true; else pink = true;
 			}
-			return red && blue;
+			return green && pink;
 		}
 	}
 

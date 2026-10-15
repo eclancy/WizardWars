@@ -2,8 +2,8 @@ using Godot;
 
 /// <summary>
 /// The bars over a wizard's head, as in Unity: health, energy (flashing red when a cast is
-/// refused for want of energy), a gold ultimate meter that flashes white when ready, and three
-/// cooldown pips for the basic, second and third abilities. In Teams a strip in the team colour
+/// refused for want of energy), a gold ultimate meter that flashes white when ready, and four
+/// cooldown pips for the basic, second, third and fourth abilities. In Teams a strip in the team colour
 /// runs down the left edge. New in the port: the player's label, so P1-P4 and CPU are obvious.
 ///
 /// Pips read their fill straight from the ability's cooldown; Unity had to learn cooldown
@@ -70,8 +70,9 @@ public partial class WizardHud : Node2D
 		y += BarHeight + Gap + 1.0f;
 
 		const float pipGap = 3.0f, pipHeight = 5.0f;
-		float pipWidth = (Width - pipGap * 2.0f) / 3.0f;
-		for (int i = 0; i < 3; i++)
+		const int pips = WizardData.UltimateSlot; // one per ability before the ultimate
+		float pipWidth = (Width - pipGap * (pips - 1)) / pips;
+		for (int i = 0; i < pips; i++)
 		{
 			Ability ability = wizard.Abilities[i];
 			float x = i * (pipWidth + pipGap);

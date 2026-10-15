@@ -10,5 +10,5 @@ DisplayName = "Woodland"
 Background = ExtResource("2_background")
 Spawns = PackedVector2Array(-7, 4, 7, 4, -7, -4, 7, -4)
 ComputerSpawn = 3
-Rocks = PackedVector2Array()
-Cacti = PackedVector2Array()
+CoverKind = "stump"
+Cover = PackedVector2Array(1.9, 2.4, -1.9, -2.4, -5.4, 0.8, 5, -0.8)

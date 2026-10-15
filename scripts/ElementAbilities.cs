@@ -33,7 +33,7 @@ public sealed class AbsoluteZeroAbility : Ultimate
 
 	protected override void Cast() => Battle.AddEffect(Aura.Create(
 		Owner, Data.Radius, Data.Duration, new Modifier { Slow = Data.SlowPercent, NoRegen = true },
-		"res://assets/art/ultimates/absolute-zero.png", new Color(0.55f, 0.85f, 1.0f), 0.0f, Finish));
+		"res://assets/art/ultimates/absolute-zero.png", new FrostFx(), Finish));
 }
 
 /// <summary>Mud Patch: turns the ground at the target to mud after clods spurt up and spread.</summary>
@@ -61,7 +61,7 @@ public sealed class RockWallAbility : Ability
 	}
 }
 
-/// <summary>Earthquake: the ground shakes around the caster, slowing enemies who stay close.</summary>
+/// <summary>Earthquake: the ground cracks and shakes around the caster, slowing enemies who stay close.</summary>
 public sealed class EarthquakeAbility : Ultimate
 {
 	double reusableAt;
@@ -75,7 +75,7 @@ public sealed class EarthquakeAbility : Ultimate
 
 	protected override void Cast() => Battle.AddEffect(Aura.Create(
 		Owner, Data.Radius, Data.Duration, new Modifier { Slow = Data.SlowPercent },
-		"res://assets/art/ultimates/earthquake.png", new Color(0.75f, 0.55f, 0.3f), Data.Interval,
+		"res://assets/art/ultimates/earthquake.png", new QuakeFx(Data.Interval),
 		() => { reusableAt = Now + Data.Duration2; Finish(); }));
 }
 

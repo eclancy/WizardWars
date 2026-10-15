@@ -31,9 +31,24 @@ public class CpuInputSource : IInputSource
 	double Now => Battle.Time;
 	static float U(float units) => Units.U(units);
 
+	double nextWiggle;
+	float wiggleSide = 1.0f;
+
+	/// <summary>Frozen in ice: rock the stick from side to side to break out, a few times a second.</summary>
+	InputState Wiggle()
+	{
+		if (Now >= nextWiggle)
+		{
+			nextWiggle = Now + GD.RandRange(0.16, 0.3);
+			wiggleSide = -wiggleSide;
+		}
+		return new InputState { Move = new Vector2(wiggleSide, 0.0f) };
+	}
+
 	public InputState Poll()
 	{
 		if (self == null || !GodotObject.IsInstanceValid(self) || !self.Alive || !Battle.Fighting) return InputState.None;
+		if (self.Frozen) return Wiggle();
 
 		AcquireTarget();
 		InputState state = new() { Move = Steer() };
@@ -186,7 +201,8 @@ public class CpuInputSource : IInputSource
 	{
 		float distance = Distance;
 		string id = self.Data.Id;
-		Ability second = self.Abilities[1], third = self.Abilities[2];
+		Ability second = self.Abilities[WizardData.SecondSlot], third = self.Abilities[WizardData.ThirdSlot];
+		Ability fourth = self.Abilities[WizardData.FourthSlot];
 
 		if (self.UltimateReady && UltimateInRange(id, distance))
 		{
@@ -196,6 +212,7 @@ public class CpuInputSource : IInputSource
 			return;
 		}
 
+		if (fourth.IsReady && GD.Randf() < 0.5f && FourthWorthIt(id, distance, ref state)) return;
 		if (third.IsReady && GD.Randf() < 0.5f && ThirdWorthIt(id, distance, ref state)) return;
 
 		if (second.IsReady && distance < U(TargeterRange + 1.5f) && self.Energy > 45.0f && GD.Randf() < 0.45f)
@@ -206,7 +223,8 @@ public class CpuInputSource : IInputSource
 			return;
 		}
 
-		if (self.Abilities[0].IsReady && distance < U(10.0f))
+		// Don't waste shots into cover: wait for a clear line (strafing will find one).
+		if (self.Abilities[WizardData.BasicSlot].IsReady && distance < U(10.0f) && Battle.HasLineOfSight(self.GlobalPosition, target.GlobalPosition))
 		{
 			aimPoint = LeadPoint();
 			state.Aim = AimToward(aimPoint);
@@ -238,7 +256,7 @@ public class CpuInputSource : IInputSource
 				break;
 			case "ElectricityWizard":
 				// Speed Up to escape when hurt, or to close a long gap.
-				if (!(self.Health < 40.0f && distance < U(4.0f)) && distance < U(8.0f)) return false;
+				if (!(self.Health < Wizard.MaxHealth * 0.4f && distance < U(4.0f)) && distance < U(8.0f)) return false;
 				if (self.Energy < 30.0f) return false;
 				break;
 			default:
@@ -251,6 +269,38 @@ public class CpuInputSource : IInputSource
 		}
 		state.Aim = AimToward(aimPoint);
 		state.ThirdPressed = true;
+		return true;
+	}
+
+	// The fourth abilities: when each one is worth its 30-35 energy.
+	bool FourthWorthIt(string id, float distance, ref InputState state)
+	{
+		if (self.Energy < 40.0f) return false;
+		switch (id)
+		{
+			case "FireWizard":
+				// Meteor Strike lands on the targeter after 1.2 s: lead the target a little.
+				if (distance > U(TargeterRange + 1.0f)) return false;
+				aimPoint = target.GlobalPosition + targetVelocity * 0.6f;
+				break;
+			case "FrostWizard":
+				// Deep Freeze lands on the targeter after a short gather.
+				if (distance > U(TargeterRange + 0.5f)) return false;
+				aimPoint = target.GlobalPosition + targetVelocity * 0.3f;
+				break;
+			case "EarthWizard":
+				// Tremor only reaches four units around the caster.
+				if (distance > U(3.5f)) return false;
+				aimPoint = target.GlobalPosition;
+				break;
+			default:
+				// Chain Lightning finds its own targets within six units.
+				if (distance > U(5.5f)) return false;
+				aimPoint = target.GlobalPosition;
+				break;
+		}
+		state.Aim = AimToward(aimPoint);
+		state.FourthPressed = true;
 		return true;
 	}
 }

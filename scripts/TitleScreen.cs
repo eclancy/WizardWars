@@ -1,56 +1,63 @@
 using Godot;
 
 /// <summary>
-/// The title: the Wizard Wars book art, a blinking prompt, and the Unity keyboard-controls box.
+/// The title: the Wizard Wars book art over the magic backdrop, with the red START painted into
+/// the art flashing to invite a press, and the version in the corner. No text prompt: the art
+/// already says START.
+///
+/// The flash is an additive white copy of just the START letters (title-start-glow.png, built
+/// from title.png by <see cref="TitleGlowTool"/>), laid exactly over them and pulsed.
 /// Start or A on any pad, or Enter or Space, goes to Character Select. Escape quits.
 /// </summary>
 public partial class TitleScreen : Control
 {
-	Label prompt;
+	/// <summary>title.png's size, and where the START letters' mask sits in it (from TitleGlowTool).</summary>
+	static readonly Vector2 ArtSize = new(5528, 3921);
+	public static readonly Vector2 GlowOrigin = new(1960, 2773);
+
+	static readonly Rect2 ArtRect = new(250, 25, 1420, 1007);
+
+	Control art;
+	TextureRect glow;
 	double elapsed;
 
 	public override void _Ready()
 	{
 		SetAnchorsPreset(LayoutPreset.FullRect);
-		ColorRect black = new() { Color = Colors.Black };
-		black.SetAnchorsPreset(LayoutPreset.FullRect);
-		AddChild(black);
+		AddChild(new MagicBackdrop());
 
-		AddChild(Ui.Image(Content.Texture("res://assets/art/ui/title.png"), new Rect2(300, 10, 1320, 936)));
+		// The art and its START glow share a parent so they breathe together.
+		art = new Control { Position = ArtRect.Position, Size = ArtRect.Size, PivotOffset = ArtRect.Size * 0.5f, MouseFilter = MouseFilterEnum.Ignore };
+		DesignFrame.In(this).AddChild(art);
+		art.AddChild(Ui.Image(Content.Texture("res://assets/art/ui/title.png"), new Rect2(Vector2.Zero, ArtRect.Size)));
 
-		prompt = Ui.Label("Press Start", 44, new Color(1.0f, 0.95f, 0.7f));
-		Ui.Place(prompt, 0, 990, 1920, 70);
-		AddChild(prompt);
+		float scale = ArtRect.Size.X / ArtSize.X;
+		Texture2D glowTexture = Content.Texture("res://assets/art/ui/title-start-glow.png");
+		glow = Ui.Image(glowTexture, new Rect2(GlowOrigin * scale, glowTexture.GetSize() * scale));
+		glow.Material = new CanvasItemMaterial { BlendMode = CanvasItemMaterial.BlendModeEnum.Add };
+		glow.Modulate = new Color(1, 1, 1, 0);
+		art.AddChild(glow);
 
-		AddChild(Ui.Panel(new Rect2(30, 820, 520, 230)));
-		string[] lines =
-		{
-			"Controls",
-			"Move: left stick      Aim: right stick",
-			"Abilities: RT  LT  RB      Ultimate: X",
-			"Join / start: Start      Back: B",
-			"Character Select: View for mode, Y for team",
-			"Hold the right stick in for help",
-		};
-		for (int i = 0; i < lines.Length; i++)
-		{
-			Label line = Ui.Label(lines[i], i == 0 ? 24 : 19, i == 0 ? Ui.Waiting : Colors.White, HorizontalAlignment.Left);
-			Ui.Place(line, 50, 832 + i * 34, 490, 32);
-			AddChild(line);
-		}
-
+		// The version sits in the real bottom-right corner, whatever the screen's shape.
 		Label version = Ui.Label($"v{UpdateScreen.CurrentVersion}", 22, new Color(1, 1, 1, 0.55f), HorizontalAlignment.Right);
-		Ui.Place(version, 1640, 1030, 250, 36);
 		AddChild(version);
+		DesignFrame.BottomRight(version, 14);
 
 		Sfx.Music("res://assets/music/title.mp3");
 	}
 
-	public override void _PhysicsProcess(double delta)
+	public override void _Process(double delta)
 	{
 		elapsed += delta;
-		prompt.Modulate = new Color(1, 1, 1, 0.55f + 0.45f * Mathf.Sin((float)elapsed * 4.0f));
+		float t = (float)elapsed;
+		// START flashes: a quick bright pulse, then a rest.
+		float pulse = Mathf.Pow((Mathf.Sin(t * 3.6f) + 1.0f) * 0.5f, 3.0f);
+		glow.Modulate = new Color(1, 1, 1, 0.9f * pulse);
+		art.Scale = Vector2.One * (1.0f + 0.006f * Mathf.Sin(t * 1.3f));
+	}
 
+	public override void _PhysicsProcess(double delta)
+	{
 		if (Input.IsPhysicalKeyPressed(Key.Escape)) { GetTree().Quit(); return; }
 		foreach (int device in Devices.All)
 		{

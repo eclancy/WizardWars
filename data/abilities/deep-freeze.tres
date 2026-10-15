@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/icepatch.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "deep-freeze"
+DisplayName = "Deep Freeze"
+Description = "Frost gathers on the target, then freezes everyone caught there solid."
+Cost = 35.0
+Cooldown = 6.0
+Duration = 0.6
+Radius = 2.0
+Duration2 = 2.0
+Damage = 10.0
+Sound = ExtResource("2_sound")

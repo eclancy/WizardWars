@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/fire.wav" id="2_sound"]
 
 [resource]
 script = ExtResource("1_script")
@@ -14,3 +15,4 @@ Radius = 3.0
 Damage = 28.0
 Damage2 = 5.0
 Duration = 0.9
+Sound = ExtResource("2_sound")

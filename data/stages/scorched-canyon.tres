@@ -10,5 +10,5 @@ DisplayName = "Scorched Canyon"
 Background = ExtResource("2_background")
 Spawns = PackedVector2Array(-7, 0, 7, 0, 0, 5, 0, -5)
 ComputerSpawn = 1
-Rocks = PackedVector2Array(3, 2.5)
-Cacti = PackedVector2Array(-3, 2.5, 3, -2.5)
+CoverKind = "saguaro"
+Cover = PackedVector2Array(-4, -1.6, 4, 1.6, -1.6, 1.8, 1.6, -1.8)

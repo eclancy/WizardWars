@@ -31,6 +31,8 @@ public partial class AbilityData : Resource
 	[Export] public float Interval { get; set; }
 	/// <summary>Movement change in percent: a slow on enemies, or a speed-up on the caster.</summary>
 	[Export] public float SlowPercent { get; set; }
+	/// <summary>Burn damage per half-second tick that a hit sets (Meteor Strike). 0 = no burn.</summary>
+	[Export] public float BurnPerTick { get; set; }
 	/// <summary>Energy drained per second while channelled.</summary>
 	[Export] public float Drain { get; set; }
 
