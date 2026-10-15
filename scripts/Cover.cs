@@ -1,9 +1,10 @@
 using Godot;
 
 /// <summary>
-/// One piece of a stage's cover: a tree stump, an ice crystal cluster, a saguaro cactus or a
-/// rune obelisk. It is solid - wizards walk into it, projectiles stop on it, flames inside it go
-/// out - and it is y-sorted with the wizards, so a wizard standing behind it is drawn behind it.
+/// One piece of a stage's cover: a tree stump, an ice crystal cluster, a saguaro cactus, a rune
+/// obelisk, a basalt boulder or a toadstool. It is solid - wizards walk into it, projectiles stop
+/// on it, flames inside it go out - and it is y-sorted with the wizards, so a wizard standing
+/// behind it is drawn behind it.
 ///
 /// Every piece stands on a hard, flat shadow. Nothing else in an arena casts one (the floors are
 /// only ground), so a shadow means "solid": that is how a player tells cover from the map.
@@ -24,6 +25,8 @@ public partial class Cover : StaticBody2D
 			"crystal" => (new CircleShape2D { Radius = Units.U(0.55f) }, new Vector2(0.72f, 0.28f)),
 			"saguaro" => (new CircleShape2D { Radius = Units.U(0.36f) }, new Vector2(0.55f, 0.2f)),
 			"obelisk" => (new RectangleShape2D { Size = new Vector2(Units.U(0.74f), Units.U(0.4f)) }, new Vector2(0.6f, 0.22f)),
+			"boulder" => (new CircleShape2D { Radius = Units.U(0.62f) }, new Vector2(0.8f, 0.3f)),
+			"toadstool" => (new CircleShape2D { Radius = Units.U(0.36f) }, new Vector2(0.72f, 0.26f)),
 			_ => (new CircleShape2D { Radius = Units.U(0.6f) }, new Vector2(0.7f, 0.28f)),
 		};
 		cover.AddChild(new CollisionShape2D { Shape = shape });

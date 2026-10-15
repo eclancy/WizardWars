@@ -38,7 +38,8 @@ public static class Devices
 /// <summary>A player's input source for a battle: reads whatever the bound device did this frame.</summary>
 public class DeviceInputSource : IInputSource
 {
-	readonly int device;
-	public DeviceInputSource(int device) => this.device = device;
-	public InputState Poll() => Devices.Get(device);
+	/// <summary>The bound device: <see cref="Devices.Keyboard"/>, or a gamepad id (0 and up).</summary>
+	public int Device { get; }
+	public DeviceInputSource(int device) => Device = device;
+	public InputState Poll() => Devices.Get(Device);
 }

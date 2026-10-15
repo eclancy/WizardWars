@@ -30,6 +30,9 @@ public static class Units
 	/// <summary>A Unity position vector (+y up) as a Godot position.</summary>
 	public static Vector2 U(Vector2 unity) => U(unity.X, unity.Y);
 
+	/// <summary>A Godot position as a Unity position (+y up): the inverse of <see cref="U(Vector2)"/>.</summary>
+	public static Vector2 ToUnity(Vector2 pixels) => new(pixels.X / PixelsPerUnit, -pixels.Y / PixelsPerUnit);
+
 	/// <summary>
 	/// Godot sprite scale for imported art shown at a Unity transform scale. Unity imported
 	/// this project's PNGs at 100 pixels per unit.

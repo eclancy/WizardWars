@@ -45,6 +45,8 @@ public static class CoverArt
 			"crystal" => Crystal(),
 			"saguaro" => Saguaro(),
 			"obelisk" => Obelisk(variant),
+			"boulder" => Boulder(),
+			"toadstool" => Toadstool(),
 			_ => throw new ArgumentException($"No cover art for '{kind}'"),
 		};
 		cache[key] = piece;
@@ -216,6 +218,52 @@ public static class CoverArt
 		painter.Layer(p => RoundedBox(p, new Vector2(41, 12), new Vector2(89, 192), 24), Ribbed(89), outline);
 		painter.Layer(p => Ellipse(p, new Vector2(65, 15), new Vector2(9, 6)), p => bloom, outline, 3.0f);
 		return new Piece(painter.Finish(), new Vector2(65, 188), Units.U(2.0f) / h);
+	}
+
+	/// <summary>Volcano: a lump of black basalt, lit on top, with a seam of cooling lava down one side.</summary>
+	static Piece Boulder()
+	{
+		const int w = 156, h = 128;
+		Color outline = new(0.06f, 0.04f, 0.05f);
+		Color top = new(0.42f, 0.38f, 0.4f), face = new(0.3f, 0.27f, 0.29f), shade = new(0.2f, 0.18f, 0.2f);
+		Color ember = new(1.0f, 0.5f, 0.1f), emberCore = new(1.0f, 0.85f, 0.4f);
+		Painter painter = new(w, h);
+		Vector2[] rock = { new(16, 104), new(10, 70), new(30, 34), new(66, 14), new(108, 20), new(138, 46), new(146, 84), new(132, 112), new(78, 120), new(36, 118) };
+		painter.Layer(p => Polygon(p, rock), p =>
+		{
+			// A lit top facet, a face, and the right-hand side in shade.
+			if (p.Y < 50 - (p.X - 70) * 0.25f) return top;
+			return p.X > 110 - (p.Y - 60) * 0.2f ? shade : face;
+		}, outline);
+		// A glowing crack down the face.
+		Vector2[][] seam = { new Vector2[] { new(62, 52), new(70, 70), new(64, 84), new(74, 104) }, new Vector2[] { new(70, 70), new(88, 76) } };
+		painter.Layer(p => Strokes(p, seam, 3.2f), p => Strokes(p, seam, 3.2f) < -1.5f ? emberCore : ember, outline, 1.5f);
+		return new Piece(painter.Finish(), new Vector2(78, 100), Units.U(1.5f) / w);
+	}
+
+	/// <summary>Swamp: a giant toadstool, a spotted purple cap on a pale stem.</summary>
+	static Piece Toadstool()
+	{
+		const int w = 150, h = 176;
+		Color outline = new(0.1f, 0.05f, 0.1f);
+		Color stem = new(0.93f, 0.88f, 0.75f), stemShade = new(0.78f, 0.7f, 0.56f);
+		Color cap = new(0.6f, 0.22f, 0.42f), capLight = new(0.76f, 0.34f, 0.55f), capShade = new(0.45f, 0.14f, 0.32f), gills = new(0.82f, 0.72f, 0.6f);
+		Color spot = new(0.98f, 0.95f, 0.88f);
+		Painter painter = new(w, h);
+		// The stem, flaring at the foot, shaded on the right.
+		painter.Layer(p => Mathf.Min(RoundedBox(p, new Vector2(56, 70), new Vector2(94, 162), 14), Ellipse(p, new Vector2(75, 160), new Vector2(30, 10))), p => p.X > 82 ? stemShade : stem, outline);
+		// The underside of the cap: a band of gills.
+		painter.Layer(p => Ellipse(p, new Vector2(75, 78), new Vector2(66, 16)), p => gills, outline);
+		// The cap: a dome, lit top left, shaded right.
+		painter.Layer(p => Mathf.Max(Ellipse(p, new Vector2(75, 78), new Vector2(68, 64)), p.Y - 78.0f), p =>
+		{
+			Vector2 q = (p - new Vector2(75, 78)) / new Vector2(68, 64);
+			if (q.X < -0.1f && q.Y < -0.45f) return capLight;
+			return q.X > 0.45f ? capShade : cap;
+		}, outline);
+		foreach ((Vector2 c, float r) in new[] { (new Vector2(52, 44), 9.0f), (new Vector2(84, 30), 7.0f), (new Vector2(104, 56), 8.0f), (new Vector2(38, 68), 6.0f), (new Vector2(72, 60), 5.5f) })
+			painter.Layer(p => Ellipse(p, c, new Vector2(r, r * 0.8f)), p => spot, outline, 2.0f);
+		return new Piece(painter.Finish(), new Vector2(75, 158), Units.U(1.9f) / h);
 	}
 
 	/// <summary>

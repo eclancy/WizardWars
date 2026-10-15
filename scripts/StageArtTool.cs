@@ -2,7 +2,7 @@ using System;
 using Godot;
 
 /// <summary>
-/// Paints the floors of Frost Tundra, Scorched Canyon and Storm Plateau. Run once, with
+/// Paints the floors of Frost Tundra, Scorched Canyon, Storm Plateau, Volcano and Swamp. Run once, with
 /// `-- --make-stages`; the PNGs are committed.
 ///
 /// The old generated backgrounds were scattered with painted boulders, trees and blobs that
@@ -23,6 +23,8 @@ public static class StageArtTool
 		failures += Save(Frost(), "frost-tundra");
 		failures += Save(Canyon(), "scorched-canyon");
 		failures += Save(Storm(), "storm-plateau");
+		failures += Save(Volcano(), "volcano");
+		failures += Save(Swamp(), "swamp");
 		failures += CleanWoodland();
 		return failures;
 	}
@@ -166,6 +168,74 @@ public static class StageArtTool
 		}
 		for (int n = 0; n < 60; n++) Pebble(pixels, rng.Next(W), rng.Next(H), 5 + rng.Next(5), 3 + rng.Next(3), new Color(0.66f, 0.7f, 0.76f), new Color(0.42f, 0.47f, 0.55f));
 		return pixels;
+	}
+
+	/// <summary>Dark volcanic ash in three bands, faint ripples, and specks of glowing ember.</summary>
+	static byte[] Volcano()
+	{
+		byte[] pixels = new byte[W * H * 4];
+		float[] body = Noise(41, 0.0015f), ripple = Noise(42, 0.004f, octaves: 1), fleck = Noise(43, 0.3f, FastNoiseLite.NoiseTypeEnum.Value, 1);
+		Color[] ash = { new(0.2f, 0.17f, 0.17f), new(0.24f, 0.2f, 0.19f), new(0.28f, 0.23f, 0.21f) };
+		Color line = new(0.17f, 0.14f, 0.14f), ember = new(1.0f, 0.5f, 0.12f);
+		for (int i = 0; i < W * H; i++)
+		{
+			int x = i % W, y = i / W;
+			Color c = Band(body[i], ash, new[] { 0.42f, 0.6f });
+			float r = ripple[i] * 0.8f + y * 0.011f + Mathf.Sin(x * 0.003f) * 0.5f;
+			if (Mathf.Abs(r % 1.0f - 0.5f) < 0.03f) c = line;
+			if (fleck[i] > 0.992f) c = ember;
+			Set(pixels, i, c);
+		}
+		Random rng = new(44);
+		for (int n = 0; n < 60; n++) Pebble(pixels, rng.Next(W), rng.Next(H), 4 + rng.Next(5), 3 + rng.Next(3), new Color(0.32f, 0.27f, 0.26f), new Color(0.13f, 0.1f, 0.1f));
+		return pixels;
+	}
+
+	/// <summary>Mossy mud in three bands, darker mottling, little ticks of grass and a few pebbles.</summary>
+	static byte[] Swamp()
+	{
+		byte[] pixels = new byte[W * H * 4];
+		float[] body = Noise(51, 0.0016f), moss = Noise(52, 0.006f, octaves: 2);
+		Color[] mud = { new(0.29f, 0.34f, 0.18f), new(0.33f, 0.39f, 0.2f), new(0.37f, 0.44f, 0.23f) };
+		Color dark = new(0.26f, 0.31f, 0.16f), blade = new(0.24f, 0.3f, 0.14f);
+		for (int i = 0; i < W * H; i++)
+		{
+			Color c = Band(body[i], mud, new[] { 0.42f, 0.6f });
+			if (moss[i] > 0.66f) c = dark;
+			Set(pixels, i, c);
+		}
+		Random rng = new(53);
+		// Little tufts of grass: three thin blades of different heights, fanning slightly.
+		for (int n = 0; n < 220; n++)
+		{
+			Vector2 foot = new(rng.Next(W), rng.Next(H));
+			float tall = 7 + rng.Next(6), lean = (float)(rng.NextDouble() - 0.5) * 0.4f;
+			for (int b = -1; b <= 1; b++)
+			{
+				float height = tall * (b == 0 ? 1.0f : 0.7f + (float)rng.NextDouble() * 0.2f);
+				Vector2 tip = foot + new Vector2(b * 3.0f + (b * 0.25f + lean) * height, -height);
+				Stroke(pixels, foot + new Vector2(b * 2.0f, 0), tip, 1.1f, blade);
+			}
+		}
+		for (int n = 0; n < 40; n++) Pebble(pixels, rng.Next(W), rng.Next(H), 4 + rng.Next(4), 3 + rng.Next(2), new Color(0.45f, 0.43f, 0.36f), new Color(0.24f, 0.24f, 0.18f));
+		return pixels;
+	}
+
+	/// <summary>A straight line of discs.</summary>
+	static void Stroke(byte[] pixels, Vector2 from, Vector2 to, float width, Color colour)
+	{
+		int steps = Mathf.Max(1, (int)from.DistanceTo(to));
+		for (int s = 0; s <= steps; s++)
+		{
+			Vector2 at = from.Lerp(to, s / (float)steps);
+			for (int dy = (int)-width; dy <= width; dy++)
+				for (int dx = (int)-width; dx <= width; dx++)
+				{
+					int px = (int)at.X + dx, py = (int)at.Y + dy;
+					if (px < 0 || py < 0 || px >= W || py >= H || dx * dx + dy * dy > width * width) continue;
+					Set(pixels, py * W + px, colour);
+				}
+		}
 	}
 
 	/// <summary>Sand in three bands, wind ripples and small pebbles.</summary>

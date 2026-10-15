@@ -14,7 +14,12 @@ The game is **feature-complete**. It has:
 - the title screen (the START painted into the art flashes) and Character Select: join by
   device, one player per wizard, Free-for-All/Teams (Green vs Pink), team switching, kit
   lists, how-to-play
-- Stage Select and all four stages, each with its own cover to hide behind
+- Stage Select and six stages, each with its own cover to hide behind; the Volcano (lava
+  and bridges) and the Swamp (bog pools) have hazards
+- matches of best of 1, 3 or 5 rounds with a scoreboard between rounds, and a computer
+  opponent on Easy, Normal or Hard (both set on Stage Select)
+- a pause menu (Start: resume, rematch, options, quit), options (volume, fullscreen,
+  rumble; saved) and controller rumble
 - all four wizards with all 20 abilities and their telegraphs: basic (RT), second (LT),
   third (RB), fourth (LB) and ultimate (X), each ultimate announced by a build-up
 - the HUD and a computer opponent
@@ -63,8 +68,9 @@ It runs, and fails on the first failure:
 5. `--abilities`: `AbilityTest` casts all 20 abilities at an enemy (each must do its job) and
    at a teammate (each must do nothing), on open ground (Woodland without its cover).
    Afterwards the arena must be empty.
-6. `--soak`: `SoakTest` plays computer-only matches, Free-for-All and Teams, faster than real
-   time. After each one, no effect node, modifier or ultimate lock may be left behind.
+6. `--soak`: `SoakTest` plays computer-only matches, Free-for-All (six, one per stage) and
+   Teams, faster than real time. After each one, no effect node, modifier or ultimate lock
+   may be left behind. On a hazard stage it also reports the lava damage dealt.
 
 Run the steps after `dotnet build` with
 `--headless --fixed-fps 60 --path . res://scenes/Main.tscn -- <flag>`.
@@ -79,9 +85,10 @@ Run the steps after `dotnet build` with
 monitor's resolution. `--shot-size=WxH` picks another window shape: check a layout change at
 `1620x1080` (3:2) as well as 16:9.
 
-`--screen` takes `title`, `select`, `stage`, `battle` or `demo` (four computer wizards; add
-`--teams` for 2v2, `--stage=0`..`3` to pick the arena, and `--charged` to start everyone
-with a full ultimate). `select` also takes `--teams`.
+`--screen` takes `title`, `select`, `stage`, `battle`, `pause`, `options` or `demo` (four
+computer wizards; add `--teams` for 2v2, `--stage=0`..`5` to pick the arena, and `--charged`
+to start everyone with a full ultimate). `select` also takes `--teams`. Godot's own
+`--time-scale 4` (before `--`) fast-forwards a shot run, e.g. to catch a round result.
 
 `--make-title-glow` rebuilds `assets/art/ui/title-start-glow.png`, the mask of the START
 letters the title flashes, from `title.png` (`TitleGlowTool`). Rerun it if the title art
@@ -168,8 +175,9 @@ export preset, `UpdateScreen` or `tools/release/`.
   covering 2560×1440 (`Battle.CoveredView`), so the art sits in the same place on every
   screen, and the floor beyond the arena walls is dimmed.
 - **Stage cover:** each stage's `CoverKind` and `Cover` positions place `Cover` pieces
-  (stumps, ice crystals, saguaro cacti, and rune obelisks each carved with a different Elder
-  Futhark rune) drawn by `CoverArt` in the flat cartoon style. Cover is solid: it stops wizards, projectiles and flames. `Battle` is y-sorted, so a
+  (stumps, ice crystals, saguaro cacti, rune obelisks each carved with a different Elder
+  Futhark rune, basalt boulders and toadstools) drawn by `CoverArt` in the flat cartoon
+  style. Cover is solid: it stops wizards, projectiles and flames. `Battle` is y-sorted, so a
   wizard behind a piece is drawn behind it. The AI does not fire into cover
   (`Battle.HasLineOfSight`).
   - **Rule: only solid things look solid.** Every cover piece stands on a hard shadow, and
@@ -184,6 +192,28 @@ export preset, `UpdateScreen` or `tools/release/`.
 - **Menus** share `Ui` (heading and body fonts from the system, rounded panels, pills) and
   `MagicBackdrop` (a banded night sky with drifting sparkles). `GameRoot` fades each new
   screen in from black.
+- **Matches and rounds:** `GameRoot.ShowBattle` starts a `Match` (plain C#: rounds, wins per
+  side, winner) from `Session.RoundsToWin`; each round is a `Battle` with `Battle.Match` set,
+  which records its result and shows the round banner and scoreboard. A drawn round counts
+  for nobody, and `Match.MaxRounds` stops endless draws. Tests and the soak build `Battle`s
+  with no match, which behave as single battles.
+- **Pausing:** `GameRoot` runs with `ProcessMode.Always`, so it keeps polling devices; `Battle`
+  is `Pausable`. Start from any fighter's device opens `PauseMenu` (always-processing) and
+  pauses the tree; `GameRoot.Swap` always unpauses. `OptionsPanel` works on top of either the
+  pause menu or Character Select (X), and `Settings` saves to `user://settings.cfg`, but only
+  for a real run: tests and shots keep the defaults (`Settings.Persist`).
+- **Rumble:** `Wizard.Rumble` buzzes the wizard's pad (if it is on one and rumble is on) for
+  hits, freezes, jolts, ultimates and knock-outs. A weaker buzz never cuts a stronger one
+  short.
+- **Hazards:** `StageData` holds `HazardKind` ("lava" or "bog"), areas and bridges as
+  centre and half-size pairs, and `InHazard`. `StageHazard` draws them live and applies them
+  to feet: lava hurts (`HazardDamage` per second) and sets you burning, and bog slows and
+  stops regen (a modifier keyed to the hazard). The AI steers out of and around hazards
+  (`CpuInputSource.AvoidHazard`); it does not path over bridges, so on the Volcano it mostly
+  duels across the river. `HazardPreview` draws them on Stage Select tiles.
+- **Computer skill:** `CpuInputSource(Difficulty)` sets reaction, aim error, dodging, how
+  often it thinks, how readily it spends abilities, and how fast it wiggles out of ice.
+  Normal is the default constructor, which the soak measures.
 - **Friendly fire:** `Combat.CanAffect(caster, casterTeam, target, hitsCaster)`. Effects
   record the caster's team when cast. Patches and rods hit their own caster, as in Unity.
   Teammates are never hit by anything. Any new hostile effect must use this check.

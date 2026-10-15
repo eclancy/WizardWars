@@ -149,6 +149,8 @@ public partial class Wizard : CharacterBody2D
 		Health -= amount;
 		AddUltimateCharge(amount * Balance.UltimateChargePerDamageTaken);
 		hurtFlash = 0.18f;
+		float hit = Mathf.Clamp(amount / 40.0f, 0.12f, 0.8f);
+		Rumble(hit * 0.6f, hit, 0.12f + hit * 0.2f);
 		if (Health <= 0.0f) Die();
 	}
 
@@ -202,6 +204,7 @@ public partial class Wizard : CharacterBody2D
 			Jolt(0.25f);
 			return;
 		}
+		Rumble(0.5f, 0.25f, 0.25f);
 		if (!frozen) lastWiggle = 0;
 		frozen = true;
 		if (wiggleHint == null)
@@ -227,6 +230,7 @@ public partial class Wizard : CharacterBody2D
 	{
 		if (!Alive) return;
 		Alive = false;
+		Rumble(1.0f, 1.0f, 0.5f);
 		Health = 0.0f;
 		Status.Clear();
 		Sfx.Play("res://assets/sfx/die.wav");
@@ -234,6 +238,26 @@ public partial class Wizard : CharacterBody2D
 		battle.OnWizardDied(this);
 		targeter.QueueFree();
 		QueueFree();
+	}
+
+	// ---- Rumble ----
+
+	double rumbleUntil;
+	float rumbleStrength;
+
+	/// <summary>
+	/// Shakes this player's pad (if they are on one and have rumble on). A weaker buzz never cuts
+	/// short a stronger one still running, so a burn tick cannot swallow an ultimate's jolt.
+	/// </summary>
+	public void Rumble(float weak, float strong, float seconds)
+	{
+		if (!Settings.Rumble || Controller is not DeviceInputSource { Device: >= 0 } pad) return;
+		double now = Time.GetTicksMsec() / 1000.0;
+		float strength = Mathf.Max(weak, strong);
+		if (now < rumbleUntil && strength < rumbleStrength) return;
+		rumbleUntil = now + seconds;
+		rumbleStrength = strength;
+		Input.StartJoyVibration(pad.Device, weak, strong, seconds);
 	}
 
 	// ---- Geometry ----
@@ -283,7 +307,11 @@ public partial class Wizard : CharacterBody2D
 	}
 
 	/// <summary>Shakes the wizard where they stand for a moment: a stagger, an earthquake's jolt.</summary>
-	public void Jolt(float seconds) => joltLeft = Mathf.Max(joltLeft, seconds);
+	public void Jolt(float seconds)
+	{
+		joltLeft = Mathf.Max(joltLeft, seconds);
+		Rumble(0.35f, 0.55f, seconds);
+	}
 
 	void TickStun(float dt)
 	{

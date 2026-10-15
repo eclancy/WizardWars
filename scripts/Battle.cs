@@ -15,6 +15,8 @@ public sealed class Fighter
 	public string Label = "CPU";
 	/// <summary>A device to read, or null for the computer.</summary>
 	public IInputSource Input;
+	/// <summary>The computer's skill, when <see cref="Input"/> is null.</summary>
+	public Difficulty Difficulty = Difficulty.Normal;
 }
 
 public sealed class BattleSetup
@@ -43,7 +45,7 @@ public sealed class BattleSetup
 				Input = new DeviceInputSource(slot.Device),
 			});
 		}
-		if (setup.Fighters.Count == 1) setup.Fighters.Add(new Fighter { Wizard = ComputerWizard(setup.Fighters[0].Wizard), Slot = -1, Spawn = setup.Stage.ComputerSpawn });
+		if (setup.Fighters.Count == 1) setup.Fighters.Add(new Fighter { Wizard = ComputerWizard(setup.Fighters[0].Wizard), Slot = -1, Spawn = setup.Stage.ComputerSpawn, Difficulty = Session.CpuDifficulty });
 		return setup;
 	}
 
@@ -65,7 +67,7 @@ public partial class Battle : Node2D
 {
 	/// <summary>Inner edge of the arena walls, in Unity units (Park walls at x ±10.7, y ±6.5).</summary>
 	public static readonly Vector2 ArenaHalf = new(10.2f, 5.95f);
-	const float ResultSeconds = 5.0f;
+	const float ResultSeconds = 5.0f, RoundResultSeconds = 3.5f;
 
 	public static Battle Current { get; private set; }
 
@@ -83,6 +85,8 @@ public partial class Battle : Node2D
 	public readonly List<GroundPatch> Patches = new();
 	public readonly List<FireSource> FireSources = new();
 	public readonly List<RockWall> RockWalls = new();
+	/// <summary>The stage's lava or bog, if it has one.</summary>
+	public StageHazard Hazard { get; private set; }
 
 	/// <summary>Raised once when the result screen has finished, with the result text.</summary>
 	public event Action<string> Finished;
@@ -105,11 +109,17 @@ public partial class Battle : Node2D
 	/// <summary>Skip the 3-2-1 (tests and soak runs).</summary>
 	public bool SkipCountdown;
 
+	/// <summary>The match this battle is a round of, or null (tests and soak runs play single battles).</summary>
+	public Match Match;
+
+	bool RoundsMatter => Match != null && Match.RoundsToWin > 1;
+
 	public static Battle Create(BattleSetup setup)
 	{
 		// Y-sorted, so wizards and cover pieces draw in depth order: stand behind a stump and
 		// the stump hides you.
-		Battle battle = new() { setup = setup, Name = "Battle", YSortEnabled = true };
+		// Pausable, so the pause menu (and GameRoot, which runs always) can freeze it.
+		Battle battle = new() { setup = setup, Name = "Battle", YSortEnabled = true, ProcessMode = ProcessModeEnum.Pausable };
 		return battle;
 	}
 
@@ -134,6 +144,7 @@ public partial class Battle : Node2D
 		overlay = new CanvasLayer { Layer = 10 };
 		AddChild(overlay);
 		countdownImage = Centred(overlay, null, Vector2.Zero);
+		if (RoundsMatter) ShowRoundTitle();
 
 		Sfx.Music("res://assets/music/battle.wav");
 		countdownStart = 0.0;
@@ -174,6 +185,11 @@ public partial class Battle : Node2D
 		AddDim(new Rect2(-outer.X, -half.Y, outer.X - half.X, half.Y * 2), dim);
 		AddDim(new Rect2(half.X, -half.Y, outer.X - half.X, half.Y * 2), dim);
 
+		if (stage.HazardKind.Length > 0)
+		{
+			Hazard = StageHazard.Create(stage, this);
+			AddChild(Hazard);
+		}
 		// The floors are only ground; each stage's cover is the one thing that blocks wizards and shots.
 		// Each piece gets its own variant (on Storm Plateau, its own rune).
 		for (int i = 0; i < stage.Cover.Length; i++) AddChild(Cover.Create(stage.CoverKind, Units.U(stage.Cover[i]), i));
@@ -223,7 +239,7 @@ public partial class Battle : Node2D
 		foreach (Fighter fighter in setup.Fighters)
 		{
 			Vector2 unitySpawn = spawns[fighter.Spawn % spawns.Length];
-			CpuInputSource cpu = fighter.Input == null ? new CpuInputSource() : null;
+			CpuInputSource cpu = fighter.Input == null ? new CpuInputSource(fighter.Difficulty) : null;
 			Wizard wizard = Wizard.Create(this, fighter.Wizard, fighter.Slot, fighter.Label, fighter.Team, (IInputSource)cpu ?? fighter.Input, Units.U(unitySpawn));
 			cpu?.Attach(wizard);
 			Wizards.Add(wizard);
@@ -281,8 +297,10 @@ public partial class Battle : Node2D
 		Fighting = false;
 		Result = result;
 		resultAt = Time;
-		GD.Print($"Battle: result {result} after {Time:0.0}s");
-		ShowResult(result);
+		int round = Match?.Round ?? 1;
+		Match?.Record(result);
+		GD.Print($"Battle: result {result} after {Time:0.0}s" + (RoundsMatter ? $" (round {round}, match {(Match.Decided ? Match.Winner : "goes on")})" : ""));
+		ShowResult(result, round);
 	}
 
 	/// <summary>An image centred on screen at a fixed size, whatever the window shape.</summary>
@@ -302,7 +320,7 @@ public partial class Battle : Node2D
 		return image;
 	}
 
-	void ShowResult(string result)
+	void ShowResult(string result, int round)
 	{
 		Control panel = new();
 		panel.SetAnchorsPreset(Control.LayoutPreset.FullRect);
@@ -312,7 +330,18 @@ public partial class Battle : Node2D
 		dim.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		panel.AddChild(dim);
 
-		// The four players have authored win art; the computer, teams and draws are drawn.
+		// Partway through a match: who took the round, and the score so far.
+		if (RoundsMatter && !Match.Decided)
+		{
+			string name = result.StartsWith("CPU") ? "THE COMPUTER" : result == "GREEN" || result == "PINK" ? result + " TEAM" : result;
+			string line = result == "DRAW" ? $"ROUND {round}: DRAW" : $"{name} WINS ROUND {round}";
+			panel.AddChild(Banner.Create(line, result == "DRAW" ? new Color(0.85f, 0.55f, 1.0f) : Match.ColourOf(result), 96));
+			panel.AddChild(Scoreboard());
+			return;
+		}
+
+		// The match is over. The four players have authored win art; the computer, teams and draws are drawn.
+		if (RoundsMatter) panel.AddChild(Scoreboard());
 		if (result.Length == 2 && result[0] == 'P')
 		{
 			Centred(panel, Content.Texture($"res://assets/art/ui/p{result[1]}-wins.png"), new Vector2(1050, 300));
@@ -327,6 +356,53 @@ public partial class Battle : Node2D
 		};
 		Color colour = result == "GREEN" ? Teams.Colour(Teams.Green) : result == "PINK" ? Teams.Colour(Teams.Pink) : new Color(0.85f, 0.55f, 1.0f);
 		panel.AddChild(Banner.Create(text, colour));
+	}
+
+	/// <summary>"ROUND 2 - BEST OF 3" across the top during the countdown, then it fades.</summary>
+	void ShowRoundTitle()
+	{
+		Label title = Ui.Heading($"ROUND {Match.Round}", 64, Ui.Gold);
+		title.SetAnchorsPreset(Control.LayoutPreset.TopWide);
+		title.OffsetTop = 40;
+		title.OffsetBottom = 130;
+		overlay.AddChild(title);
+		Label best = Ui.Label($"BEST OF {Match.RoundsToWin * 2 - 1}", 26, new Color(1, 1, 1, 0.8f));
+		best.SetAnchorsPreset(Control.LayoutPreset.TopWide);
+		best.OffsetTop = 128;
+		best.OffsetBottom = 170;
+		overlay.AddChild(best);
+		Tween fade = CreateTween();
+		fade.TweenInterval(3.3);
+		fade.TweenProperty(title, "modulate:a", 0.0f, 0.4);
+		fade.Parallel().TweenProperty(best, "modulate:a", 0.0f, 0.4);
+	}
+
+	/// <summary>
+	/// The match score under the result: a pill per side in its colour (wizard or team) with its
+	/// round wins as pips, and "FIRST TO 2" above.
+	/// </summary>
+	Control Scoreboard()
+	{
+		CenterContainer centre = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+		centre.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		VBoxContainer column = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+		column.AddThemeConstantOverride("separation", 12);
+		centre.AddChild(column);
+		column.AddChild(new Control { CustomMinimumSize = new Vector2(0, 330) });
+		Label first = Ui.Heading($"FIRST TO {Match.RoundsToWin}", 26, Ui.Gold);
+		column.AddChild(first);
+		HBoxContainer row = new() { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
+		row.AddThemeConstantOverride("separation", 18);
+		column.AddChild(row);
+		foreach (string side in Match.Sides)
+		{
+			int wins = Match.Wins(side);
+			string pips = new string('●', wins) + new string('○',Mathf.Max(0, Match.RoundsToWin - wins));
+			Panel pill = Ui.Pill(new Rect2(0, 0, 200, 56), $"{(side.StartsWith("CPU") ? "CPU" : side)}  {pips}", 24, Match.ColourOf(side), Ui.Ink, heading: true);
+			pill.CustomMinimumSize = pill.Size;
+			row.AddChild(pill);
+		}
+		return centre;
 	}
 
 	// ---- Camera shake ----
@@ -359,10 +435,25 @@ public partial class Battle : Node2D
 		Projectiles.RemoveAll(p => !GodotObject.IsInstanceValid(p) || p.IsQueuedForDeletion());
 
 		if (!Fighting && !Over && !SkipCountdown) RunCountdown();
-		if (Over && !finishedRaised && Time - resultAt >= ResultSeconds)
+		CheckPause();
+		if (Over && !finishedRaised && Time - resultAt >= (RoundsMatter && !Match.Decided ? RoundResultSeconds : ResultSeconds))
 		{
 			finishedRaised = true;
 			Finished?.Invoke(Result);
+		}
+	}
+
+	public void OpenPause(int device, string who) => PauseMenu.Open(overlay, device, who);
+
+	/// <summary>Start from any player in the battle pauses it, and that player drives the menu.</summary>
+	void CheckPause()
+	{
+		if (Over) return;
+		foreach (Fighter fighter in setup.Fighters)
+		{
+			if (fighter.Input is not DeviceInputSource device || !Devices.Get(device.Device).StartPressed) continue;
+			OpenPause(device.Device, fighter.Label);
+			return;
 		}
 	}
 

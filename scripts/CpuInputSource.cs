@@ -15,6 +15,34 @@ public class CpuInputSource : IInputSource
 	public float ReactionDelay = 0.35f;
 	public float AimErrorDegrees = 9.0f;
 	public float DodgeChance = 0.6f;
+	/// <summary>Seconds between decisions (random in this range).</summary>
+	public float ThinkMin = 0.18f, ThinkMax = 0.4f;
+	/// <summary>How readily it spends abilities when it could: 1 is normal, higher is keener.</summary>
+	public float Eagerness = 1.0f;
+	/// <summary>Seconds between wiggles when frozen.</summary>
+	public float WiggleMin = 0.16f, WiggleMax = 0.3f;
+
+	public CpuInputSource() { }
+
+	/// <summary>
+	/// A computer at a skill level. Easy reacts late, aims loosely, rarely dodges and holds its
+	/// abilities back. Hard reacts fast, aims tightly, nearly always dodges and spends freely.
+	/// Normal is the tuning the soak test measures.
+	/// </summary>
+	public CpuInputSource(Difficulty difficulty)
+	{
+		switch (difficulty)
+		{
+			case Difficulty.Easy:
+				ReactionDelay = 0.7f; AimErrorDegrees = 22.0f; DodgeChance = 0.15f;
+				ThinkMin = 0.4f; ThinkMax = 0.75f; Eagerness = 0.55f; WiggleMin = 0.3f; WiggleMax = 0.5f;
+				break;
+			case Difficulty.Hard:
+				ReactionDelay = 0.18f; AimErrorDegrees = 4.0f; DodgeChance = 0.9f;
+				ThinkMin = 0.1f; ThinkMax = 0.22f; Eagerness = 1.5f; WiggleMin = 0.1f; WiggleMax = 0.17f;
+				break;
+		}
+	}
 	const float TargeterRange = 4.5f;
 	const float ProjectileSpeed = 9.0f;
 
@@ -39,7 +67,7 @@ public class CpuInputSource : IInputSource
 	{
 		if (Now >= nextWiggle)
 		{
-			nextWiggle = Now + GD.RandRange(0.16, 0.3);
+			nextWiggle = Now + GD.RandRange(WiggleMin, WiggleMax);
 			wiggleSide = -wiggleSide;
 		}
 		return new InputState { Move = new Vector2(wiggleSide, 0.0f) };
@@ -68,7 +96,7 @@ public class CpuInputSource : IInputSource
 
 		if (self.UltimateActive || Now < nextThink) return state;
 		// Think a few times a second, with jitter, so it never fires the instant a cooldown ends.
-		nextThink = Now + GD.RandRange(0.18, 0.4);
+		nextThink = Now + GD.RandRange(ThinkMin, ThinkMax);
 		Decide(ref state);
 		return state;
 	}
@@ -162,7 +190,35 @@ public class CpuInputSource : IInputSource
 			move = new Vector2(-move.Y, move.X);
 			strafe = -strafe;
 		}
-		return move;
+		return AvoidHazard(move);
+	}
+
+	/// <summary>
+	/// Keeps out of lava and bog: standing in it, head for the nearest way out; about to walk
+	/// in, turn aside (or stop, if every way is bad).
+	/// </summary>
+	Vector2 AvoidHazard(Vector2 move)
+	{
+		StageHazard hazard = Battle.Hazard;
+		if (hazard == null) return move;
+		Vector2 feet = self.Feet;
+		if (hazard.Contains(feet))
+		{
+			for (float reach = 0.6f; reach <= 4.0f; reach += 0.6f)
+				for (int k = 0; k < 16; k++)
+				{
+					Vector2 direction = Vector2.FromAngle(k * Mathf.Tau / 16.0f);
+					if (!hazard.Contains(feet + direction * U(reach))) return direction;
+				}
+			return move;
+		}
+		if (move.LengthSquared() < 0.01f || !hazard.Contains(feet + move.Normalized() * U(0.9f))) return move;
+		foreach (float turn in new[] { 45.0f, -45.0f, 90.0f, -90.0f, 135.0f, -135.0f })
+		{
+			Vector2 turned = move.Rotated(Mathf.DegToRad(turn));
+			if (!hazard.Contains(feet + turned.Normalized() * U(0.9f))) return turned;
+		}
+		return Vector2.Zero;
 	}
 
 	Vector2 StayInside()
@@ -212,10 +268,10 @@ public class CpuInputSource : IInputSource
 			return;
 		}
 
-		if (fourth.IsReady && GD.Randf() < 0.5f && FourthWorthIt(id, distance, ref state)) return;
-		if (third.IsReady && GD.Randf() < 0.5f && ThirdWorthIt(id, distance, ref state)) return;
+		if (fourth.IsReady && GD.Randf() < 0.5f * Eagerness && FourthWorthIt(id, distance, ref state)) return;
+		if (third.IsReady && GD.Randf() < 0.5f * Eagerness && ThirdWorthIt(id, distance, ref state)) return;
 
-		if (second.IsReady && distance < U(TargeterRange + 1.5f) && self.Energy > 45.0f && GD.Randf() < 0.45f)
+		if (second.IsReady && distance < U(TargeterRange + 1.5f) && self.Energy > 45.0f && GD.Randf() < 0.45f * Eagerness)
 		{
 			aimPoint = target.GlobalPosition + targetVelocity * 0.5f;
 			state.Aim = AimToward(aimPoint);

@@ -37,6 +37,7 @@ public partial class CharacterSelectScreen : Control
 	readonly bool[] hovered = new bool[4];
 	readonly List<Control> pulsing = new();
 	Control help;
+	OptionsPanel options;
 	double time;
 
 	static float CardX(int index) => (1920.0f - (CardWidth * 4 + CardGap * 3)) * 0.5f + index * (CardWidth + CardGap);
@@ -129,12 +130,15 @@ public partial class CharacterSelectScreen : Control
 
 	public override void _PhysicsProcess(double delta)
 	{
+		// While the options are open they have the controls.
+		if (IsInstanceValid(options)) return;
 		bool changed = false;
 		bool helpHeld = false;
 		foreach (int device in Devices.All)
 		{
 			InputState state = Devices.Get(device);
 			helpHeld |= state.HelpHeld;
+			if (state.UltimatePressed) { options = OptionsPanel.Open(this, device, null); return; }
 			if (state.ModePressed) { Session.TeamsMode = !Session.TeamsMode; changed = true; }
 
 			PlayerSlot slot = Session.SlotForDevice(device);
@@ -224,7 +228,7 @@ public partial class CharacterSelectScreen : Control
 
 		statusLabel.Text = RoomStatus();
 		statusLabel.AddThemeColorOverride("font_color", EveryoneReady ? Ui.Done : Ui.Waiting);
-		footer.Text = (Session.TeamsMode ? "Y: switch team      " : "") + "Hold the right stick in: how to play";
+		footer.Text = "X: options      " + (Session.TeamsMode ? "Y: switch team      " : "") + "Hold the right stick in: how to play";
 
 		WizardData[] wizards = Content.Wizards;
 		for (int i = 0; i < 4; i++)

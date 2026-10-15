@@ -23,6 +23,8 @@ public static class Content
 		"res://data/stages/frost-tundra.tres",
 		"res://data/stages/scorched-canyon.tres",
 		"res://data/stages/storm-plateau.tres",
+		"res://data/stages/volcano.tres",
+		"res://data/stages/swamp.tres",
 	};
 
 	public const string BalancePath = "res://data/balance.tres";

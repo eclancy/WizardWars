@@ -42,6 +42,12 @@ public static class Session
 
 	public static int StageIndex;
 
+	/// <summary>Rounds needed to win the match: 1, 2 or 3 (best of 1, 3 or 5), chosen on Stage Select.</summary>
+	public static int RoundsToWin = 2;
+
+	/// <summary>How well the computer plays when someone is alone against it, chosen on Stage Select.</summary>
+	public static Difficulty CpuDifficulty = Difficulty.Normal;
+
 	public static int JoinedCount
 	{
 		get
@@ -110,5 +116,15 @@ public static class Session
 		foreach (PlayerSlot slot in Slots) slot.Leave();
 		TeamsMode = false;
 		StageIndex = 0;
+		RoundsToWin = 2;
+		CpuDifficulty = Difficulty.Normal;
 	}
+}
+
+/// <summary>The computer opponent's skill (see <see cref="CpuInputSource"/>).</summary>
+public enum Difficulty
+{
+	Easy,
+	Normal,
+	Hard,
 }

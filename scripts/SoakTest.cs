@@ -85,7 +85,7 @@ public partial class SoakTest : Node
 			if (wizard.UltimateActive) Fail($"match {played + 1}: {wizard.Label} is stuck with an ultimate active");
 			if (wizard.Status.SpeedMultiplier != 1.0f) Fail($"match {played + 1}: {wizard.Label} speed multiplier is {wizard.Status.SpeedMultiplier}");
 		}
-		GD.Print($"Soak: match {played + 1} result {battle.Result} after {battle.EndedAt:0.0}s, {battle.UltimatesCast} ultimate(s)");
+		GD.Print($"Soak: match {played + 1} result {battle.Result} after {battle.EndedAt:0.0}s, {battle.UltimatesCast} ultimate(s)" + (battle.Hazard != null && battle.Hazard.DamageDealt > 0.0f ? $", lava dealt {battle.Hazard.DamageDealt:0}" : ""));
 		totalSeconds += battle.EndedAt;
 		totalUltimates += battle.UltimatesCast;
 		if (battle.UltimatesCast > 0) matchesWithUltimate++;

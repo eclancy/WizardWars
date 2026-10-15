@@ -2,8 +2,8 @@
 
 A local multiplayer arena battler for 1–4 players. Pick a wizard of fire, frost, earth or
 electricity (each wizard can be played by one player at a time) and fight to be the last one
-standing, or team up in Green vs Pink. Playing alone?
-You face a computer-controlled wizard.
+standing, or team up in Green vs Pink. Matches are best of 1, 3 or 5 rounds. Playing alone?
+You face a computer wizard on Easy, Normal or Hard.
 
 Built with **Godot 4.5 (.NET / C#)**. It started life as a Unity game. The last Unity
 version is preserved at the git tag [`unity-final`](../../tree/unity-final).
@@ -24,12 +24,14 @@ version is preserved at the git tag [`unity-final`](../../tree/unity-final).
 | Third ability | RB | 3 |
 | Fourth ability | LB | 4 |
 | Ultimate (when the gold bar is full) | X | 5 |
-| Join / start | Start | Enter |
+| Join / start / pause | Start | Enter |
 | Confirm / lock in | A | Space |
 | Back / leave | B | Backspace |
 | Free-for-All or Teams | Back/View | Tab |
 | Switch team | Y | T |
 | How to play (hold) | Right stick click | H |
+| Options (Character Select) | X | 5 |
+| Rounds / computer skill (Stage Select) | Y / X | T / 5 |
 | Fullscreen / window | | F11 or Alt+Enter |
 
 ### The wizards
@@ -41,8 +43,23 @@ version is preserved at the git tag [`unity-final`](../../tree/unity-final).
 | Earth | Mudball | Mud Patch | Rock Wall | Tremor | Earthquake |
 | Electricity | Electricity Ball | Lightning Rod | Speed Up | Chain Lightning | Overcharge |
 
-Every stage has its own cover to hide behind: tree stumps, ice crystals, saguaro cacti
-and rune obelisks. They stop shots. Anything that casts a shadow is solid; the rest is floor.
+### The stages
+
+Every stage has its own cover to hide behind, and two have a hazard:
+
+| Stage | Cover | Hazard |
+|---|---|---|
+| Woodland | Tree stumps | |
+| Frost Tundra | Ice crystals | |
+| Scorched Canyon | Saguaro cacti | |
+| Storm Plateau | Rune stones | |
+| Volcano | Basalt boulders | A lava river down the middle: it burns. Cross on the bridges. |
+| Swamp | Toadstools | Bog pools: they slow you and stop your energy recharging. |
+
+Cover stops shots. Anything that casts a shadow is solid; the rest is floor.
+
+Start pauses a battle (resume, rematch, options or quit). The options are music and sound
+volume, fullscreen and controller rumble, and are saved between sessions.
 
 ## Develop
 
@@ -67,4 +84,5 @@ To publish a release that every downloaded copy updates itself to, see `docs/rel
 
 ## Credits
 
-The music is CC0, from OpenGameArt; see `assets/music/CREDITS.md`.
+The music is CC0, from OpenGameArt; see `assets/music/CREDITS.md`. The newer sound effects are
+synthesised in code (`scripts/SoundTool.cs`).

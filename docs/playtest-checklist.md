@@ -28,7 +28,11 @@ That is what this list is for. Run the game with F5 in the editor, or from an ex
       skip it. Player tags are plain white; no player has a colour of their own.
 - [ ] Start is blocked, with a message, while both teams are not filled.
 - [ ] Holding RS or H shows how-to-play.
-- [ ] Stage Select: every stage can be picked. B goes back.
+- [ ] Stage Select: every stage can be picked, and the Volcano and Swamp tiles show their
+      hazards. Y cycles best of 1/3/5; X cycles the computer's skill (shown only when one
+      player faces the computer). B goes back.
+- [ ] X on Character Select opens the options. Volume changes are heard at once; fullscreen
+      and rumble toggle; everything is remembered after quitting the game.
 
 ## Battle
 
@@ -48,6 +52,14 @@ That is what this list is for. Run the game with F5 in the editor, or from an ex
       then does anything. Each looks dramatic and distinct; Earthquake reads as cracking,
       shaking ground, not a brown circle.
 - [ ] Storm Plateau's four stones each carry a different carved rune.
+- [ ] Start pauses the battle. Resume, Rematch (round 1 again), Options and Quit all work, and
+      only the player who paused drives the menu.
+- [ ] Best of 3: a round banner and scoreboard between rounds, "ROUND 2" at the next start,
+      and the match result with the final score.
+- [ ] Rumble: hits, freezes, quake jolts and your own ultimate going off are felt on the pad.
+- [ ] Volcano: lava burns and hurts, the bridges are safe, and the computer keeps out of it.
+      Swamp: bog slows you and stops your energy, and lifts the moment you step out.
+- [ ] Easy, Normal and Hard computers feel clearly different.
 - [ ] Results: "P1 wins" art, "THE COMPUTER WINS", "GREEN/PINK TEAM WINS", or "DRAW". Then
       back to Character Select with everyone still locked in.
 - [ ] Solo: the computer wizard is beatable but not trivial.

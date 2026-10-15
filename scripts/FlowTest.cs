@@ -69,14 +69,22 @@ public partial class FlowTest : Node
 		Expect("teams playable", () => Session.TeamsPlayable);
 		Do("Start", () => a.Press(s => { s.StartPressed = true; return s; }));
 		Expect("on Stage Select", () => Screen is StageSelectScreen);
-		// Storm Plateau (right, then down): its cover leaves a clear line between the P1 and P2
+		Expect("best of 3 by default", () => Session.RoundsToWin == 2);
+		Do("Y: best of 5", () => b.Press(s => { s.TeamPressed = true; return s; }));
+		Expect("best of 5", () => Session.RoundsToWin == 3);
+		Do("Y again: best of 1", () => b.Press(s => { s.TeamPressed = true; return s; }));
+		Expect("best of 1, so one battle decides it", () => Session.RoundsToWin == 1);
+		// Storm Plateau (down from Woodland): its cover leaves a clear line between the P1 and P2
 		// spawns, which the shooting step below needs. Frost Tundra's crystals block it.
-		Do("move right on Stage Select", () => b.Press(s => { s.NavPressed = new Vector2I(1, 0); return s; }));
 		Do("move down on Stage Select", () => b.Press(s => { s.NavPressed = new Vector2I(0, 1); return s; }));
 		Do("confirm stage", () => b.Press(s => { s.ConfirmPressed = true; return s; }));
 		Expect("in a Teams battle on Storm Plateau", () => Screen is Battle battle && Session.StageIndex == 3 && battle.Wizards.Count == 2);
 		Expect("P2 plays the Earth wizard on Pink", () => FindWizard("P2") is Wizard w && w.Data.Id == "EarthWizard" && w.Team == Teams.Pink);
 		WaitFor("the countdown ends", () => Screen is Battle battle && battle.Fighting, 300);
+		Do("P1 pauses with Start", () => a.Press(s => { s.StartPressed = true; return s; }));
+		WaitFor("the battle is paused with the menu open", () => GameRoot.Instance.GetTree().Paused && FindPauseMenu() != null, 30);
+		Do("P1 resumes with Start", () => a.Press(s => { s.StartPressed = true; return s; }));
+		WaitFor("the battle runs again", () => !GameRoot.Instance.GetTree().Paused && FindPauseMenu() == null, 30);
 		Do("P1 aims at P2 and holds fire", () =>
 		{
 			Wizard p1 = FindWizard("P1"), p2 = FindWizard("P2");
@@ -92,6 +100,13 @@ public partial class FlowTest : Node
 	}
 
 	static Node Screen => GameRoot.Instance.CurrentScreen;
+
+	static PauseMenu FindPauseMenu()
+	{
+		if (Screen is not Battle battle) return null;
+		foreach (Node node in battle.FindChildren("*", "", true, false)) if (node is PauseMenu menu && !menu.IsQueuedForDeletion()) return menu;
+		return null;
+	}
 
 	static Wizard FindWizard(string label)
 	{

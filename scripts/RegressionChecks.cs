@@ -29,6 +29,9 @@ public static class RegressionChecks
 		CheckFriendlyFire();
 		CheckFreezeWiggle();
 		CheckOneWizardPerPlayer();
+		CheckMatch();
+		CheckDifficulty();
+		CheckSettings();
 		CheckUltimateCharge();
 		CheckMusic();
 		CheckBalance();
@@ -101,17 +104,48 @@ public static class RegressionChecks
 		Expect(seen.Count == 20, "20 distinct abilities", $"{seen.Count}");
 	}
 
+	/// <summary>
+	/// Lava and bog must leave every spawn and cover piece on solid ground, and lava must be
+	/// crossable: each bridge spans the river with ground at both ends.
+	/// </summary>
+	static void CheckHazard(StageData stage)
+	{
+		Expect(stage.HazardKind is "lava" or "bog", $"{stage.Id} hazard kind '{stage.HazardKind}' is known");
+		Expect(stage.Hazards.Length >= 2 && stage.Hazards.Length % 2 == 0, $"{stage.Id} hazard areas come in centre, half-size pairs");
+		bool spawnsSafe = true, coverSafe = true;
+		foreach (Vector2 spawn in stage.Spawns) spawnsSafe &= !stage.InHazard(spawn) && !stage.InHazard(spawn + new Vector2(0, -0.6f));
+		foreach (Vector2 piece in stage.Cover) coverSafe &= !stage.InHazard(piece);
+		Expect(spawnsSafe, $"{stage.Id} nobody starts in the {stage.HazardKind}");
+		Expect(coverSafe, $"{stage.Id} no cover stands in the {stage.HazardKind}");
+		if (stage.HazardKind == "lava")
+		{
+			Expect(stage.Bridges.Length >= 2 && stage.HazardDamage > 0.0f, $"{stage.Id} lava hurts and has bridges");
+			bool crossable = true;
+			for (int i = 0; i + 1 < stage.Bridges.Length; i += 2)
+			{
+				Vector2 centre = stage.Bridges[i], half = stage.Bridges[i + 1];
+				for (float x = -half.X; x <= half.X; x += 0.1f) crossable &= !stage.InHazard(centre + new Vector2(x, 0));
+				crossable &= !stage.InHazard(centre + new Vector2(half.X + 0.3f, 0)) && !stage.InHazard(centre - new Vector2(half.X + 0.3f, 0));
+			}
+			Expect(crossable, $"{stage.Id} every bridge crosses from ground to ground");
+			Expect(stage.InHazard(new Vector2(stage.Hazards[0].X, 0.0f)), $"{stage.Id} the river itself is lava");
+		}
+		else Expect(stage.HazardSlow is > 0.0f and < 100.0f, $"{stage.Id} bog slows but never stops you", $"{stage.HazardSlow}%");
+	}
+
 	static bool InsideArena(Vector2 unity, float margin) =>
 		Mathf.Abs(unity.X) <= Battle.ArenaHalf.X - margin && Mathf.Abs(unity.Y) <= Battle.ArenaHalf.Y - margin;
 
 	static void CheckStages()
 	{
 		StageData[] stages = Content.Stages;
-		Expect(stages.Length == 4, "four stages", $"{stages.Length}");
+		Expect(stages.Length == 6, "six stages", $"{stages.Length}");
 		foreach (StageData stage in stages)
 		{
 			if (stage == null) { Expect(false, "stage loads"); continue; }
 			Expect(stage.Background != null, $"{stage.Id} has a background");
+			Expect(stage.Caption.Length > 0, $"{stage.Id} has a Stage Select caption");
+			if (stage.HazardKind.Length > 0) CheckHazard(stage);
 			Expect(stage.Spawns.Length == 4, $"{stage.Id} has four spawns", $"{stage.Spawns.Length}");
 			Expect(stage.ComputerSpawn >= 0 && stage.ComputerSpawn < stage.Spawns.Length, $"{stage.Id} computer spawn is valid");
 			bool spawnsInside = true;
@@ -202,6 +236,56 @@ public static class RegressionChecks
 		wizard.Stun(0.75f, StunKind.Staggered);
 		Expect(wizard.Stunned && !wizard.Frozen, "a stagger is not a freeze");
 		wizard.Free();
+	}
+
+	/// <summary>Best of 3: first to two round wins takes it; a drawn round counts for nobody; it cannot run forever.</summary>
+	static void CheckMatch()
+	{
+		BattleSetup setup = new() { Stage = Content.Stages[0] };
+		setup.Fighters.Add(new Fighter { Wizard = Content.Wizards[0], Label = "P1" });
+		setup.Fighters.Add(new Fighter { Wizard = Content.Wizards[1], Label = "P2" });
+		Match match = new(setup, 2);
+		match.Record("P1");
+		Expect(!match.Decided && match.Round == 2 && match.Wins("P1") == 1, "one round won is not the match");
+		match.Record("DRAW");
+		Expect(!match.Decided && match.Round == 3, "a drawn round counts for nobody");
+		match.Record("P1");
+		Expect(match.Decided && match.Winner == "P1", "two round wins take a best of 3");
+		Match endless = new(setup, 2);
+		for (int i = 0; i < 20 && !endless.Decided; i++) endless.Record("DRAW");
+		Expect(endless.Decided && endless.Winner == "DRAW" && endless.Round <= endless.MaxRounds, "all draws end the match as a draw", $"after {endless.Round} rounds");
+		setup.TeamsActive = true;
+		Expect(new Match(setup, 2).Sides.Count == 2, "a Teams match is scored by team");
+		Expect(new Match(setup, 1) is { RoundsToWin: 1 } single && RecordAndCheck(single, "GREEN"), "best of 1 is decided by one round");
+	}
+
+	static bool RecordAndCheck(Match match, string result)
+	{
+		match.Record(result);
+		return match.Decided && match.Winner == result;
+	}
+
+	/// <summary>Easy is slower and looser than Normal, and Hard sharper.</summary>
+	static void CheckDifficulty()
+	{
+		CpuInputSource easy = new(Difficulty.Easy), normal = new(Difficulty.Normal), hard = new(Difficulty.Hard);
+		Expect(easy.AimErrorDegrees > normal.AimErrorDegrees && normal.AimErrorDegrees > hard.AimErrorDegrees, "aim tightens with difficulty");
+		Expect(easy.ReactionDelay > normal.ReactionDelay && normal.ReactionDelay > hard.ReactionDelay, "reactions quicken with difficulty");
+		Expect(easy.DodgeChance < normal.DodgeChance && normal.DodgeChance < hard.DodgeChance, "dodging improves with difficulty");
+		Expect(normal.AimErrorDegrees == new CpuInputSource().AimErrorDegrees, "Normal is the soak test's computer");
+	}
+
+	/// <summary>Volumes step by tenths and stay in 0..1 (checks never save: Settings.Persist is off).</summary>
+	static void CheckSettings()
+	{
+		Expect(!Settings.Persist, "checks do not touch the saved settings");
+		float before = Settings.MusicVolume;
+		Settings.StepMusic(20);
+		Expect(Settings.MusicVolume == 1.0f, "volume tops out at 100%");
+		Settings.StepMusic(-30);
+		Expect(Settings.MusicVolume == 0.0f, "volume bottoms out at off");
+		Settings.StepMusic(Mathf.RoundToInt(before * 10.0f));
+		Expect(Mathf.IsEqualApprox(Settings.MusicVolume, before), "volume steps by tenths", $"{Settings.MusicVolume}");
 	}
 
 	/// <summary>One player per wizard: cursors skip a wizard someone else has locked in.</summary>

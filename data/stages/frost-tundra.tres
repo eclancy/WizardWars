@@ -7,8 +7,14 @@
 script = ExtResource("1_script")
 Id = "frost-tundra"
 DisplayName = "Frost Tundra"
+Caption = "Ice crystals block the way"
 Background = ExtResource("2_background")
 Spawns = PackedVector2Array(-8, 0, 8, 0, 0, 5, 0, -5)
 ComputerSpawn = 1
 CoverKind = "crystal"
 Cover = PackedVector2Array(-4, 0, 4, 0, 0, 2.2, 0, -2.2)
+HazardKind = ""
+Hazards = PackedVector2Array()
+Bridges = PackedVector2Array()
+HazardDamage = 0
+HazardSlow = 0

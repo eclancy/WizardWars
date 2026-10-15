@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="StageData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/StageData.cs" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/art/stages/swamp.png" id="2_background"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "swamp"
+DisplayName = "Swamp"
+Caption = "Bog pools slow you and drain your energy"
+Background = ExtResource("2_background")
+Spawns = PackedVector2Array(-8, 0, 8, 0, 0, 5, 0, -5)
+ComputerSpawn = 1
+CoverKind = "toadstool"
+Cover = PackedVector2Array(-3.6, -2.2, 3.6, 2.2, -6.4, 2.6, 6.4, -2.6)
+HazardKind = "bog"
+Hazards = PackedVector2Array(-3.5, 2.6, 1.8, 1.1, 3.5, -2.6, 1.8, 1.1, 0, 0, 1.5, 0.95, -6, -1.8, 1.3, 0.9, 6, 1.8, 1.3, 0.9)
+Bridges = PackedVector2Array()
+HazardDamage = 0
+HazardSlow = 50

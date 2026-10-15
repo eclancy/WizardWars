@@ -7,8 +7,14 @@
 script = ExtResource("1_script")
 Id = "scorched-canyon"
 DisplayName = "Scorched Canyon"
+Caption = "Saguaro cacti for cover"
 Background = ExtResource("2_background")
 Spawns = PackedVector2Array(-7, 0, 7, 0, 0, 5, 0, -5)
 ComputerSpawn = 1
 CoverKind = "saguaro"
 Cover = PackedVector2Array(-4, -1.6, 4, 1.6, -1.6, 1.8, 1.6, -1.8)
+HazardKind = ""
+Hazards = PackedVector2Array()
+Bridges = PackedVector2Array()
+HazardDamage = 0
+HazardSlow = 0

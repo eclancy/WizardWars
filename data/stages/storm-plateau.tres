@@ -7,8 +7,14 @@
 script = ExtResource("1_script")
 Id = "storm-plateau"
 DisplayName = "Storm Plateau"
+Caption = "Rune stones stand in the storm"
 Background = ExtResource("2_background")
 Spawns = PackedVector2Array(-8, 4.5, 8, 4.5, -8, -4.5, 8, -4.5)
 ComputerSpawn = 3
 CoverKind = "obelisk"
 Cover = PackedVector2Array(-2.5, 1.6, 2.5, 1.6, -2.5, -1.6, 2.5, -1.6)
+HazardKind = ""
+Hazards = PackedVector2Array()
+Bridges = PackedVector2Array()
+HazardDamage = 0
+HazardSlow = 0

@@ -50,6 +50,6 @@ run flowtest --flowtest
 FILTER="AbilityTest: FAIL|casts, |ERROR"
 run abilities --abilities
 FILTER="Soak: FAIL|Soak: [0-9]+ matches|result|ERROR"
-run soak --soak=4
+run soak --soak=6
 run soak-teams --soak=2 --teams
 echo "All checks passed."
