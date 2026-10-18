@@ -9,7 +9,8 @@ Writes build/release/:
   WizardWars-patch.zip    just the game: the .pck and the game's own assembly. A few MB, against
                           tens of MB for the full zip, because the engine and the .NET runtime
                           only change when Godot is upgraded.
-  version.json            what the game's update check reads (see scripts/UpdateScreen.cs)
+  version.json            what the game's update check reads (see scripts/UpdateScreen.cs),
+                          plus the URL of WizardWars-Setup.exe, which release.sh builds next
 
 Normally run by tools/release/release.sh rather than by hand. See docs/releasing.md.
 Works with Python 2.7 and 3.
@@ -121,6 +122,8 @@ def main(argv):
         "engine": engine_version(),
         "patch": base + "WizardWars-patch.zip",
         "full": base + "WizardWars-windows.zip",
+        # The installer, built afterwards by release.sh from tools/release/installer.iss.
+        "installer": base + "WizardWars-Setup.exe",
     }
     text = json.dumps(info, indent=2, sort_keys=True, separators=(",", ": ")) + "\n"
     if not isinstance(text, type(u"")):

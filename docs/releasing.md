@@ -22,19 +22,42 @@ release**.
 
 ## What a release contains
 
-`tools/release/package.py` makes three files from the export in `build/windows/`:
+`tools/release/package.py` makes three files from the export in `build/windows/`, and Inno Setup
+makes a fourth:
 
+- **`WizardWars-Setup.exe`** (about 63 MB): the installer, compiled from
+  `tools/release/installer.iss`. This is the file a new player downloads: run it, and play from
+  the Start menu or the desktop.
 - **`WizardWars-windows.zip`** (about 80 MB): everything, in a `WizardWars/` folder, with a
-  `How to play.txt`. This is the file a new player downloads.
+  `How to play.txt`. The portable version, for anyone who would rather not install: unzip it
+  anywhere writable and run `WizardWars.exe`.
 - **`WizardWars-patch.zip`** (about 13 MB): `WizardWars.pck` (every image, sound, setting and
   scene; most of its size is the music) and `WizardWars.dll` with its two JSON files (all the
   C#). These are the only files that change when the game changes and Godot does not. The rest
   of the full zip is the Godot engine and the .NET runtime.
 - **`version.json`**: the version, the Godot version it was built with, and the URLs of both
-  zips.
+  zips and of the installer (`installer`; the game itself does not use it).
 
 The export preset keeps the `.pck` next to the exe (`binary_format/embed_pck=false`) so the
 patch can replace it on its own.
+
+## The installer
+
+`WizardWars-Setup.exe` installs **per user, with no admin prompt**, into
+`%LOCALAPPDATA%\Programs\WizardWars` (`PrivilegesRequired=lowest`). It adds a Start menu
+shortcut and, unless unticked, a desktop one, and registers an uninstaller under Settings > Apps.
+Uninstalling removes the whole folder, including anything updates added, but never the save data
+and settings in `%APPDATA%\Godot\app_userdata\Wizard Wars`.
+
+Why per user: the self-updater copies each update into the game's own folder, so that folder must
+stay writable by the player. Program Files is not, and installing there would also need an admin
+prompt. Tested 2026-10-18: a default silent install landed in `%LOCALAPPDATA%\Programs\WizardWars`
+with no prompt, registered under HKCU only, the folder passed the same write probe `UpdateScreen`
+uses, the game started, and the uninstaller left nothing behind.
+
+The `AppId` GUID in `installer.iss` must never change: it is how a newer installer finds and
+upgrades an installed copy (into the same folder, `UsePreviousAppDir`). Running a newer installer
+over an older copy is fine; so is letting the copy update itself.
 
 ## How a copy updates
 
@@ -72,8 +95,8 @@ download. The script puts it above the download instructions, which always start
 "Download **" because the site strips the paragraph that starts that way.
 
 Run it on `master` with a clean working tree. The script sets the version, builds, exports,
-packages, commits "Release v0.2.0", tags it, pushes master and the tag, and runs
-`gh release create`. It takes about a minute. Run `bash tools/check.sh` first; the release script
+packages, compiles the installer, commits "Release v0.2.0", tags it, pushes master and the tag,
+and runs `gh release create` with the installer, both zips and `version.json`. It takes about a minute. Run `bash tools/check.sh` first; the release script
 does not.
 
 Version numbers: bump the last number for fixes and balance changes, and the middle one for a new
@@ -85,6 +108,13 @@ version. They come from the `godotengine/godot-builds` GitHub release, file
 needed, unpacked into `%APPDATA%\Godot\export_templates\<version>.stable.mono\`. The export
 fails with "No export template found" until they are there. `package.py` reads the engine version
 from the name of `$GODOT_BIN` (default: the path in `CLAUDE.md`), and runs on Python 2.7 or 3.
+
+The installer needs **Inno Setup 6** on the releasing machine: `winget install JRSoftware.InnoSetup`.
+`release.sh` looks for `ISCC.exe` at `$ISCC`, or by default at
+`C:/Users/ericc/AppData/Local/Programs/Inno Setup 6/ISCC.exe` (a per-user install), and stops
+before tagging anything if it is missing. To build the installer by hand after an export and
+`package.py`: `ISCC /DAppVersion=X.Y.Z tools/release/installer.iss` (from Git Bash, prefix
+`MSYS2_ARG_CONV_EXCL="*"` so the `/` options are not turned into paths).
 
 For the exe to carry the game's icon in Explorer, also download `rcedit-x64.exe` from the
 `electron/rcedit` GitHub releases (MIT) to somewhere outside the repo, and set Godot's editor
@@ -107,13 +137,15 @@ Run a build with `-- --no-update` to skip the check entirely.
 
 ## Things to know
 
-- **Windows SmartScreen** warns "Windows protected your PC" the first time, because the exe is
-  not code-signed. `How to play.txt` and the download page tell people to click "More info", then
-  "Run anyway". Signing costs money every year, and is not worth it for family and friends.
+- **Windows SmartScreen** warns "Windows protected your PC" the first time, because the
+  installer and the exe are not code-signed. `How to play.txt` and the download page tell people
+  to click "More info", then "Run anyway". Signing costs money every year, and is not worth it for family and friends.
 - **Upgrading Godot** changes the engine version, so every copy downloads the full zip once.
   Install the new export templates before releasing.
-- **The game must be somewhere it can write to.** Unzipped into Program Files, it cannot update
-  itself and silently stays on its version. `How to play.txt` says to keep it in Documents or on
-  the Desktop.
+- **The game must be somewhere it can write to.** The installer sees to that. The portable zip
+  unzipped into Program Files cannot update itself and silently stays on its version.
+  `How to play.txt` says to keep it in Documents or on the Desktop.
+- **The download page** (`ecec.dev/wizard-wars/download`) offers the installer
+  (`releases/latest/download/WizardWars-Setup.exe`) first, and the zip as the portable fallback.
 - **Only Windows is exported.** A Mac build needs Apple notarization to open without a fight.
 - **The repo is public**, so a release is public too.
