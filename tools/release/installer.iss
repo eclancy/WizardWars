@@ -18,6 +18,8 @@
 AppId={{7CB5915F-4809-4117-B9CC-1D7355374BFA}
 AppName=Wizard Wars
 AppVersion={#AppVersion}
+; Apps & features shows the name alone; the version has its own column there.
+UninstallDisplayName=Wizard Wars
 AppPublisher=ECEC
 AppPublisherURL=https://ecec.dev/games/wizard-wars
 ; Paths below are relative to the repo root.

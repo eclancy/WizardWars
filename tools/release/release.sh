@@ -59,7 +59,7 @@ timeout 900 "$GODOT_BIN" --headless --path . --export-release "Windows Desktop" 
 [ -f build/windows/WizardWars.pck ] || { echo "export produced no .pck - see build/export.log" >&2; git checkout project.godot; exit 1; }
 
 python tools/release/package.py "$VERSION"
-MSYS2_ARG_CONV_EXCL="*" "$ISCC" /Q "/DAppVersion=$VERSION" tools/release/installer.iss \
+MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "$ISCC" /Q "/DAppVersion=$VERSION" tools/release/installer.iss \
 	|| { echo "installer build failed" >&2; git checkout project.godot; exit 1; }
 [ -f build/release/WizardWars-Setup.exe ] || { echo "no build/release/WizardWars-Setup.exe" >&2; git checkout project.godot; exit 1; }
 
