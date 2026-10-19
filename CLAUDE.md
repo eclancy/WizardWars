@@ -94,9 +94,10 @@ to start everyone with a full ultimate). `select` also takes `--teams`. Godot's 
 letters the title flashes, from `title.png` (`TitleGlowTool`). Rerun it if the title art
 changes, and update `TitleScreen.GlowOrigin` with the position it prints.
 
-`--make-icon` rebuilds `icon.png` and `icon.ico` (a "WW" cut from the title art above a
-fireball, `IconTool`). `--make-stages` repaints the Frost Tundra, Scorched Canyon and Storm
-Plateau floors and paints the bush-like tufts out of Woodland's (`StageArtTool`). `--make-sounds`
+`--make-icon` rebuilds `icon.png` and `icon.ico` (`IconTool`): a "WW" cut from the title art,
+standing behind a fireball, turned slightly toward it and lit by it, on a dark backdrop with a
+ring of runes. `--make-stages` repaints the Frost Tundra, Scorched Canyon, Storm Plateau,
+Volcano and Swamp floors and paints the bush-like tufts out of Woodland's (`StageArtTool`). `--make-sounds`
 synthesises the newer sound effects (ultimate charge and release, ground crack, ice break and
 chip) into `assets/sfx` (`SoundTool`). All four write committed files; run them on purpose,
 then a headless `--import`.
