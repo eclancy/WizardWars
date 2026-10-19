@@ -405,6 +405,7 @@ public partial class CharacterSelectScreen : Control
 		"Hide behind each stage's cover: it stops shots.",
 		"Free-for-All: last wizard standing wins.",
 		"Teams: knock out the other team. Your spells never hurt your teammates.",
+		$"King of the Rune (set on Stage Select): stand in the glowing rune to score. First to {RuneHill.Target:0} seconds wins.",
 		"Playing alone? You face a computer-controlled wizard.",
 	};
 
@@ -423,7 +424,7 @@ public partial class CharacterSelectScreen : Control
 		for (int i = 0; i < HowToPlay.Length; i++)
 		{
 			Label line = Ui.Label(HowToPlay[i], 26, Colors.White, HorizontalAlignment.Left);
-			Ui.Place(line, 360, 262 + i * 60, 1220, 56);
+			Ui.Place(line, 360, 258 + i * 56, 1220, 52);
 			frame.AddChild(line);
 		}
 		return root;

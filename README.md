@@ -2,7 +2,8 @@
 
 A local multiplayer arena battler for 1–4 players. Pick a wizard of fire, frost, earth or
 electricity (each wizard can be played by one player at a time) and fight to be the last one
-standing, or team up in Green vs Pink. Matches are best of 1, 3 or 5 rounds. Playing alone?
+standing (or the one who holds the rune longest, in King of the Rune), or team up in Green vs
+Pink. Matches are best of 1, 3 or 5 rounds. Playing alone?
 You face a computer wizard on Easy, Normal or Hard.
 
 Built with **Godot 4.5 (.NET / C#)**. It started life as a Unity game. The last Unity
@@ -31,7 +32,7 @@ version is preserved at the git tag [`unity-final`](../../tree/unity-final).
 | Switch team | Y | T |
 | How to play (hold) | Right stick click | H |
 | Options (Character Select) | X | 5 |
-| Rounds / computer skill (Stage Select) | Y / X | T / 5 |
+| Rounds / goal / computer skill (Stage Select) | Y / RB / X | T / 3 / 5 |
 | Fullscreen / window | | F11 or Alt+Enter |
 
 ### The wizards
@@ -57,6 +58,10 @@ Every stage has its own cover to hide behind, and two have a hazard:
 | Swamp | Toadstools | Bog pools: they slow you and stop your energy recharging. |
 
 Cover stops shots. Anything that casts a shadow is solid; the rest is floor.
+
+**King of the Rune** (RB on Stage Select): stand alone in the glowing rune circle to score; the
+first to 20 seconds takes the round. Two sides in it contest it, and knocked-out wizards come
+back after 3 seconds. On the Volcano and the Swamp the rune moves between two spots.
 
 Start pauses a battle (resume, rematch, options or quit). The options are music and sound
 volume, fullscreen and controller rumble, and are saved between sessions.

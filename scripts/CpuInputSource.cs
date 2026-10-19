@@ -185,6 +185,8 @@ public class CpuInputSource : IInputSource
 			Vector2 toWaypoint = waypoint - self.Feet;
 			if (toWaypoint.LengthSquared() > 1.0f) desired = toWaypoint.Normalized();
 		}
+		// King of the Rune: the rune is where to be, whoever is about.
+		if (Battle.Rune is RuneHill rune) desired = TowardRune(rune);
 
 		ScanForIncomingShots();
 		if (Now < dodgeUntil) desired = dodge;
@@ -198,6 +200,21 @@ public class CpuInputSource : IInputSource
 			strafe = -strafe;
 		}
 		return AvoidHazard(move);
+	}
+
+	/// <summary>
+	/// Get onto the rune (over a bridge if lava is in the way), then hold it: drift about inside,
+	/// pulled back toward the middle, while fighting whoever comes.
+	/// </summary>
+	Vector2 TowardRune(RuneHill rune)
+	{
+		Vector2 toRune = rune.Centre - self.Feet;
+		if (toRune.Length() <= RuneHill.Radius * 0.55f) return strafe * 0.5f + toRune / RuneHill.Radius;
+		StageData stage = Battle.Hazard?.Stage;
+		Vector2? way = stage == null ? null : Route(stage, Units.ToUnity(self.Feet), Units.ToUnity(rune.Centre));
+		Vector2 headFor = way is Vector2 w ? Units.U(w) : rune.Centre;
+		Vector2 toward = headFor - self.Feet;
+		return toward.LengthSquared() > 1.0f ? toward.Normalized() : toRune.Normalized();
 	}
 
 	double routeUntil;

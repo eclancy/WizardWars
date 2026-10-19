@@ -18,3 +18,4 @@ Hazards = PackedVector2Array(-3.5, 2.6, 1.8, 1.1, 3.5, -2.6, 1.8, 1.1, 0, 0, 1.5
 Bridges = PackedVector2Array()
 HazardDamage = 0
 HazardSlow = 50
+RunePoints = PackedVector2Array(-3, 0, 3, 0)

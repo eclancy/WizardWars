@@ -41,6 +41,12 @@ public partial class StageData : Resource
 	/// <summary>Slow, in percent, while standing in bog.</summary>
 	[Export] public float HazardSlow { get; set; }
 
+	/// <summary>
+	/// Where King of the Rune's circle sits, in turn (Unity units). One spot keeps it still; with
+	/// more it moves on every <see cref="RuneHill.MoveEvery"/> seconds. Empty means the centre.
+	/// </summary>
+	[Export] public Vector2[] RunePoints { get; set; } = System.Array.Empty<Vector2>();
+
 	/// <summary>Whether a point (Unity units) is in the hazard and not on a bridge.</summary>
 	public bool InHazard(Vector2 point)
 	{

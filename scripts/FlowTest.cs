@@ -74,6 +74,11 @@ public partial class FlowTest : Node
 		Expect("best of 5", () => Session.RoundsToWin == 3);
 		Do("Y again: best of 1", () => b.Press(s => { s.TeamPressed = true; return s; }));
 		Expect("best of 1, so one battle decides it", () => Session.RoundsToWin == 1);
+		Expect("the goal is knock-out by default", () => Session.Goal == Goal.Knockout);
+		Do("RB: King of the Rune", () => b.Press(s => { s.ThirdPressed = true; return s; }));
+		Expect("King of the Rune", () => Session.Goal == Goal.KingOfTheRune);
+		Do("RB again: back to knock-out", () => b.Press(s => { s.ThirdPressed = true; return s; }));
+		Expect("knock-out again", () => Session.Goal == Goal.Knockout);
 		// Storm Plateau (down from Woodland): its cover leaves a clear line between the P1 and P2
 		// spawns, which the shooting step below needs. Frost Tundra's crystals block it.
 		Do("move down on Stage Select", () => b.Press(s => { s.NavPressed = new Vector2I(0, 1); return s; }));

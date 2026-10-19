@@ -16,8 +16,9 @@ The game is **feature-complete**. It has:
   lists, how-to-play
 - Stage Select and six stages, each with its own cover to hide behind; the Volcano (lava
   and bridges) and the Swamp (bog pools) have hazards
-- matches of best of 1, 3 or 5 rounds with a scoreboard between rounds, and a computer
-  opponent on Easy, Normal or Hard (both set on Stage Select)
+- matches of best of 1, 3 or 5 rounds with a scoreboard between rounds, two goals (knock
+  everyone out, or King of the Rune), and a computer opponent on Easy, Normal or Hard (all
+  set on Stage Select)
 - a pause menu (Start: resume, rematch, options, quit), options (volume, fullscreen,
   rumble; saved) and controller rumble
 - all four wizards with all 20 abilities and their telegraphs: basic (RT), second (LT),
@@ -70,7 +71,8 @@ It runs, and fails on the first failure:
    Afterwards the arena must be empty.
 6. `--soak`: `SoakTest` plays computer-only matches, Free-for-All (six, one per stage) and
    Teams, faster than real time. After each one, no effect node, modifier or ultimate lock
-   may be left behind. On a hazard stage it also reports the lava damage dealt.
+   may be left behind. On a hazard stage it also reports the lava damage dealt. A short King
+   of the Rune soak (`--king`) checks every round was won on the rune or the clock.
 
 Run the steps after `dotnet build` with
 `--headless --fixed-fps 60 --path . res://scenes/Main.tscn -- <flag>`.
@@ -213,6 +215,16 @@ export preset, `UpdateScreen` or `tools/release/`.
   (`CpuInputSource.AvoidHazard`), and when lava lies between it and a target that is out of
   range or out of sight, it walks over the bridge with the shortest route
   (`CpuInputSource.Route`, tested in `RegressionChecks`). The soak reports bridge crossings. `HazardPreview` draws them on Stage Select tiles.
+- **King of the Rune** (`Session.Goal`, RB on Stage Select): `Battle` adds a `RuneHill`, a
+  rune circle drawn flat on the floor over ground effects. A side alone in it scores
+  (`RuneHill.Target` seconds wins the round; after `TimeLimit` the leader wins); two sides
+  in it contest it. Scoring uses the same flattened ellipse as the drawing. Knocked-out
+  wizards respawn after `Battle.RespawnSeconds`. Stages whose middle is lava or bog list
+  several `RunePoints` and the rune moves between them every `MoveEvery` seconds, its next
+  spot glowing first. `RuneScoreboard` shows the race across the top. The AI heads for the
+  rune (over bridges) and fights from it. Tuning from the soak: duels and Teams settle in
+  about a minute; four computers dogpile, so a four-way round usually runs to the 90 s cap.
+  `RuneGlyphs` holds the runes shared with the icon.
 - **Computer skill:** `CpuInputSource(Difficulty)` sets reaction, aim error, dodging, how
   often it thinks, how readily it spends abilities, and how fast it wiggles out of ice.
   Normal is the default constructor, which the soak measures.

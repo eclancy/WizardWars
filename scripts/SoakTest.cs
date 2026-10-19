@@ -17,7 +17,7 @@ public partial class SoakTest : Node
 	const double SettleSeconds = 8.0;
 
 	readonly int matches;
-	readonly bool teams;
+	readonly bool teams, king;
 	readonly int players = 4;
 	int played, failures;
 	// Balance report: how long fights last and whether ultimates come up.
@@ -29,10 +29,11 @@ public partial class SoakTest : Node
 
 	public SoakTest() { }
 
-	public SoakTest(int matches, bool teams, int players = 4)
+	public SoakTest(int matches, bool teams, int players = 4, bool king = false)
 	{
 		this.matches = matches;
 		this.teams = teams;
+		this.king = king;
 		this.players = teams ? 4 : Mathf.Clamp(players, 2, 4);
 		Name = "SoakTest";
 	}
@@ -46,7 +47,7 @@ public partial class SoakTest : Node
 
 	void StartMatch()
 	{
-		BattleSetup setup = new() { Stage = Content.Stages[played % Content.Stages.Length], TeamsActive = teams };
+		BattleSetup setup = new() { Stage = Content.Stages[played % Content.Stages.Length], TeamsActive = teams, Goal = king ? Goal.KingOfTheRune : Goal.Knockout };
 		List<string> names = new();
 		for (int i = 0; i < players; i++)
 		{
@@ -59,7 +60,7 @@ public partial class SoakTest : Node
 		battle.SkipCountdown = true;
 		AddChild(battle);
 		settleUntil = -1.0;
-		GD.Print($"Soak: match {played + 1}/{matches} on {setup.Stage.DisplayName}{(teams ? " (teams)" : "")}: {string.Join(", ", names)}");
+		GD.Print($"Soak: match {played + 1}/{matches} on {setup.Stage.DisplayName}{(teams ? " (teams)" : "")}{(king ? " (king of the rune)" : "")}: {string.Join(", ", names)}");
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -85,11 +86,26 @@ public partial class SoakTest : Node
 			if (wizard.UltimateActive) Fail($"match {played + 1}: {wizard.Label} is stuck with an ultimate active");
 			if (wizard.Status.SpeedMultiplier != 1.0f) Fail($"match {played + 1}: {wizard.Label} speed multiplier is {wizard.Status.SpeedMultiplier}");
 		}
+		if (battle.Rune != null) CheckRune();
 		GD.Print($"Soak: match {played + 1} result {battle.Result} after {battle.EndedAt:0.0}s, {battle.UltimatesCast} ultimate(s)" + (battle.Hazard?.Stage.HazardKind == "lava" ? $", lava dealt {battle.Hazard.DamageDealt:0}, {battle.Hazard.Crossings} bridge crossing(s)" : ""));
 		totalSeconds += battle.EndedAt;
 		totalUltimates += battle.UltimatesCast;
 		if (battle.UltimatesCast > 0) matchesWithUltimate++;
 		FinishMatch();
+	}
+
+	/// <summary>
+	/// King of the Rune ends on the rune: the winner reached the target, or the time ran out (and
+	/// then the leader won, or it was a tie). Scores are reported.
+	/// </summary>
+	void CheckRune()
+	{
+		List<string> scores = new();
+		foreach (KeyValuePair<string, float> pair in battle.Rune.Scores) scores.Add($"{pair.Key} {pair.Value:0}");
+		GD.Print($"Soak: rune scores {string.Join(", ", scores)}");
+		bool reached = battle.Rune.Scores.TryGetValue(battle.Result, out float won) && won >= RuneHill.Target - 0.05f;
+		bool timedOut = battle.Rune.TimedOut;
+		if (!reached && !timedOut) Fail($"match {played + 1}: {battle.Result} won King of the Rune without holding it for {RuneHill.Target:0}s or the time running out");
 	}
 
 	void Fail(string message)

@@ -134,6 +134,26 @@ public static class RegressionChecks
 		else Expect(stage.HazardSlow is > 0.0f and < 100.0f, $"{stage.Id} bog slows but never stops you", $"{stage.HazardSlow}%");
 	}
 
+	/// <summary>
+	/// King of the Rune's spots: inside the arena, on safe ground (not in the lava or bog), clear of
+	/// cover, and not on top of anyone's start.
+	/// </summary>
+	static void CheckRuneSpots(StageData stage)
+	{
+		Vector2[] spots = stage.RunePoints.Length > 0 ? stage.RunePoints : new[] { Vector2.Zero };
+		bool inside = true, safe = true, clearOfCover = true, awayFromSpawns = true;
+		foreach (Vector2 spot in spots)
+		{
+			inside &= InsideArena(spot, RuneHill.RadiusUnits + 0.5f);
+			safe &= !stage.InHazard(spot);
+			foreach (Vector2 piece in stage.Cover) clearOfCover &= spot.DistanceTo(piece) > RuneHill.RadiusUnits + 0.3f;
+			foreach (Vector2 spawn in stage.Spawns) awayFromSpawns &= spot.DistanceTo(spawn) > 3.0f;
+		}
+		Expect(inside && safe, $"{stage.Id} the rune sits inside the arena on safe ground");
+		Expect(clearOfCover, $"{stage.Id} no cover stands in the rune");
+		Expect(awayFromSpawns, $"{stage.Id} nobody starts on the rune");
+	}
+
 	static bool InsideArena(Vector2 unity, float margin) =>
 		Mathf.Abs(unity.X) <= Battle.ArenaHalf.X - margin && Mathf.Abs(unity.Y) <= Battle.ArenaHalf.Y - margin;
 
@@ -147,6 +167,7 @@ public static class RegressionChecks
 			Expect(stage.Background != null, $"{stage.Id} has a background");
 			Expect(stage.Caption.Length > 0, $"{stage.Id} has a Stage Select caption");
 			if (stage.HazardKind.Length > 0) CheckHazard(stage);
+			CheckRuneSpots(stage);
 			Expect(stage.Spawns.Length == 4, $"{stage.Id} has four spawns", $"{stage.Spawns.Length}");
 			Expect(stage.ComputerSpawn >= 0 && stage.ComputerSpawn < stage.Spawns.Length, $"{stage.Id} computer spawn is valid");
 			bool spawnsInside = true;

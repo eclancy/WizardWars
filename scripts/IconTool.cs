@@ -109,17 +109,7 @@ public static class IconTool
 			}
 
 		// Runes round the circle, each upright toward the centre, faintly lit: brighter near the fire.
-		Vector2[][][] runes =
-		{
-			new[] { new Vector2[] { new(-0.3f, -1), new(-0.3f, 1) }, new Vector2[] { new(-0.3f, -0.45f), new(0.35f, 0), new(-0.3f, 0.45f) } }, // Thurisaz
-			new[] { new Vector2[] { new(0.35f, -1), new(-0.35f, -0.1f), new(0.35f, 0.15f), new(-0.35f, 1) } }, // Sowilo
-			new[] { new Vector2[] { new(-0.35f, -1), new(-0.35f, 1) }, new Vector2[] { new(0.35f, -1), new(0.35f, 1) }, new Vector2[] { new(-0.35f, -0.3f), new(0.35f, 0.3f) } }, // Hagalaz
-			new[] { new Vector2[] { new(0, -0.8f), new(0, 1) }, new Vector2[] { new(-0.4f, -1), new(0, -0.3f), new(0.4f, -1) } }, // Algiz
-			new[] { new Vector2[] { new(0, -1), new(0, 1) }, new Vector2[] { new(-0.4f, -0.5f), new(0, -1), new(0.4f, -0.5f) } }, // Tiwaz
-			new[] { new Vector2[] { new(-0.3f, -1), new(-0.3f, 1) }, new Vector2[] { new(-0.3f, -1), new(0.35f, -0.4f), new(-0.3f, 0) }, new Vector2[] { new(-0.3f, 0), new(0.35f, 1) } }, // Raidho
-			new[] { new Vector2[] { new(-0.3f, -1), new(-0.3f, 1) }, new Vector2[] { new(-0.3f, -0.5f), new(0.35f, -0.9f) }, new Vector2[] { new(-0.3f, 0), new(0.35f, -0.4f) } }, // Fehu
-			new[] { new Vector2[] { new(-0.35f, -1), new(-0.35f, 1) }, new Vector2[] { new(0.35f, -1), new(0.35f, 1) }, new Vector2[] { new(-0.35f, -1), new(0.35f, 0) }, new Vector2[] { new(0.35f, -1), new(-0.35f, 0) } }, // Mannaz
-		};
+		Vector2[][][] runes = RuneGlyphs.All;
 		const int Count = 16;
 		for (int i = 0; i < Count; i++)
 		{

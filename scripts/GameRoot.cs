@@ -15,8 +15,9 @@ using Godot;
 ///   --make-sounds         synthesise the newer sound effects into assets/sfx (see SoundTool)
 ///   --soak[=N]            play N computer-only matches headless (default 6) and check for leaks
 ///   --flowtest            drive every menu and a Teams match with scripted pads, asserting each step
-///   --abilities           cast all 16 abilities at an enemy and at a teammate, checking each
+///   --abilities           cast all 20 abilities at an enemy and at a teammate, checking each
 ///   --teams               with --soak, --screen=demo or --screen=select: Teams mode
+///   --king                with --soak or --screen=demo: King of the Rune instead of knock-out
 ///   --players=N           with --soak: 2-4 computer wizards in Free-for-All (default 4)
 ///   --screen=NAME         start on title | select | stage | battle | demo | pause | options (--stage=0-3 picks its arena)
 ///   --charged             with --screen=demo: every wizard starts with a full ultimate
@@ -78,7 +79,7 @@ public partial class GameRoot : Node2D
 		{
 			int count = flags.TryGetValue("soak", out string n) && int.TryParse(n, out int parsed) ? parsed : 6;
 			int players = flags.TryGetValue("players", out string p) && int.TryParse(p, out int parsedPlayers) ? parsedPlayers : 4;
-			AddChild(new SoakTest(count, flags.ContainsKey("teams"), players));
+			AddChild(new SoakTest(count, flags.ContainsKey("teams"), players, flags.ContainsKey("king")));
 			return;
 		}
 		if (flags.TryGetValue("shot", out string shotPath))
@@ -101,7 +102,7 @@ public partial class GameRoot : Node2D
 			case "battle": DemoJoin(); ShowBattle(); break;
 			case "pause": DemoJoin(); ShowBattle(); OpenPauseLater(); break;
 			case "options": DemoJoin(); ShowCharacterSelect(); OptionsPanel.Open(current, Devices.Keyboard, null); break;
-			case "demo": ShowDemo(flags.ContainsKey("teams"), flags.TryGetValue("stage", out string stage) && int.TryParse(stage, out int s) ? s : 1); break;
+			case "demo": ShowDemo(flags.ContainsKey("teams"), flags.ContainsKey("king"), flags.TryGetValue("stage", out string stage) && int.TryParse(stage, out int s) ? s : 1); break;
 			// A downloaded copy checks ecec.dev for a newer version before anything else.
 			default:
 				if (UpdateScreen.ShouldCheck()) Swap(new UpdateScreen { Name = "Update" }, true);
@@ -182,9 +183,9 @@ public partial class GameRoot : Node2D
 	}
 
 	/// <summary>A computer-only match for screenshots and attract mode.</summary>
-	void ShowDemo(bool teams, int stage)
+	void ShowDemo(bool teams, bool king, int stage)
 	{
-		BattleSetup setup = new() { Stage = Content.Stages[Mathf.Clamp(stage, 0, Content.Stages.Length - 1)], TeamsActive = teams };
+		BattleSetup setup = new() { Stage = Content.Stages[Mathf.Clamp(stage, 0, Content.Stages.Length - 1)], TeamsActive = teams, Goal = king ? Goal.KingOfTheRune : Goal.Knockout };
 		for (int i = 0; i < 4; i++)
 			setup.Fighters.Add(new Fighter { Wizard = Content.Wizards[i], Slot = -1, Spawn = i, Label = "CPU" + (i + 1), Team = teams ? Teams.DefaultForSlot(i) : Teams.NoTeam });
 		Battle battle = StartBattle(setup, skipCountdown: false);

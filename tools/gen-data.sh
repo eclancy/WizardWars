@@ -110,7 +110,7 @@ wizard electricity ElectricityWizard "Electricity Wizard" electricity yellow "0.
 # of its path (its floor art is hand-drawn; the other floors are plain ground, see StageArtTool).
 stage() {
 	local file=$1 name=$2 caption=$3 spawns=$4 computer=$5 coverkind=$6 cover=$7
-	local hazard=${8:-} hazards=${9:-} bridges=${10:-} damage=${11:-0} slow=${12:-0}
+	local hazard=${8:-} hazards=${9:-} bridges=${10:-} damage=${11:-0} slow=${12:-0} runes=${13:-0, 0}
 	{
 		echo "[gd_resource type=\"Resource\" script_class=\"StageData\" load_steps=3 format=3]"
 		echo
@@ -132,6 +132,7 @@ stage() {
 		echo "Bridges = PackedVector2Array($bridges)"
 		echo "HazardDamage = $damage"
 		echo "HazardSlow = $slow"
+		echo "RunePoints = PackedVector2Array($runes)"
 	} > data/stages/$file.tres
 }
 
@@ -144,7 +145,10 @@ stage storm-plateau "Storm Plateau" "Rune stones stand in the storm" "-8, 4.5, 8
 # Hazards and bridges are centre, half-size pairs. The Volcano's lava river splits the arena down
 # the middle (Green's spawns on the left, Pink's on the right) with a bridge high and low; lava
 # burns for 20 a second. The Swamp's bog pools slow by half and stop energy recharging.
-stage volcano "Volcano" "Lava splits the arena: cross on the bridges" "-8, 4, 8, 4, -8, -4, 8, -4" 3 boulder "-5, 1.6, 5, -1.6, -4.2, -3.2, 4.2, 3.2" lava "0, 0, 1.3, 7" "0, 3, 1.7, 0.85, 0, -3, 1.7, 0.85" 20 0
-stage swamp "Swamp" "Bog pools slow you and drain your energy" "-8, 0, 8, 0, 0, 5, 0, -5" 1 toadstool "-3.6, -2.2, 3.6, 2.2, -6.4, 2.6, 6.4, -2.6" bog "-3.5, 2.6, 1.8, 1.1, 3.5, -2.6, 1.8, 1.1, 0, 0, 1.5, 0.95, -6, -1.8, 1.3, 0.9, 6, 1.8, 1.3, 0.9" "" 0 50
+# King of the Rune's circle sits in the centre, except where the centre is lava or bog: on the
+# Volcano it moves between the two bridges, on the Swamp between the banks either side of the
+# middle pool.
+stage volcano "Volcano" "Lava splits the arena: cross on the bridges" "-8, 4, 8, 4, -8, -4, 8, -4" 3 boulder "-5, 1.6, 5, -1.6, -4.2, -3.2, 4.2, 3.2" lava "0, 0, 1.3, 7" "0, 3, 1.7, 0.85, 0, -3, 1.7, 0.85" 20 0 "0, 3, 0, -3"
+stage swamp "Swamp" "Bog pools slow you and drain your energy" "-8, 0, 8, 0, 0, 5, 0, -5" 1 toadstool "-3.6, -2.2, 3.6, 2.2, -6.4, 2.6, 6.4, -2.6" bog "-3.5, 2.6, 1.8, 1.1, 3.5, -2.6, 1.8, 1.1, 0, 0, 1.5, 0.95, -6, -1.8, 1.3, 0.9, 6, 1.8, 1.3, 0.9" "" 0 50 "-3, 0, 3, 0"
 
 echo "Generated $(ls data/abilities | wc -l) abilities, $(ls data/wizards | wc -l) wizards, $(ls data/stages | wc -l) stages."

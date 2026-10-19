@@ -5,6 +5,7 @@ using Godot;
 /// cover piece and a line on what makes it different (<see cref="StageData.Caption"/>). Under the
 /// grid are the match settings:
 /// - Y cycles the rounds: best of 1, 3 or 5
+/// - RB switches the goal: knock everyone out, or King of the Rune (<see cref="RuneHill"/>)
 /// - X cycles the computer's skill, when someone is playing alone
 ///
 /// Any joined player moves the highlight and confirms with A (Space); B (Backspace) goes back to
@@ -123,6 +124,11 @@ public partial class StageSelectScreen : Control
 				Session.RoundsToWin = Session.RoundsToWin % 3 + 1;
 				DrawSettings();
 			}
+			if (state.ThirdPressed)
+			{
+				Session.Goal = Session.Goal == Goal.Knockout ? Goal.KingOfTheRune : Goal.Knockout;
+				DrawSettings();
+			}
 			if (state.UltimatePressed && ComputerPlays)
 			{
 				Session.CpuDifficulty = (Difficulty)(((int)Session.CpuDifficulty + 1) % 3);
@@ -153,20 +159,24 @@ public partial class StageSelectScreen : Control
 	{
 		foreach (Node child in settings.GetChildren()) child.QueueFree();
 		bool computer = ComputerPlays;
-		float width = computer ? 1000.0f : 480.0f, x = (1920.0f - width) * 0.5f;
+		float width = computer ? SettingWidth * 3 + 40 : SettingWidth * 2 + 20, x = (1920.0f - width) * 0.5f;
 		Setting(x, "Y", "ROUNDS", $"BEST OF {Session.RoundsToWin * 2 - 1}");
+		Setting(x + SettingWidth + 20, "RB", "GOAL", Session.Goal == Goal.KingOfTheRune ? "KING OF THE RUNE" : "KNOCK OUT",
+			Session.Goal == Goal.KingOfTheRune ? new Color(1.0f, 0.55f, 0.25f) : Ui.Gold);
 		if (computer)
-			Setting(x + 520, "X", "COMPUTER", Session.CpuDifficulty.ToString().ToUpper(),
+			Setting(x + (SettingWidth + 20) * 2, "X", "COMPUTER", Session.CpuDifficulty.ToString().ToUpper(),
 				Session.CpuDifficulty switch { Difficulty.Easy => new Color(0.3f, 0.75f, 0.4f), Difficulty.Hard => new Color(0.9f, 0.3f, 0.25f), _ => Ui.Gold });
 	}
 
+	const float SettingWidth = 500.0f;
+
 	void Setting(float x, string button, string name, string value, Color? colour = null)
 	{
-		settings.AddChild(Ui.Panel(new Rect2(x, SettingsTop, 480, 72), new Color(1, 1, 1, 0.15f), 0.9f));
-		settings.AddChild(Ui.Pill(new Rect2(x + 16, SettingsTop + 18, 48, 36), button, 18, new Color(0.25f, 0.22f, 0.35f), Colors.White, heading: true));
-		Label label = Ui.Label(name, 22, new Color(1, 1, 1, 0.75f), HorizontalAlignment.Left);
-		Ui.Place(label, x + 80, SettingsTop + 14, 150, 44);
+		settings.AddChild(Ui.Panel(new Rect2(x, SettingsTop, SettingWidth, 72), new Color(1, 1, 1, 0.15f), 0.9f));
+		settings.AddChild(Ui.Pill(new Rect2(x + 14, SettingsTop + 18, 52, 36), button, 18, new Color(0.25f, 0.22f, 0.35f), Colors.White, heading: true));
+		Label label = Ui.Label(name, 21, new Color(1, 1, 1, 0.75f), HorizontalAlignment.Left);
+		Ui.Place(label, x + 76, SettingsTop + 14, 140, 44);
 		settings.AddChild(label);
-		settings.AddChild(Ui.Pill(new Rect2(x + 236, SettingsTop + 14, 224, 44), value, 22, colour ?? Ui.Gold, Ui.Ink, heading: true));
+		settings.AddChild(Ui.Pill(new Rect2(x + 206, SettingsTop + 14, 280, 44), value, 21, colour ?? Ui.Gold, Ui.Ink, heading: true));
 	}
 }

@@ -52,4 +52,5 @@ run abilities --abilities
 FILTER="Soak: FAIL|Soak: [0-9]+ matches|result|ERROR"
 run soak --soak=6
 run soak-teams --soak=2 --teams
+run soak-king --soak=2 --king --players=2
 echo "All checks passed."

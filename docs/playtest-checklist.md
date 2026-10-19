@@ -61,6 +61,9 @@ That is what this list is for. Run the game with F5 in the editor, or from an ex
       lava and crosses on the bridges to reach you.
       Swamp: bog slows you and stops your energy, and lifts the moment you step out.
 - [ ] Easy, Normal and Hard computers feel clearly different.
+- [ ] King of the Rune: the rune is easy to see, standing in it alone fills your bar, two sides
+      in it show CONTESTED, knocked-out wizards come back, and the first to 20 wins the round.
+      On the Volcano and Swamp the next spot glows before the rune moves.
 - [ ] Results: "P1 wins" art, "THE COMPUTER WINS", "GREEN/PINK TEAM WINS", or "DRAW". Then
       back to Character Select with everyone still locked in.
 - [ ] Solo: the computer wizard is beatable but not trivial.

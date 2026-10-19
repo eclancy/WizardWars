@@ -48,6 +48,9 @@ public static class Session
 	/// <summary>How well the computer plays when someone is alone against it, chosen on Stage Select.</summary>
 	public static Difficulty CpuDifficulty = Difficulty.Normal;
 
+	/// <summary>What wins a round: the last one standing, or the most time on the rune. Chosen on Stage Select.</summary>
+	public static Goal Goal = Goal.Knockout;
+
 	public static int JoinedCount
 	{
 		get
@@ -118,6 +121,7 @@ public static class Session
 		StageIndex = 0;
 		RoundsToWin = 2;
 		CpuDifficulty = Difficulty.Normal;
+		Goal = Goal.Knockout;
 	}
 }
 
@@ -127,4 +131,13 @@ public enum Difficulty
 	Easy,
 	Normal,
 	Hard,
+}
+
+/// <summary>What wins a round (see <see cref="RuneHill"/> for King of the Rune).</summary>
+public enum Goal
+{
+	/// <summary>Last wizard (or team) standing.</summary>
+	Knockout,
+	/// <summary>First to hold the rune circle for <see cref="RuneHill.Target"/> seconds; knocked-out wizards come back.</summary>
+	KingOfTheRune,
 }

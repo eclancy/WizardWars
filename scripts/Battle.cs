@@ -23,6 +23,8 @@ public sealed class BattleSetup
 {
 	public StageData Stage;
 	public bool TeamsActive;
+	/// <summary>What wins a round: knock everyone out, or hold the rune (<see cref="RuneHill"/>).</summary>
+	public Goal Goal = Goal.Knockout;
 	public readonly List<Fighter> Fighters = new();
 
 	/// <summary>
@@ -31,7 +33,7 @@ public sealed class BattleSetup
 	/// </summary>
 	public static BattleSetup FromSession()
 	{
-		BattleSetup setup = new() { Stage = Content.Stages[Mathf.Clamp(Session.StageIndex, 0, Content.Stages.Length - 1)], TeamsActive = Session.TeamsPlayable };
+		BattleSetup setup = new() { Stage = Content.Stages[Mathf.Clamp(Session.StageIndex, 0, Content.Stages.Length - 1)], TeamsActive = Session.TeamsPlayable, Goal = Session.Goal };
 		foreach (PlayerSlot slot in Session.Slots)
 		{
 			if (!slot.Joined) continue;
@@ -87,6 +89,18 @@ public partial class Battle : Node2D
 	public readonly List<RockWall> RockWalls = new();
 	/// <summary>The stage's lava or bog, if it has one.</summary>
 	public StageHazard Hazard { get; private set; }
+	/// <summary>King of the Rune's circle, or null in a knock-out battle.</summary>
+	public RuneHill Rune { get; private set; }
+	public BattleSetup Setup => setup;
+
+	/// <summary>Ends the round with this result (King of the Rune decides its own rounds).</summary>
+	public void EndRound(string result)
+	{
+		if (!Over) EndMatch(result);
+	}
+
+	/// <summary>Adds a control over the arena, on the same layer as the countdown and results.</summary>
+	public void AddOverlay(Control control) => overlay.AddChild(control);
 
 	/// <summary>Raised once when the result screen has finished, with the result text.</summary>
 	public event Action<string> Finished;
@@ -143,6 +157,11 @@ public partial class Battle : Node2D
 
 		overlay = new CanvasLayer { Layer = 10 };
 		AddChild(overlay);
+		if (setup.Goal == Goal.KingOfTheRune)
+		{
+			Rune = RuneHill.Create(this);
+			AddChild(Rune);
+		}
 		countdownImage = Centred(overlay, null, Vector2.Zero);
 		if (RoundsMatter) ShowRoundTitle();
 
@@ -238,12 +257,38 @@ public partial class Battle : Node2D
 		Vector2[] spawns = setup.TeamsActive ? TeamSpawns(stage) : stage.Spawns;
 		foreach (Fighter fighter in setup.Fighters)
 		{
-			Vector2 unitySpawn = spawns[fighter.Spawn % spawns.Length];
-			CpuInputSource cpu = fighter.Input == null ? new CpuInputSource(fighter.Difficulty) : null;
-			Wizard wizard = Wizard.Create(this, fighter.Wizard, fighter.Slot, fighter.Label, fighter.Team, (IInputSource)cpu ?? fighter.Input, Units.U(unitySpawn));
-			cpu?.Attach(wizard);
-			Wizards.Add(wizard);
-			AddChild(wizard);
+			spawnPoints[fighter] = Units.U(spawns[fighter.Spawn % spawns.Length]);
+			Spawn(fighter);
+		}
+	}
+
+	/// <summary>Where each fighter starts, and comes back to in King of the Rune.</summary>
+	readonly Dictionary<Fighter, Vector2> spawnPoints = new();
+	readonly List<(Fighter fighter, double at)> respawns = new();
+	/// <summary>Seconds a knocked-out wizard waits to come back, in King of the Rune.</summary>
+	public const double RespawnSeconds = 3.0;
+
+	Wizard Spawn(Fighter fighter)
+	{
+		CpuInputSource cpu = fighter.Input == null ? new CpuInputSource(fighter.Difficulty) : null;
+		Wizard wizard = Wizard.Create(this, fighter.Wizard, fighter.Slot, fighter.Label, fighter.Team, (IInputSource)cpu ?? fighter.Input, spawnPoints[fighter]);
+		cpu?.Attach(wizard);
+		Wizards.Add(wizard);
+		AddChild(wizard);
+		return wizard;
+	}
+
+	/// <summary>King of the Rune: knocked-out wizards come back at their start after a short wait.</summary>
+	void Respawn()
+	{
+		for (int i = respawns.Count - 1; i >= 0; i--)
+		{
+			if (Time < respawns[i].at) continue;
+			Wizard wizard = Spawn(respawns[i].fighter);
+			respawns.RemoveAt(i);
+			wizard.Modulate = new Color(1, 1, 1, 0);
+			wizard.CreateTween().TweenProperty(wizard, "modulate:a", 1.0f, 0.35);
+			Sfx.Play("res://assets/sfx/speedup.wav", -8.0f);
 		}
 	}
 
@@ -275,6 +320,12 @@ public partial class Battle : Node2D
 	public void OnWizardDied(Wizard wizard)
 	{
 		if (Over) return;
+		if (setup.Goal == Goal.KingOfTheRune)
+		{
+			foreach (Fighter fighter in setup.Fighters)
+				if (fighter.Label == wizard.Label) respawns.Add((fighter, Time + RespawnSeconds));
+			return;
+		}
 		List<Wizard> alive = new();
 		foreach (Wizard w in Wizards) if (w.Alive) alive.Add(w);
 
@@ -361,15 +412,17 @@ public partial class Battle : Node2D
 	/// <summary>"ROUND 2 - BEST OF 3" across the top during the countdown, then it fades.</summary>
 	void ShowRoundTitle()
 	{
+		// Below King of the Rune's scoreboard when there is one.
+		int drop = setup.Goal == Goal.KingOfTheRune ? 110 : 0;
 		Label title = Ui.Heading($"ROUND {Match.Round}", 64, Ui.Gold);
 		title.SetAnchorsPreset(Control.LayoutPreset.TopWide);
-		title.OffsetTop = 40;
-		title.OffsetBottom = 130;
+		title.OffsetTop = 40 + drop;
+		title.OffsetBottom = 130 + drop;
 		overlay.AddChild(title);
 		Label best = Ui.Label($"BEST OF {Match.RoundsToWin * 2 - 1}", 26, new Color(1, 1, 1, 0.8f));
 		best.SetAnchorsPreset(Control.LayoutPreset.TopWide);
-		best.OffsetTop = 128;
-		best.OffsetBottom = 170;
+		best.OffsetTop = 128 + drop;
+		best.OffsetBottom = 170 + drop;
 		overlay.AddChild(best);
 		Tween fade = CreateTween();
 		fade.TweenInterval(3.3);
@@ -436,6 +489,7 @@ public partial class Battle : Node2D
 
 		if (!Fighting && !Over && !SkipCountdown) RunCountdown();
 		CheckPause();
+		if (Fighting && !Over) Respawn();
 		if (Over && !finishedRaised && Time - resultAt >= (RoundsMatter && !Match.Decided ? RoundResultSeconds : ResultSeconds))
 		{
 			finishedRaised = true;
