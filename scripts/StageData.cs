@@ -13,7 +13,7 @@ public partial class StageData : Resource
 	[Export] public string Caption { get; set; } = "";
 	[Export] public Texture2D Background { get; set; }
 
-	/// <summary>Player 1 to 4. In Teams, Green takes spawns 1 and 3 and Pink takes 2 and 4.</summary>
+	/// <summary>Player 1 to 4. In Teams, Gold takes spawns 1 and 3 and Pink takes 2 and 4.</summary>
 	[Export] public Vector2[] Spawns { get; set; } = System.Array.Empty<Vector2>();
 	/// <summary>Which spawn the solo computer opponent uses (0-based).</summary>
 	[Export] public int ComputerSpawn { get; set; } = 3;

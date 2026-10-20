@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/smoke.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "smoke-cloud"
+DisplayName = "Smoke Cloud"
+Description = "A cloud of smoke at the target hides anyone inside it and slows enemies."
+Cost = 30.0
+Cooldown = 5.0
+Duration = 4.0
+Radius = 1.8
+SlowPercent = 30.0
+Sound = ExtResource("2_sound")

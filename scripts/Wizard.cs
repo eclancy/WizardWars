@@ -154,6 +154,35 @@ public partial class Wizard : CharacterBody2D
 		if (Health <= 0.0f) Die();
 	}
 
+	/// <summary>Restores health, never above the maximum (Regrowth, Overgrowth).</summary>
+	public void Heal(float amount)
+	{
+		if (!Alive || amount <= 0.0f) return;
+		Health = Mathf.Min(MaxHealth, Health + amount);
+	}
+
+	Vector2 shoveVelocity;
+	float shoveLeft, shoveTotal;
+
+	/// <summary>
+	/// Pushes the wizard along (pixels a second), fading to nothing over <paramref name="seconds"/>:
+	/// a gust's knockback, a cyclone's pull, a dash. Walls and cover still stop it; roots hold
+	/// against it. A new shove replaces one still running.
+	/// </summary>
+	public void Shove(Vector2 velocity, float seconds)
+	{
+		if (!Alive) return;
+		shoveVelocity = velocity;
+		shoveLeft = shoveTotal = Mathf.Max(0.01f, seconds);
+	}
+
+	/// <summary>Moves the wizard instantly (Shadow Step). The caller picks a clear spot.</summary>
+	public void Blink(Vector2 to)
+	{
+		GlobalPosition = to;
+		slideDirection = Vector2.Zero;
+	}
+
 	public void AddUltimateCharge(float amount)
 	{
 		if (UltimateReady || amount <= 0.0f) return;
@@ -298,6 +327,8 @@ public partial class Wizard : CharacterBody2D
 		// A brief red flash on every hit, so damage reads even without numbers.
 		hurtFlash = Mathf.Max(0.0f, hurtFlash - dt);
 		body.Modulate = hurtFlash > 0.0f ? new Color(1.0f, 0.45f, 0.45f) : Colors.White;
+		// In smoke a wizard is a faint shape: hard to track for anyone, the computer included.
+		if (Status.Hidden) body.Modulate = new Color(body.Modulate, 0.3f);
 
 		UpdateAim(input);
 		Move(input, dt);
@@ -397,6 +428,11 @@ public partial class Wizard : CharacterBody2D
 		else slideDirection = direction;
 
 		Velocity = direction * Units.U(Balance.MoveSpeed) * Status.SpeedMultiplier;
+		if (shoveLeft > 0.0f)
+		{
+			if (!Status.Rooted) Velocity += shoveVelocity * (shoveLeft / shoveTotal);
+			shoveLeft -= dt;
+		}
 		MoveAndSlide();
 		// Walls stop a slide rather than pinning you against them for the patch's lifetime.
 		if (GetSlideCollisionCount() > 0 && Status.Sliding) slideDirection = Vector2.Zero;
@@ -406,6 +442,8 @@ public partial class Wizard : CharacterBody2D
 	{
 		if (UltimateActive) return;
 		if (input.BasicHeld) Abilities[WizardData.BasicSlot].TryCast();
+		// Silenced: the basic attack still works, nothing else does.
+		if (Status.Silenced) return;
 		if (input.SecondHeld) Abilities[WizardData.SecondSlot].TryCast();
 		if (input.ThirdPressed) Abilities[WizardData.ThirdSlot].TryCast();
 		if (input.FourthPressed) Abilities[WizardData.FourthSlot].TryCast();

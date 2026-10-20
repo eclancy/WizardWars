@@ -50,7 +50,7 @@ public partial class FlowTest : Node
 		Do("P1 locks in the Fire wizard", () => a.Press(s => { s.ConfirmPressed = true; return s; }));
 		Expect("P1 has the Fire wizard", () => Session.Slots[0].Locked && Session.LockedOn(0) == Session.Slots[0]);
 		Do("P2 moves left", () => b.Press(s => { s.NavPressed = new Vector2I(-1, 0); return s; }));
-		Expect("P2 skips P1's Fire wizard to Electricity", () => Session.Slots[1].WizardIndex == 3);
+		Expect("P2 skips P1's Fire wizard, round to Wind", () => Session.Slots[1].WizardIndex == 6);
 		Do("P2 moves right", () => b.Press(s => { s.NavPressed = new Vector2I(1, 0); return s; }));
 		Expect("P2 skips the Fire wizard again, to Frost", () => Session.Slots[1].WizardIndex == 1);
 		Do("P2 moves right again", () => b.Press(s => { s.NavPressed = new Vector2I(1, 0); return s; }));
@@ -60,8 +60,8 @@ public partial class FlowTest : Node
 		Do("P2 locks in", () => b.Press(s => { s.ConfirmPressed = true; return s; }));
 		Expect("both locked", () => Session.Slots[0].Locked && Session.Slots[1].Locked);
 		Do("toggle Teams", () => b.Press(s => { s.ModePressed = true; return s; }));
-		Expect("Teams on, P1 Green, P2 Pink", () => Session.TeamsMode && Session.Slots[0].Team == Teams.Green && Session.Slots[1].Team == Teams.Pink);
-		Do("P2 switches to Green", () => b.Press(s => { s.TeamPressed = true; return s; }));
+		Expect("Teams on, P1 Gold, P2 Pink", () => Session.TeamsMode && Session.Slots[0].Team == Teams.Gold && Session.Slots[1].Team == Teams.Pink);
+		Do("P2 switches to Gold", () => b.Press(s => { s.TeamPressed = true; return s; }));
 		Expect("teams unbalanced", () => Session.TeamsUnbalanced);
 		Do("Start while unbalanced does nothing", () => a.Press(s => { s.StartPressed = true; return s; }));
 		Expect("still on Character Select", () => Screen is CharacterSelectScreen);
@@ -98,7 +98,7 @@ public partial class FlowTest : Node
 		});
 		WaitFor("P1's fireballs hit P2", () => FindWizard("P2") is Wizard w && w.Health < Wizard.MaxHealth, 300);
 		Expect("P2 has not hurt P1 (P2 never fired)", () => FindWizard("P1") is Wizard w && w.Health == Wizard.MaxHealth);
-		WaitFor("P2 is knocked out and Green wins", () => Screen is Battle battle && battle.Result == "GREEN", 1200);
+		WaitFor("P2 is knocked out and Gold wins", () => Screen is Battle battle && battle.Result == "GOLD", 1200);
 		Do("let go of fire", () => a.Held = default);
 		WaitFor("back on Character Select after the result", () => Screen is CharacterSelectScreen, 600);
 		Expect("players are still joined and locked for a rematch", () => Session.Slots[0].Locked && Session.Slots[1].Locked && Session.TeamsMode);

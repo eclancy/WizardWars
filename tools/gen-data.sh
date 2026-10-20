@@ -69,6 +69,27 @@ ability tremor rockwall 'DisplayName = "Tremor"' 'Description = "Stamp the groun
 # between hops, ready after 4.3 s).
 ability chain-lightning rodlightning 'DisplayName = "Chain Lightning"' 'Description = "Lightning leaps from enemy to enemy, up to three of them."' 'Cost = 35.0' 'Cooldown = 4.5' 'Range = 6.0' 'Radius = 4.0' 'Count = 3' 'Interval = 0.1' 'Damage = 18.0'
 
+# --- Shadow, Nature and Wind: new in the Godot version (2026-10-20), no Unity original ---
+# Each kit has the same shape as the four Unity wizards': a free basic bolt, two 25-35 energy
+# abilities, a 35 energy fourth on its own cooldown, and an ultimate.
+ability shadow-bolt shadow 'DisplayName = "Shadow Bolt"' 'Description = "A bolt of shadow trailing smoke. Free to cast."' 'Cooldown = 0.55' 'Damage = 20.0' 'Speed = 9.0' 'Duration = 2.0'
+ability smoke-cloud smoke 'DisplayName = "Smoke Cloud"' 'Description = "A cloud of smoke at the target hides anyone inside it and slows enemies."' 'Cost = 30.0' 'Cooldown = 5.0' 'Duration = 4.0' 'Radius = 1.8' 'SlowPercent = 30.0'
+ability shadow-step blink 'DisplayName = "Shadow Step"' 'Description = "Vanish and reappear a short way off."' 'Cost = 25.0' 'Cooldown = 3.5' 'Range = 4.5'
+ability night-grasp shadow 'DisplayName = "Night Grasp"' 'Description = "Shadowy hands claw up at the target: enemies caught are hurt and can only use their basic attack."' 'Cost = 35.0' 'Cooldown = 6.0' 'Duration = 0.6' 'Radius = 1.8' 'Damage = 18.0' 'Duration2 = 2.5'
+ability eclipse shadow 'DisplayName = "Eclipse"' 'Description = "Night pours out around you: enemies inside can only use their basic attack, and it drains them."' 'Radius = 7.0' 'Duration = 5.0' 'Damage = 10.0'
+
+ability thorn thorn 'DisplayName = "Thorn"' 'Description = "A sharp thorn, flung hard. Free to cast."' 'Cooldown = 0.55' 'Damage = 20.0' 'Speed = 10.0' 'Duration = 1.8'
+ability bramble-patch rustle 'DisplayName = "Bramble Patch"' 'Description = "Thorny vines spread at the target: enemies in them are slowed and scratched."' 'Cost = 30.0' 'Cooldown = 4.75' 'Duration = 3.5' 'Radius = 1.5' 'SlowPercent = 30.0' 'Damage = 6.0'
+ability regrowth chime 'DisplayName = "Regrowth"' 'Description = "Heal yourself over a few seconds."' 'Cost = 30.0' 'Cooldown = 8.0' 'Duration = 3.0' 'Damage = 35.0'
+ability entangle rustle 'DisplayName = "Entangle"' 'Description = "Vines whip up at the target: enemies caught are hurt and rooted to the spot."' 'Cost = 35.0' 'Cooldown = 6.0' 'Duration = 0.5' 'Radius = 1.7' 'Damage = 10.0' 'Duration2 = 2.0'
+ability overgrowth rustle 'DisplayName = "Overgrowth"' 'Description = "Thorns overrun the ground around you: enemies inside are slowed and hurt, and you heal."' 'Radius = 6.5' 'Duration = 5.0' 'SlowPercent = 40.0' 'Damage = 6.0' 'Damage2 = 6.0'
+
+ability gust gust 'DisplayName = "Gust"' 'Description = "A fast blast of air that knocks enemies back. Free to cast."' 'Cooldown = 0.55' 'Damage = 16.0' 'Speed = 12.0' 'Duration = 1.4' 'Knockback = 2.0'
+ability updraft gust 'DisplayName = "Updraft"' 'Description = "Rising air under you: you and your teammates in it run much faster."' 'Cost = 25.0' 'Cooldown = 5.0' 'Duration = 4.0' 'Radius = 1.8' 'SlowPercent = 40.0'
+ability tailwind-dash gust 'DisplayName = "Tailwind Dash"' 'Description = "Dash a short way, knocking aside and hurting enemies you pass through."' 'Cost = 25.0' 'Cooldown = 3.5' 'Range = 4.5' 'Duration = 0.25' 'Damage = 12.0' 'Knockback = 1.5'
+ability cyclone howl 'DisplayName = "Cyclone"' 'Description = "A whirlwind at the target drags enemies in and batters them."' 'Cost = 35.0' 'Cooldown = 6.0' 'Duration = 2.5' 'Radius = 2.6' 'Damage = 7.0' 'Knockback = 3.0'
+ability tempest howl 'DisplayName = "Tempest"' 'Description = "A storm whirls around you, hurling enemies outward and battering them."' 'Radius = 7.0' 'Duration = 4.5' 'Damage = 6.0' 'Knockback = 4.0'
+
 wizard() {
 	local file=$1 id=$2 name=$3 art=$4 targeter=$5 colour=$6 a1=$7 a2=$8 a3=$9 a4=${10} a5=${11}
 	{
@@ -102,6 +123,9 @@ wizard fire FireWizard "Fire Wizard" fire red "0.95, 0.4, 0.15, 1" fireball ring
 wizard frost FrostWizard "Frost Wizard" frost blue "0.45, 0.75, 1, 1" icicle ice-patch ice-wave deep-freeze absolute-zero
 wizard earth EarthWizard "Earth Wizard" earth green "0.6, 0.45, 0.25, 1" mudball mud-patch rock-wall tremor earthquake
 wizard electricity ElectricityWizard "Electricity Wizard" electricity yellow "0.72, 0.5, 1, 1" electricity-ball lightning-rod speed-up chain-lightning overcharge
+wizard shadow ShadowWizard "Shadow Wizard" shadow ash "0.72, 0.7, 0.82, 1" shadow-bolt smoke-cloud shadow-step night-grasp eclipse
+wizard nature NatureWizard "Nature Wizard" nature leaf "0.45, 0.85, 0.3, 1" thorn bramble-patch regrowth entangle overgrowth
+wizard wind WindWizard "Wind Wizard" wind mint "0.45, 0.95, 0.8, 1" gust updraft tailwind-dash cyclone tempest
 
 # Spawns from ParkBattle.ConfigureStageVariant (Unity units, +y up). Unity also scattered small
 # rocks and cacti that looked solid but blocked nothing; they are gone. The cover (kind and

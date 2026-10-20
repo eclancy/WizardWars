@@ -29,8 +29,8 @@ public static class CoverArt
 		}
 	}
 
-	delegate float Sdf(Vector2 p);
-	delegate Color Fill(Vector2 p);
+	public delegate float Sdf(Vector2 p);
+	public delegate Color Fill(Vector2 p);
 
 	static readonly Dictionary<string, Piece> cache = new();
 
@@ -57,23 +57,33 @@ public static class CoverArt
 
 	const float OutlinePx = 4.0f;
 
-	sealed class Painter
+	/// <summary>Paints outlined flat shapes onto an image. Shared with <see cref="WizardArtTool"/>.</summary>
+	public sealed class Painter
 	{
 		readonly Image image;
 		readonly int width, height;
 
-		public Painter(int width, int height)
+		public Painter(int width, int height) : this(Image.CreateEmpty(width, height, false, Image.Format.Rgba8)) { }
+
+		/// <summary>Paints over an existing image (RGBA8).</summary>
+		public Painter(Image image)
 		{
-			this.width = width;
-			this.height = height;
-			image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
+			this.image = image;
+			width = image.GetWidth();
+			height = image.GetHeight();
 		}
 
+		public Image Image => image;
+
 		/// <summary>Paints one shape over what is already there: fill inside, outline at the edge.</summary>
-		public void Layer(Sdf shape, Fill fill, Color outline, float outlinePx = OutlinePx)
+		public void Layer(Sdf shape, Fill fill, Color outline, float outlinePx = OutlinePx) => Layer(shape, fill, outline, outlinePx, new Rect2I(0, 0, width, height));
+
+		/// <summary>The same, looking only inside <paramref name="bounds"/> (much quicker on a big image).</summary>
+		public void Layer(Sdf shape, Fill fill, Color outline, float outlinePx, Rect2I bounds)
 		{
-			for (int y = 0; y < height; y++)
-				for (int x = 0; x < width; x++)
+			Rect2I area = bounds.Intersection(new Rect2I(0, 0, width, height));
+			for (int y = area.Position.Y; y < area.End.Y; y++)
+				for (int x = area.Position.X; x < area.End.X; x++)
 				{
 					Vector2 p = new(x + 0.5f, y + 0.5f);
 					float d = shape(p);
@@ -114,20 +124,20 @@ public static class CoverArt
 		public Texture2D Finish() => ImageTexture.CreateFromImage(image);
 	}
 
-	static float Ellipse(Vector2 p, Vector2 centre, Vector2 radii)
+	public static float Ellipse(Vector2 p, Vector2 centre, Vector2 radii)
 	{
 		Vector2 q = (p - centre) / radii;
 		return (q.Length() - 1.0f) * Mathf.Min(radii.X, radii.Y);
 	}
 
-	static float RoundedBox(Vector2 p, Vector2 min, Vector2 max, float radius)
+	public static float RoundedBox(Vector2 p, Vector2 min, Vector2 max, float radius)
 	{
 		Vector2 centre = (min + max) * 0.5f, half = (max - min) * 0.5f - new Vector2(radius, radius);
 		Vector2 q = (p - centre).Abs() - half;
 		return new Vector2(Mathf.Max(q.X, 0.0f), Mathf.Max(q.Y, 0.0f)).Length() + Mathf.Min(Mathf.Max(q.X, q.Y), 0.0f) - radius;
 	}
 
-	static float Polygon(Vector2 p, Vector2[] points)
+	public static float Polygon(Vector2 p, Vector2[] points)
 	{
 		float distance = float.MaxValue;
 		bool inside = false;
@@ -141,7 +151,7 @@ public static class CoverArt
 	}
 
 	/// <summary>Distance to the nearest of a set of line strokes, minus their half-width: a carved line drawing.</summary>
-	static float Strokes(Vector2 p, Vector2[][] strokes, float halfWidth)
+	public static float Strokes(Vector2 p, Vector2[][] strokes, float halfWidth)
 	{
 		float distance = float.MaxValue;
 		foreach (Vector2[] line in strokes)

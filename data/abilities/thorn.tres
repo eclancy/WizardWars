@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/thorn.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "thorn"
+DisplayName = "Thorn"
+Description = "A sharp thorn, flung hard. Free to cast."
+Cooldown = 0.55
+Damage = 20.0
+Speed = 10.0
+Duration = 1.8
+Sound = ExtResource("2_sound")

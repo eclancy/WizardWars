@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/shadow.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "eclipse"
+DisplayName = "Eclipse"
+Description = "Night pours out around you: enemies inside can only use their basic attack, and it drains them."
+Radius = 7.0
+Duration = 5.0
+Damage = 10.0
+Sound = ExtResource("2_sound")

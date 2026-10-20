@@ -102,13 +102,13 @@ public static class Session
 		get
 		{
 			if (!TeamsMode) return false;
-			bool green = false, pink = false;
+			bool gold = false, pink = false;
 			foreach (PlayerSlot slot in Slots)
 			{
 				if (!slot.Joined) continue;
-				if (slot.Team == Teams.Green) green = true; else pink = true;
+				if (slot.Team == Teams.Gold) gold = true; else pink = true;
 			}
-			return green && pink;
+			return gold && pink;
 		}
 	}
 

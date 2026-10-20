@@ -104,7 +104,7 @@ public partial class Battle : Node2D
 
 	/// <summary>Raised once when the result screen has finished, with the result text.</summary>
 	public event Action<string> Finished;
-	/// <summary>The result, once there is one: a label like "P2", "CPU", "GREEN", or "DRAW".</summary>
+	/// <summary>The result, once there is one: a label like "P2", "CPU", "GOLD", or "DRAW".</summary>
 	public string Result { get; private set; }
 
 	BattleSetup setup;
@@ -293,7 +293,7 @@ public partial class Battle : Node2D
 	}
 
 	/// <summary>
-	/// Teammates start together: Green takes the player 1 and 3 spawns and Pink the player 2 and 4
+	/// Teammates start together: Gold takes the player 1 and 3 spawns and Pink the player 2 and 4
 	/// spawns; a team with more than two players spills into whatever the other side left.
 	/// </summary>
 	Vector2[] TeamSpawns(StageData stage)
@@ -303,7 +303,7 @@ public partial class Battle : Node2D
 		List<Fighter> overflow = new();
 		foreach (Fighter fighter in setup.Fighters)
 		{
-			List<Vector2> side = sides[fighter.Team == Teams.Green ? 0 : 1];
+			List<Vector2> side = sides[fighter.Team == Teams.Gold ? 0 : 1];
 			if (side.Count == 0) { overflow.Add(fighter); continue; }
 			spawns[fighter.Spawn] = side[0];
 			side.RemoveAt(0);
@@ -384,7 +384,7 @@ public partial class Battle : Node2D
 		// Partway through a match: who took the round, and the score so far.
 		if (RoundsMatter && !Match.Decided)
 		{
-			string name = result.StartsWith("CPU") ? "THE COMPUTER" : result == "GREEN" || result == "PINK" ? result + " TEAM" : result;
+			string name = result.StartsWith("CPU") ? "THE COMPUTER" : result == "GOLD" || result == "PINK" ? result + " TEAM" : result;
 			string line = result == "DRAW" ? $"ROUND {round}: DRAW" : $"{name} WINS ROUND {round}";
 			panel.AddChild(Banner.Create(line, result == "DRAW" ? new Color(0.85f, 0.55f, 1.0f) : Match.ColourOf(result), 96));
 			panel.AddChild(Scoreboard());
@@ -405,7 +405,7 @@ public partial class Battle : Node2D
 			_ when result.StartsWith("CPU") => "THE COMPUTER WINS",
 			_ => result + " TEAM WINS",
 		};
-		Color colour = result == "GREEN" ? Teams.Colour(Teams.Green) : result == "PINK" ? Teams.Colour(Teams.Pink) : new Color(0.85f, 0.55f, 1.0f);
+		Color colour = result == "GOLD" ? Teams.Colour(Teams.Gold) : result == "PINK" ? Teams.Colour(Teams.Pink) : new Color(0.85f, 0.55f, 1.0f);
 		panel.AddChild(Banner.Create(text, colour));
 	}
 

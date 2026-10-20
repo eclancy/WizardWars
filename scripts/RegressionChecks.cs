@@ -79,7 +79,7 @@ public static class RegressionChecks
 	static void CheckWizards()
 	{
 		WizardData[] wizards = Content.Wizards;
-		Expect(wizards.Length == 4, "four wizards", $"{wizards.Length}");
+		Expect(wizards.Length == 7, "seven wizards", $"{wizards.Length}");
 		HashSet<string> known = new(AbilityFactory.KnownIds);
 		HashSet<string> seen = new();
 		foreach (WizardData wizard in wizards)
@@ -102,7 +102,7 @@ public static class RegressionChecks
 			Expect(fourth != null && fourth.Cost > 0.0f && fourth.Cost <= 40.0f && fourth.Cooldown > 0.0f, $"{wizard.Id} fourth ability costs 1-40 energy and has a cooldown", fourth == null ? "missing" : $"{fourth.Cost} energy");
 			Expect(ultimate != null && ultimate.Cost == 0.0f, $"{wizard.Id} ultimate costs no energy");
 		}
-		Expect(seen.Count == 20, "20 distinct abilities", $"{seen.Count}");
+		Expect(seen.Count == 35, "35 distinct abilities", $"{seen.Count}");
 	}
 
 	/// <summary>
@@ -221,8 +221,8 @@ public static class RegressionChecks
 	static void CheckFriendlyFire()
 	{
 		WizardData data = Content.Wizards[0];
-		Wizard caster = Wizard.Create(null, data, 0, "P1", Teams.Green, InputState.NoneSource, Vector2.Zero);
-		Wizard ally = Wizard.Create(null, data, 2, "P3", Teams.Green, InputState.NoneSource, Vector2.Zero);
+		Wizard caster = Wizard.Create(null, data, 0, "P1", Teams.Gold, InputState.NoneSource, Vector2.Zero);
+		Wizard ally = Wizard.Create(null, data, 2, "P3", Teams.Gold, InputState.NoneSource, Vector2.Zero);
 		Wizard enemy = Wizard.Create(null, data, 1, "P2", Teams.Pink, InputState.NoneSource, Vector2.Zero);
 		Wizard loner = Wizard.Create(null, data, 3, "P4", Teams.NoTeam, InputState.NoneSource, Vector2.Zero);
 
@@ -278,7 +278,7 @@ public static class RegressionChecks
 		Expect(endless.Decided && endless.Winner == "DRAW" && endless.Round <= endless.MaxRounds, "all draws end the match as a draw", $"after {endless.Round} rounds");
 		setup.TeamsActive = true;
 		Expect(new Match(setup, 2).Sides.Count == 2, "a Teams match is scored by team");
-		Expect(new Match(setup, 1) is { RoundsToWin: 1 } single && RecordAndCheck(single, "GREEN"), "best of 1 is decided by one round");
+		Expect(new Match(setup, 1) is { RoundsToWin: 1 } single && RecordAndCheck(single, "GOLD"), "best of 1 is decided by one round");
 	}
 
 	static bool RecordAndCheck(Match match, string result)
@@ -337,11 +337,12 @@ public static class RegressionChecks
 		p1.WizardIndex = 0;
 		p1.Locked = true;
 		Expect(Session.LockedOn(0, p2) == p1 && Session.LockedOn(0, p1) == null, "a locked wizard is taken for everyone else");
-		Expect(Session.NextFree(1, -1, p2) == 3, "moving left skips a taken wizard", $"{Session.NextFree(1, -1, p2)}");
+		int last = Content.Wizards.Length - 1;
+		Expect(Session.NextFree(1, -1, p2) == last, "moving left skips a taken wizard, round to the last", $"{Session.NextFree(1, -1, p2)}");
 		Expect(Session.FirstFree(0, p2) == 1, "a player on a taken wizard moves to the next free one");
 		p2.WizardIndex = 1;
 		p2.Locked = true;
-		Expect(Session.NextFree(3, 1, Session.Slots[2]) == 2, "two taken wizards are both skipped", $"{Session.NextFree(3, 1, Session.Slots[2])}");
+		Expect(Session.NextFree(last, 1, Session.Slots[2]) == 2, "two taken wizards are both skipped", $"{Session.NextFree(last, 1, Session.Slots[2])}");
 		Session.Reset();
 	}
 

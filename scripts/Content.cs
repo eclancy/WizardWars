@@ -15,6 +15,9 @@ public static class Content
 		"res://data/wizards/frost.tres",
 		"res://data/wizards/earth.tres",
 		"res://data/wizards/electricity.tres",
+		"res://data/wizards/shadow.tres",
+		"res://data/wizards/nature.tres",
+		"res://data/wizards/wind.tres",
 	};
 
 	public static readonly string[] StagePaths =

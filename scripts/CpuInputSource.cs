@@ -111,6 +111,8 @@ public class CpuInputSource : IInputSource
 		{
 			if (!Combat.CanAffect(self, self.Team, wizard)) continue;
 			float distance = wizard.GlobalPosition.DistanceSquaredTo(self.GlobalPosition);
+			// Lost in smoke, unless they are right here.
+			if (wizard.Status.Hidden && distance > U(1.8f) * U(1.8f)) continue;
 			if (distance < best) { best = distance; nearest = wizard; }
 		}
 
@@ -381,6 +383,9 @@ public class CpuInputSource : IInputSource
 		"FrostWizard" => distance < U(6.5f),        // Absolute Zero reaches 8
 		"EarthWizard" => distance < U(5.5f),        // Earthquake reaches 6.5
 		"ElectricityWizard" => distance < U(5.0f),  // Overcharge sprays around the caster
+		"ShadowWizard" => distance < U(5.5f),       // Eclipse reaches 7
+		"NatureWizard" => distance < U(5.0f),       // Overgrowth reaches 6.5
+		"WindWizard" => distance < U(5.5f),         // Tempest reaches 7
 		_ => true,                                   // Meteor Storm covers the arena
 	};
 
@@ -403,13 +408,32 @@ public class CpuInputSource : IInputSource
 				if (!(self.Health < Wizard.MaxHealth * 0.4f && distance < U(4.0f)) && distance < U(8.0f)) return false;
 				if (self.Energy < 30.0f) return false;
 				break;
-			default:
+			case "ShadowWizard":
+				// Shadow Step: away when cornered and hurt, toward a target far off.
+				if (self.Energy < 30.0f) return false;
+				if (distance < U(2.5f) && self.Health < Wizard.MaxHealth * 0.6f) aimPoint = self.GlobalPosition * 2.0f - target.GlobalPosition;
+				else if (distance > U(8.0f)) aimPoint = target.GlobalPosition;
+				else return false;
+				break;
+			case "NatureWizard":
+				// Regrowth: heal once hurt.
+				if (self.Health > Wizard.MaxHealth * 0.65f || self.Energy < 30.0f) return false;
+				aimPoint = target.GlobalPosition;
+				break;
+			case "WindWizard":
+				// Tailwind Dash straight through an enemy in reach.
+				if (distance < U(1.5f) || distance > U(4.2f) || self.Energy < 30.0f) return false;
+				aimPoint = target.GlobalPosition;
+				break;
+			case "FireWizard":
 				// Fire: breathe on anyone close enough, and keep the button held.
 				if (distance > U(3.2f) || self.Energy < 30.0f) return false;
 				aimPoint = target.GlobalPosition;
 				channelling = true;
 				state.ThirdHeld = true;
 				break;
+			default:
+				return false;
 		}
 		state.Aim = AimToward(aimPoint);
 		state.ThirdPressed = true;
@@ -436,6 +460,13 @@ public class CpuInputSource : IInputSource
 				// Tremor only reaches four units around the caster.
 				if (distance > U(3.5f)) return false;
 				aimPoint = target.GlobalPosition;
+				break;
+			case "ShadowWizard":
+			case "NatureWizard":
+			case "WindWizard":
+				// Night Grasp, Entangle and Cyclone land on the targeter: lead the target a little.
+				if (distance > U(TargeterRange + 0.5f)) return false;
+				aimPoint = target.GlobalPosition + targetVelocity * 0.4f;
 				break;
 			default:
 				// Chain Lightning finds its own targets within six units.

@@ -110,6 +110,22 @@ public static class AbilityFactory
 		"deep-freeze" => new DeepFreezeAbility(owner, data),
 		"tremor" => new TremorAbility(owner, data),
 		"chain-lightning" => new ChainLightningAbility(owner, data),
+		// The Shadow, Nature and Wind wizards (NewWizardAbilities.cs).
+		"shadow-bolt" => new ProjectileAbility(owner, data, ProjectileKind.ShadowBolt),
+		"smoke-cloud" => new SmokeCloudAbility(owner, data),
+		"shadow-step" => new ShadowStepAbility(owner, data),
+		"night-grasp" => new NightGraspAbility(owner, data),
+		"eclipse" => new EclipseAbility(owner, data),
+		"thorn" => new ProjectileAbility(owner, data, ProjectileKind.Thorn),
+		"bramble-patch" => new BrambleAbility(owner, data),
+		"regrowth" => new RegrowthAbility(owner, data),
+		"entangle" => new EntangleAbility(owner, data),
+		"overgrowth" => new OvergrowthAbility(owner, data),
+		"gust" => new ProjectileAbility(owner, data, ProjectileKind.Gust),
+		"updraft" => new UpdraftAbility(owner, data),
+		"tailwind-dash" => new TailwindDashAbility(owner, data),
+		"cyclone" => new CycloneAbility(owner, data),
+		"tempest" => new TempestAbility(owner, data),
 		_ => throw new System.ArgumentException($"No ability behaviour for '{data.Id}'"),
 	};
 
@@ -120,5 +136,8 @@ public static class AbilityFactory
 		"ice-patch", "ice-wave", "absolute-zero", "mud-patch", "rock-wall", "earthquake",
 		"lightning-rod", "speed-up", "overcharge",
 		"meteor-strike", "deep-freeze", "tremor", "chain-lightning",
+		"shadow-bolt", "smoke-cloud", "shadow-step", "night-grasp", "eclipse",
+		"thorn", "bramble-patch", "regrowth", "entangle", "overgrowth",
+		"gust", "updraft", "tailwind-dash", "cyclone", "tempest",
 	};
 }

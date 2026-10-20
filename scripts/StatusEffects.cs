@@ -12,10 +12,17 @@ public struct Modifier
 	public bool NoRegen;
 	/// <summary>On ice: a moving wizard keeps going the same way and cannot steer.</summary>
 	public bool Slide;
+	/// <summary>Held in place (vines): no movement at all, though abilities still work.</summary>
+	public bool Rooted;
+	/// <summary>Only the basic attack works (shadow hands, Eclipse).</summary>
+	public bool Silenced;
+	/// <summary>Inside a smoke cloud: faded out, and the computer loses track of you.</summary>
+	public bool Hidden;
 }
 
 /// <summary>
-/// Slows, speed-ups, ice and regen locks, each held under the source that caused it.
+/// Slows, speed-ups, ice, regen locks, roots, silences and smoke cover, each held under the
+/// source that caused it.
 ///
 /// Unity used additive slow()/removeSlow() calls, so every effect had to undo exactly what it
 /// applied, and any effect that died early (its caster killed mid-ultimate, a patch destroyed)
@@ -53,7 +60,11 @@ public sealed class StatusEffects
 		get
 		{
 			float percent = 100.0f;
-			foreach (Modifier modifier in active.Values) percent += modifier.Haste - modifier.Slow;
+			foreach (Modifier modifier in active.Values)
+			{
+				if (modifier.Rooted) return 0.0f;
+				percent += modifier.Haste - modifier.Slow;
+			}
 			return Mathf.Max(0.0f, percent / 100.0f);
 		}
 	}
@@ -65,6 +76,16 @@ public sealed class StatusEffects
 			foreach (Modifier modifier in active.Values) if (modifier.NoRegen) return true;
 			return false;
 		}
+	}
+
+	public bool Rooted => Any(m => m.Rooted);
+	public bool Silenced => Any(m => m.Silenced);
+	public bool Hidden => Any(m => m.Hidden);
+
+	bool Any(System.Func<Modifier, bool> test)
+	{
+		foreach (Modifier modifier in active.Values) if (test(modifier)) return true;
+		return false;
 	}
 
 	public bool Sliding

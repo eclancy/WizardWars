@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/howl.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "tempest"
+DisplayName = "Tempest"
+Description = "A storm whirls around you, hurling enemies outward and battering them."
+Radius = 7.0
+Duration = 4.5
+Damage = 6.0
+Knockback = 4.0
+Sound = ExtResource("2_sound")

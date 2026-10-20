@@ -7,7 +7,7 @@ using Godot;
 /// the stick or d-pad (WASD / arrows) and locks one in with A (Space). A wizard can be played by
 /// one player at a time: once locked in, its card greys out for everyone else, other cursors
 /// skip it, and anyone still choosing on it is moved along. B (Backspace) unlocks,
-/// or leaves when not locked. Back/View (Tab) toggles Free-for-All and Teams; Y (T) switches
+/// or leaves when not locked. Select (Tab) toggles Free-for-All and Teams; Y (T) switches
 /// team. Holding RS (H) shows the how-to-play panel. Start begins once everyone is locked in.
 /// On-screen text names only pad buttons.
 ///
@@ -21,26 +21,33 @@ using Godot;
 /// </summary>
 public partial class CharacterSelectScreen : Control
 {
-	const float CardWidth = 380.0f, CardTop = 205.0f, CardHeight = 345.0f, CardGap = 40.0f;
-	const float SlotTop = 578.0f, SlotHeight = 450.0f;
+	// One card per wizard across the top (seven since Shadow, Nature and Wind), and one panel per
+	// player below, wider.
+	const float CardWidth = 238.0f, CardTop = 205.0f, CardHeight = 345.0f, CardGap = 14.0f;
+	const float SlotWidth = 380.0f, SlotGap = 40.0f, SlotTop = 578.0f, SlotHeight = 450.0f;
 	const float PortraitHeight = 236.0f;
 
 	Label statusLabel, footer;
 	Control modeBadge;
 	bool shownTeamsMode;
-	readonly Panel[] cards = new Panel[4];
-	readonly Label[] names = new Label[4];
-	readonly Control[] takenTags = new Control[4];
-	readonly TextureRect[] portraits = new TextureRect[4];
-	readonly Control[] cursorRows = new Control[4];
+	static int Count => Content.Wizards.Length;
+	readonly Panel[] cards = new Panel[Count];
+	readonly Label[] names = new Label[Count];
+	readonly Control[] takenTags = new Control[Count];
+	readonly TextureRect[] portraits = new TextureRect[Count];
+	readonly Control[] cursorRows = new Control[Count];
 	readonly Control[] slotPanels = new Control[4];
-	readonly bool[] hovered = new bool[4];
+	readonly bool[] hovered = new bool[Count];
 	readonly List<Control> pulsing = new();
 	Control help;
 	OptionsPanel options;
 	double time;
 
-	static float CardX(int index) => (1920.0f - (CardWidth * 4 + CardGap * 3)) * 0.5f + index * (CardWidth + CardGap);
+	static float CardX(int index) => (1920.0f - (CardWidth * Count + CardGap * (Count - 1))) * 0.5f + index * (CardWidth + CardGap);
+	static float SlotX(int index) => (1920.0f - (SlotWidth * 4 + SlotGap * 3)) * 0.5f + index * (SlotWidth + SlotGap);
+
+	/// <summary>The card's title: the element alone ("FROST"), which fits a narrow card.</summary>
+	static string CardName(WizardData wizard) => wizard.DisplayName.Replace(" Wizard", "").ToUpper();
 
 	public override void _Ready()
 	{
@@ -60,7 +67,7 @@ public partial class CharacterSelectScreen : Control
 		frame.AddChild(statusLabel);
 
 		WizardData[] wizards = Content.Wizards;
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < Count; i++)
 		{
 			float x = CardX(i);
 			Color tint = wizards[i].Colour;
@@ -71,10 +78,10 @@ public partial class CharacterSelectScreen : Control
 			ColorRect stripe = new() { Color = tint, Position = new Vector2(x + 14, CardTop + 10), Size = new Vector2(CardWidth - 28, 6), MouseFilter = MouseFilterEnum.Ignore };
 			frame.AddChild(stripe);
 
-			portraits[i] = Ui.Image(wizards[i].Portrait, new Rect2(x + 40, CardTop + 24, CardWidth - 80, PortraitHeight));
+			portraits[i] = Ui.Image(wizards[i].Portrait, new Rect2(x + 14, CardTop + 24, CardWidth - 28, PortraitHeight));
 			portraits[i].PivotOffset = portraits[i].Size * new Vector2(0.5f, 1.0f);
 			frame.AddChild(portraits[i]);
-			names[i] = Ui.Heading(wizards[i].DisplayName.ToUpper(), 28, tint);
+			names[i] = Ui.Heading(CardName(wizards[i]), 26, tint);
 			Ui.Place(names[i], x, CardTop + 262, CardWidth, 40);
 			frame.AddChild(names[i]);
 			takenTags[i] = new Control { Position = new Vector2(x, CardTop + 104), Size = new Vector2(CardWidth, 64), MouseFilter = MouseFilterEnum.Ignore };
@@ -85,7 +92,7 @@ public partial class CharacterSelectScreen : Control
 
 		for (int i = 0; i < 4; i++)
 		{
-			slotPanels[i] = new Control { Position = new Vector2(CardX(i), SlotTop), Size = new Vector2(CardWidth, SlotHeight), MouseFilter = MouseFilterEnum.Ignore };
+			slotPanels[i] = new Control { Position = new Vector2(SlotX(i), SlotTop), Size = new Vector2(SlotWidth, SlotHeight), MouseFilter = MouseFilterEnum.Ignore };
 			frame.AddChild(slotPanels[i]);
 		}
 
@@ -114,11 +121,11 @@ public partial class CharacterSelectScreen : Control
 	{
 		time += delta;
 		float t = (float)time;
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < Count; i++)
 		{
 			// Each portrait bobs on its own beat; a hovered one grows and its border pulses.
 			float bob = Mathf.Sin(t * 2.0f + i * 1.3f) * 4.0f;
-			portraits[i].Position = new Vector2(CardX(i) + 40, CardTop + 24 + bob);
+			portraits[i].Position = new Vector2(CardX(i) + 14, CardTop + 24 + bob);
 			float grow = hovered[i] ? 1.07f + 0.02f * Mathf.Sin(t * 4.0f) : 1.0f;
 			portraits[i].Scale = Vector2.One * Mathf.Lerp(portraits[i].Scale.X, grow, 0.2f);
 			if (hovered[i]) cards[i].SelfModulate = new Color(1, 1, 1).Lerp(new Color(1.15f, 1.15f, 1.15f), (Mathf.Sin(t * 4.0f) + 1.0f) * 0.5f);
@@ -195,7 +202,7 @@ public partial class CharacterSelectScreen : Control
 		}
 		if (state.TeamPressed && Session.TeamsMode)
 		{
-			slot.Team = slot.Team == Teams.Green ? Teams.Pink : Teams.Green;
+			slot.Team = slot.Team == Teams.Gold ? Teams.Pink : Teams.Gold;
 			changed = true;
 		}
 		return changed;
@@ -231,19 +238,19 @@ public partial class CharacterSelectScreen : Control
 		footer.Text = "X: options      " + (Session.TeamsMode ? "Y: switch team      " : "") + "Hold the right stick in: how to play";
 
 		WizardData[] wizards = Content.Wizards;
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < Count; i++)
 		{
 			foreach (Node child in cursorRows[i].GetChildren()) child.QueueFree();
 			List<PlayerSlot> here = new();
 			foreach (PlayerSlot slot in Session.Slots) if (slot.Joined && slot.WizardIndex == i) here.Add(slot);
-			const float tagWidth = 64.0f;
+			const float tagWidth = 50.0f;
 			float x = (CardWidth - here.Count * (tagWidth + 6) + 6) * 0.5f;
 			foreach (PlayerSlot slot in here)
 			{
 				// Player tags are plain white: a locked player's is solid, one still choosing outlined.
 				cursorRows[i].AddChild(slot.Locked
-					? Ui.Pill(new Rect2(x, 0, tagWidth, 34), slot.Label, 20, Colors.White, Ui.Ink, heading: true)
-					: Ui.Pill(new Rect2(x, 0, tagWidth, 34), slot.Label, 20, new Color(Ui.Ink, 0.9f), Colors.White, heading: true));
+					? Ui.Pill(new Rect2(x, 0, tagWidth, 34), slot.Label, 18, Colors.White, Ui.Ink, heading: true)
+					: Ui.Pill(new Rect2(x, 0, tagWidth, 34), slot.Label, 18, new Color(Ui.Ink, 0.9f), Colors.White, heading: true));
 				x += tagWidth + 6;
 			}
 
@@ -251,7 +258,7 @@ public partial class CharacterSelectScreen : Control
 			PlayerSlot owner = Session.LockedOn(i);
 			foreach (Node child in takenTags[i].GetChildren()) child.QueueFree();
 			if (owner != null)
-				takenTags[i].AddChild(Ui.Pill(new Rect2(70, 10, CardWidth - 140, 46), "TAKEN BY " + owner.Label, 24, new Color(0.12f, 0.1f, 0.16f, 0.92f), Colors.White, heading: true));
+				takenTags[i].AddChild(Ui.Pill(new Rect2(12, 10, CardWidth - 24, 46), "TAKEN BY " + owner.Label, 20, new Color(0.12f, 0.1f, 0.16f, 0.92f), Colors.White, heading: true));
 			Color grey = new(0.42f, 0.42f, 0.46f);
 			portraits[i].Modulate = owner != null ? grey : Colors.White;
 			names[i].Modulate = owner != null ? grey : Colors.White;
@@ -263,18 +270,19 @@ public partial class CharacterSelectScreen : Control
 	}
 
 	/// <summary>
-	/// Both modes side by side, the live one lit gold and the other dimmed, with the View button
+	/// Both modes side by side, the live one lit gold and the other dimmed, with the Select button
 	/// between them: which mode you are in, and how to change it, are both always in sight.
 	/// </summary>
 	void DrawModeSwitch()
 	{
 		foreach (Node child in modeBadge.GetChildren()) child.QueueFree();
-		Segment(new Rect2(0, 0, 390, 76), "FREE-FOR-ALL", !Session.TeamsMode, false);
-		Segment(new Rect2(490, 0, 390, 76), "TEAMS", Session.TeamsMode, true);
-		modeBadge.AddChild(Ui.Pill(new Rect2(400, 21, 80, 34), "View", 17, new Color(0.25f, 0.22f, 0.35f), Colors.White, heading: true));
-		Label arrows = Ui.Label("<            >", 22, new Color(1, 1, 1, 0.55f));
-		Ui.Place(arrows, 390, 18, 100, 40);
-		modeBadge.AddChild(arrows);
+		Segment(new Rect2(0, 0, 370, 76), "FREE-FOR-ALL", !Session.TeamsMode, false);
+		Segment(new Rect2(510, 0, 370, 76), "TEAMS", Session.TeamsMode, true);
+		// Between them, the button that switches: a picture of it, and its name.
+		modeBadge.AddChild(new SelectButtonIcon { Position = new Vector2(380, 20), Size = new Vector2(36, 36) });
+		Label select = Ui.Heading("Select", 20, Colors.White, HorizontalAlignment.Left);
+		Ui.Place(select, 421, 18, 85, 40);
+		modeBadge.AddChild(select);
 	}
 
 	void Segment(Rect2 rect, string title, bool live, bool teams)
@@ -300,7 +308,7 @@ public partial class CharacterSelectScreen : Control
 		// The team colours themselves, so Teams says which sides there are.
 		float x = rect.Position.X + rect.Size.X * 0.5f;
 		float alpha = live ? 1.0f : 0.35f;
-		modeBadge.AddChild(Ui.Pill(new Rect2(x - 124, 42, 96, 26), "GREEN", 15, new Color(Teams.Colour(Teams.Green), alpha), Ui.Ink, heading: true));
+		modeBadge.AddChild(Ui.Pill(new Rect2(x - 124, 42, 96, 26), "GOLD", 15, new Color(Teams.Colour(Teams.Gold), alpha), Ui.Ink, heading: true));
 		Label vs = Ui.Label("vs", 18, live ? Ui.Ink : new Color(1, 1, 1, 0.35f));
 		if (live) vs.AddThemeConstantOverride("outline_size", 0);
 		Ui.Place(vs, x - 28, 40, 56, 28);
@@ -328,20 +336,20 @@ public partial class CharacterSelectScreen : Control
 
 		if (!slot.Joined)
 		{
-			area.AddChild(Ui.Panel(new Rect2(0, 0, CardWidth, SlotHeight), new Color(1, 1, 1, 0.08f), 0.5f));
+			area.AddChild(Ui.Panel(new Rect2(0, 0, SlotWidth, SlotHeight), new Color(1, 1, 1, 0.08f), 0.5f));
 			Label number = Ui.Heading(slot.Label, 72, new Color(1, 1, 1, 0.3f));
-			Ui.Place(number, 0, 120, CardWidth, 100);
+			Ui.Place(number, 0, 120, SlotWidth, 100);
 			area.AddChild(number);
 			Label join = Ui.Label("Press Start to join", 28, new Color(1, 1, 1, 0.8f));
-			Ui.Place(join, 0, 225, CardWidth, 44);
+			Ui.Place(join, 0, 225, SlotWidth, 44);
 			area.AddChild(join);
 			pulsing.Add(join);
 			return;
 		}
 
-		area.AddChild(Ui.Panel(new Rect2(0, 0, CardWidth, SlotHeight), colour, 0.9f));
+		area.AddChild(Ui.Panel(new Rect2(0, 0, SlotWidth, SlotHeight), colour, 0.9f));
 		// A header in the player's colour.
-		Panel header = new() { Position = new Vector2(3, 3), Size = new Vector2(CardWidth - 6, 54), MouseFilter = MouseFilterEnum.Ignore };
+		Panel header = new() { Position = new Vector2(3, 3), Size = new Vector2(SlotWidth - 6, 54), MouseFilter = MouseFilterEnum.Ignore };
 		StyleBoxFlat headerStyle = new() { BgColor = colour.Darkened(0.35f), CornerRadiusTopLeft = 15, CornerRadiusTopRight = 15 };
 		header.AddThemeStyleboxOverride("panel", headerStyle);
 		area.AddChild(header);
@@ -349,30 +357,30 @@ public partial class CharacterSelectScreen : Control
 		Ui.Place(label, 20, 5, 120, 50);
 		area.AddChild(label);
 		Label device = Ui.Label(Devices.Describe(slot.Device), 20, new Color(1, 1, 1, 0.85f), HorizontalAlignment.Right);
-		Ui.Place(device, 140, 5, CardWidth - 160, 50);
+		Ui.Place(device, 140, 5, SlotWidth - 160, 50);
 		area.AddChild(device);
 
 		float y = 70.0f;
 		area.AddChild(slot.Locked
-			? Ui.Pill(new Rect2(70, y, CardWidth - 140, 40), "LOCKED IN", 22, new Color(0.18f, 0.5f, 0.24f), Colors.White, heading: true)
-			: Ui.Pill(new Rect2(70, y, CardWidth - 140, 40), "PICK A WIZARD", 22, new Color(0.55f, 0.4f, 0.08f), Colors.White, heading: true));
+			? Ui.Pill(new Rect2(70, y, SlotWidth - 140, 40), "LOCKED IN", 22, new Color(0.18f, 0.5f, 0.24f), Colors.White, heading: true)
+			: Ui.Pill(new Rect2(70, y, SlotWidth - 140, 40), "PICK A WIZARD", 22, new Color(0.55f, 0.4f, 0.08f), Colors.White, heading: true));
 		y += 50.0f;
 		if (Session.TeamsMode)
 		{
 			Color team = Teams.Colour(slot.Team);
-			area.AddChild(Ui.Pill(new Rect2(110, y, CardWidth - 220, 34), Teams.Name(slot.Team).ToUpper() + " TEAM", 18, team.Darkened(0.25f), Colors.White, heading: true));
+			area.AddChild(Ui.Pill(new Rect2(110, y, SlotWidth - 220, 34), Teams.Name(slot.Team).ToUpper() + " TEAM", 18, team.Darkened(0.25f), Colors.White, heading: true));
 			y += 44.0f;
 		}
 
 		Label name = Ui.Heading(wizard.DisplayName.ToUpper(), 24, wizard.Colour);
-		Ui.Place(name, 0, y, CardWidth, 36);
+		Ui.Place(name, 0, y, SlotWidth, 36);
 		area.AddChild(name);
 		y += 44.0f;
 
 		if (!slot.Locked)
 		{
 			Label hint = Ui.Label("Left / right to choose\nA to lock in", 22, new Color(1, 1, 1, 0.8f));
-			Ui.Place(hint, 0, y + 20, CardWidth, 70);
+			Ui.Place(hint, 0, y + 20, SlotWidth, 70);
 			area.AddChild(hint);
 			pulsing.Add(hint);
 			return;
@@ -386,11 +394,11 @@ public partial class CharacterSelectScreen : Control
 			area.AddChild(Ui.Pill(new Rect2(34, y + i * 38, 58, 30), WizardData.PadButtons[i], 16,
 				ultimate ? new Color(0.85f, 0.65f, 0.15f) : new Color(0.25f, 0.22f, 0.35f), ultimate ? Ui.Ink : Colors.White, heading: true));
 			Label row = Ui.Label(abilities[i].DisplayName, 21, ultimate ? Ui.Gold : Colors.White, HorizontalAlignment.Left);
-			Ui.Place(row, 106, y + i * 38 - 2, CardWidth - 120, 34);
+			Ui.Place(row, 106, y + i * 38 - 2, SlotWidth - 120, 34);
 			area.AddChild(row);
 		}
 		Label back = Ui.Label("B to change", 17, new Color(1, 1, 1, 0.5f));
-		Ui.Place(back, 0, SlotHeight - 34, CardWidth, 28);
+		Ui.Place(back, 0, SlotHeight - 34, SlotWidth, 28);
 		area.AddChild(back);
 	}
 

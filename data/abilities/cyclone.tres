@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/howl.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "cyclone"
+DisplayName = "Cyclone"
+Description = "A whirlwind at the target drags enemies in and batters them."
+Cost = 35.0
+Cooldown = 6.0
+Duration = 2.5
+Radius = 2.6
+Damage = 7.0
+Knockback = 3.0
+Sound = ExtResource("2_sound")

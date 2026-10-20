@@ -82,7 +82,7 @@ public partial class RuneHill : Node2D
 		List<string> sides = new();
 		if (setup.TeamsActive)
 		{
-			sides.Add(Teams.Name(Teams.Green).ToUpper());
+			sides.Add(Teams.Name(Teams.Gold).ToUpper());
 			sides.Add(Teams.Name(Teams.Pink).ToUpper());
 		}
 		else foreach (Fighter fighter in setup.Fighters) sides.Add(fighter.Label);
@@ -93,7 +93,7 @@ public partial class RuneHill : Node2D
 
 	public Color ColourOf(string side)
 	{
-		if (battle.Setup.TeamsActive) return side == Teams.Name(Teams.Green).ToUpper() ? Teams.Colour(Teams.Green) : Teams.Colour(Teams.Pink);
+		if (battle.Setup.TeamsActive) return side == Teams.Name(Teams.Gold).ToUpper() ? Teams.Colour(Teams.Gold) : Teams.Colour(Teams.Pink);
 		foreach (Fighter fighter in battle.Setup.Fighters) if (fighter.Label == side) return fighter.Wizard.Colour;
 		return Colors.White;
 	}

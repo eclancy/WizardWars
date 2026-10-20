@@ -33,6 +33,10 @@ public partial class AbilityTest : Node
 	// What the target went through while being watched.
 	float lowestHealth;
 	bool sawSlow, sawSlide, sawNoRegen, sawStun, sawBurn, sawCasterHaste, sawCasterUltimate, touchedInBuildUp;
+	// For the Shadow, Nature and Wind kits: roots, silences, a caster that moved or healed.
+	bool sawRoot, sawSilenced, sawCasterMoved, sawCasterHealed;
+	Vector2 casterStart;
+	float casterHealthAtCast;
 	int maxEffects, sawFireSources, sawRockWalls, sawMeteors, sawRods;
 
 	public override void _Ready()
@@ -61,11 +65,11 @@ public partial class AbilityTest : Node
 		(WizardData wizard, int slot, bool ally) = cases[index];
 		BattleSetup setup = new() { Stage = OpenGround, TeamsActive = true };
 		aimer = new Aimer();
-		setup.Fighters.Add(new Fighter { Wizard = wizard, Slot = 0, Spawn = 0, Label = "P1", Team = Teams.Green, Input = aimer });
+		setup.Fighters.Add(new Fighter { Wizard = wizard, Slot = 0, Spawn = 0, Label = "P1", Team = Teams.Gold, Input = aimer });
 		// A standing target that never acts. The Earth wizard is used unless he is the caster,
 		// so there is always a different wizard to hit.
 		WizardData dummy = wizard.Id == "EarthWizard" ? Content.Wizards[0] : Content.Wizards[2];
-		setup.Fighters.Add(new Fighter { Wizard = dummy, Slot = 1, Spawn = 1, Label = "P2", Team = ally ? Teams.Green : Teams.Pink, Input = InputState.NoneSource });
+		setup.Fighters.Add(new Fighter { Wizard = dummy, Slot = 1, Spawn = 1, Label = "P2", Team = ally ? Teams.Gold : Teams.Pink, Input = InputState.NoneSource });
 		battle = Battle.Create(setup);
 		battle.SkipCountdown = true;
 		AddChild(battle);
@@ -73,6 +77,7 @@ public partial class AbilityTest : Node
 		cast = observed = false;
 		lowestHealth = Wizard.MaxHealth;
 		sawSlow = sawSlide = sawNoRegen = sawStun = sawBurn = sawCasterHaste = sawCasterUltimate = touchedInBuildUp = false;
+		sawRoot = sawSilenced = sawCasterMoved = sawCasterHealed = false;
 		maxEffects = sawFireSources = sawRockWalls = sawMeteors = sawRods = 0;
 	}
 
@@ -113,6 +118,10 @@ public partial class AbilityTest : Node
 		if (!cast)
 		{
 			if (slot == WizardData.UltimateSlot) caster.AddUltimateCharge(100.0f);
+			// Regrowth needs something to heal.
+			if (cases[index].wizard.Abilities[slot].Id == "regrowth") caster.TakeDamage(100.0f);
+			casterStart = caster.GlobalPosition;
+			casterHealthAtCast = caster.Health;
 			if (slot == WizardData.ThirdSlot && cases[index].wizard.Id == "FireWizard") aimer.State.ThirdHeld = true;
 			if (!caster.Abilities[slot].TryCast()) Fail("the cast was refused");
 			cast = true;
@@ -155,12 +164,16 @@ public partial class AbilityTest : Node
 			sawSlide |= target.Status.Sliding;
 			sawNoRegen |= target.Status.NoRegen;
 			sawStun |= target.Stunned;
+			sawRoot |= target.Status.Rooted;
+			sawSilenced |= target.Status.Silenced;
 			sawBurn |= target.OnFire;
 		}
 		else lowestHealth = 0.0f;
 		if (GodotObject.IsInstanceValid(caster) && caster.Alive)
 		{
 			sawCasterHaste |= caster.Status.SpeedMultiplier > 1.01f;
+			sawCasterMoved |= caster.GlobalPosition.DistanceTo(casterStart) > Units.U(1.5f);
+			sawCasterHealed |= caster.Health > casterHealthAtCast + 15.0f;
 			sawCasterUltimate |= caster.UltimateActive;
 		}
 		maxEffects = Math.Max(maxEffects, battle.EffectCount);
@@ -181,7 +194,7 @@ public partial class AbilityTest : Node
 		string id = cases[index].wizard.Abilities[cases[index].slot].Id;
 		bool ally = cases[index].ally;
 		bool hurt = lowestHealth < Wizard.MaxHealth;
-		bool touched = hurt || sawSlow || sawSlide || sawNoRegen || sawStun || sawBurn;
+		bool touched = hurt || sawSlow || sawSlide || sawNoRegen || sawStun || sawBurn || sawRoot || sawSilenced;
 
 		// Effects that do not depend on who they hit.
 		switch (id)
@@ -194,6 +207,11 @@ public partial class AbilityTest : Node
 			case "absolute-zero":
 			case "earthquake": Expect(sawCasterUltimate, "the ultimate ran"); break;
 			case "meteor-strike": Expect(sawMeteors > 0 && !sawCasterUltimate, "a meteor fell without locking the ultimate"); break;
+			case "shadow-step": Expect(sawCasterMoved, "the caster stepped away"); break;
+			case "regrowth": Expect(sawCasterHealed, "the caster healed"); break;
+			case "updraft": Expect(sawCasterHaste, "the caster sped up"); break;
+			case "tailwind-dash": Expect(sawCasterMoved, "the caster dashed"); break;
+			case "eclipse": case "overgrowth": case "tempest": Expect(sawCasterUltimate, "the ultimate ran"); break;
 		}
 
 		if (cases[index].slot == WizardData.UltimateSlot) Expect(!touchedInBuildUp, "nothing happened during the build-up");
@@ -207,7 +225,7 @@ public partial class AbilityTest : Node
 
 		switch (id)
 		{
-			case "fireball": case "icicle": case "mudball": case "electricity-ball":
+			case "fireball": case "icicle": case "mudball": case "electricity-ball": case "shadow-bolt": case "thorn": case "gust":
 				Expect(hurt, "the bolt hit"); break;
 			case "flamethrower": Expect(hurt && sawBurn, "the flame burned"); break;
 			case "ice-patch": Expect(sawSlide, "the target was on ice"); break;
@@ -221,6 +239,15 @@ public partial class AbilityTest : Node
 			case "deep-freeze": Expect(sawStun && hurt, "the target was frozen solid"); break;
 			case "tremor": Expect(sawStun && hurt, "the target was hurt and staggered"); break;
 			case "chain-lightning": Expect(hurt, "the lightning struck the target"); break;
+			// Shadow, Nature and Wind.
+			case "smoke-cloud": Expect(sawSlow, "the target was slowed in the smoke"); break;
+			case "night-grasp": case "eclipse": Expect(hurt && sawSilenced, "the target was hurt and silenced"); break;
+			case "bramble-patch": case "overgrowth": Expect(hurt && sawSlow, "the target was slowed and hurt"); break;
+			case "entangle": Expect(hurt && sawRoot, "the target was hurt and rooted"); break;
+			case "tailwind-dash": Expect(hurt, "the dash hit the target"); break;
+			case "cyclone": case "tempest": Expect(hurt, "the wind battered the target"); break;
+			case "shadow-step": case "regrowth": case "updraft":
+				break; // they act on the caster, checked above
 			case "ring-of-fire": case "rock-wall": case "meteor-storm": case "overcharge": case "speed-up":
 				break; // placement or chance, checked above
 			default: Fail($"no expectation for {id}"); break;

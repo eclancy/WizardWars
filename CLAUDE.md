@@ -12,7 +12,7 @@ Unity files here. `docs/GODOT_PORT_PLAN.md` records how and why it was ported.
 
 The game is **feature-complete**. It has:
 - the title screen (the START painted into the art flashes) and Character Select: join by
-  device, one player per wizard, Free-for-All/Teams (Green vs Pink), team switching, kit
+  device, one player per wizard, Free-for-All/Teams (Gold vs Pink), team switching, kit
   lists, how-to-play
 - Stage Select and six stages, each with its own cover to hide behind; the Volcano (lava
   and bridges) and the Swamp (bog pools) have hazards
@@ -21,8 +21,9 @@ The game is **feature-complete**. It has:
   set on Stage Select)
 - a pause menu (Start: resume, rematch, options, quit), options (volume, fullscreen,
   rumble; saved) and controller rumble
-- all four wizards with all 20 abilities and their telegraphs: basic (RT), second (LT),
-  third (RB), fourth (LB) and ultimate (X), each ultimate announced by a build-up
+- seven wizards (the Unity four, plus Shadow, Nature and Wind, new in 2026-10) with all 35
+  abilities and their telegraphs: basic (RT), second (LT), third (RB), fourth (LB) and
+  ultimate (X), each ultimate announced by a build-up
 - the HUD and a computer opponent
 - the countdown, results, rematch, and a Windows export
 
@@ -66,7 +67,7 @@ It runs, and fails on the first failure:
    resource, stage geometry, the status-effect rules, friendly fire, and ultimate charge.
 4. `--flowtest`: `FlowTest` drives two scripted pads through every menu and a Teams battle,
    back to Character Select.
-5. `--abilities`: `AbilityTest` casts all 20 abilities at an enemy (each must do its job) and
+5. `--abilities`: `AbilityTest` casts all 35 abilities at an enemy (each must do its job) and
    at a teammate (each must do nothing), on open ground (Woodland without its cover).
    Afterwards the arena must be empty.
 6. `--soak`: `SoakTest` plays computer-only matches, Free-for-All (six, one per stage) and
@@ -89,7 +90,8 @@ monitor's resolution. `--shot-size=WxH` picks another window shape: check a layo
 
 `--screen` takes `title`, `select`, `stage`, `battle`, `pause`, `options` or `demo` (four
 computer wizards; add `--teams` for 2v2, `--stage=0`..`5` to pick the arena, and `--charged`
-to start everyone with a full ultimate). `select` also takes `--teams`. Godot's own
+to start everyone with a full ultimate; `--wizards=4,5,6,1` picks who fights, by index, 0 Fire
+to 6 Wind). `select` also takes `--teams`. Godot's own
 `--time-scale 4` (before `--`) fast-forwards a shot run, e.g. to catch a round result.
 
 `--make-title-glow` rebuilds `assets/art/ui/title-start-glow.png`, the mask of the START
@@ -101,8 +103,10 @@ standing behind a fireball, turned slightly toward it and lit by it, on a dark b
 ring of runes. `--make-stages` repaints the Frost Tundra, Scorched Canyon, Storm Plateau,
 Volcano and Swamp floors and paints the bush-like tufts out of Woodland's (`StageArtTool`). `--make-sounds`
 synthesises the newer sound effects (ultimate charge and release, ground crack, ice break and
-chip) into `assets/sfx` (`SoundTool`). All four write committed files; run them on purpose,
-then a headless `--import`.
+chip, and the Shadow, Nature and Wind sounds) into `assets/sfx` (`SoundTool`). `--make-wizards`
+draws the Shadow, Nature and Wind portraits, targeters, projectile sheets and ultimate icons
+from the Electricity wizard as a template (`WizardArtTool`). All five write committed files;
+run them on purpose, then a headless `--import`.
 
 Export: `"$GODOT_BIN" --headless --path . --export-release "Windows Desktop" build/windows/WizardWars.exe`.
 `build/` is not committed. The exported exe accepts the same flags, plus `--no-update`.
@@ -130,7 +134,8 @@ export preset, `UpdateScreen` or `tools/release/`.
   (`Session.LockedOn`, `NextFree`): Character Select greys a taken card and cursors skip it.
 - **Colour means wizard or team, never player.** Players are only numbered (white P1-P4
   tags). The colour that marks a player is their wizard's element colour, which is unique
-  because wizards are. Teams are Green and Pink (`Teams`), colours no wizard wears. Don't
+  because wizards are. Teams are Gold and Pink (`Teams`), colours no wizard wears (Green
+  became Gold when the Nature wizard arrived). Don't
   give players colours of their own again: Unity's red, blue, green and yellow players
   clashed with Fire, Frost, Earth and Electricity.
 - **Data:** `data/abilities/*.tres` (`AbilityData`), `data/wizards/*.tres` (`WizardData`),
@@ -171,6 +176,23 @@ export preset, `UpdateScreen` or `tools/release/`.
   fourth-slot Earthquake, renamed because Earthquake is the ultimate) and Chain Lightning.
   Same ideas, numbers brought into the 20-35 energy range, and a cooldown of their own;
   `gen-data.sh` records the Unity originals.
+- **Shadow, Nature and Wind** (2026-10-20, no Unity original; `NewWizardAbilities.cs`):
+  - Shadow: Shadow Bolt, Smoke Cloud (`Zone`: hides anyone inside, slows enemies), Shadow
+    Step (blink to the furthest clear spot), Night Grasp (`Eruption`: hurts and silences),
+    Eclipse (`Aura` + `EclipseFx`: silences and drains).
+  - Nature: Thorn, Bramble Patch (`Zone`: slows and scratches), Regrowth (heal over time),
+    Entangle (`Eruption`: hurts and roots), Overgrowth (`Aura` + `OvergrowthFx`: slows and
+    hurts enemies, heals the caster).
+  - Wind: Gust (knockback), Updraft (`Zone` under the caster: speeds allies), Tailwind Dash
+    (`WindDash`), Cyclone (pulls in), Tempest (`Aura` + `TempestFx`: hurls enemies out).
+  - New mechanics they brought: `Modifier.Rooted` (no movement), `Silenced` (basic attack
+    only), `Hidden` (faded out; the AI ignores you), `Wizard.Heal`, `Wizard.Shove` (knockback,
+    pull, dash; roots hold against it) and `Wizard.Blink`. `TimedEffect` holds a root or
+    silence on one wizard for a while and draws it.
+  - Their art is generated by `WizardArtTool` from the Electricity wizard: same figure,
+    recoloured robe, new face and orb. Effects are drawn in code from many small pieces.
+  - Soak notes: in fixed-seed duels Nature (healing) wins more than its share and Shadow
+    less; Regrowth was trimmed and Night Grasp and Eclipse strengthened once. Playtest it.
 - **Screen shapes:** stretch aspect `expand` makes the view taller than 1080 on 16:10 or 3:2
   and wider on 21:9. Menus lay out in a centred 1920×1080 `DesignFrame`; full-bleed parts
   (backdrop, corner labels) anchor to the screen itself. `GameRoot.Swap` gives every screen
@@ -231,7 +253,7 @@ export preset, `UpdateScreen` or `tools/release/`.
 - **Friendly fire:** `Combat.CanAffect(caster, casterTeam, target, hitsCaster)`. Effects
   record the caster's team when cast. Patches and rods hit their own caster, as in Unity.
   Teammates are never hit by anything. Any new hostile effect must use this check.
-- **Status effects:** `StatusEffects` holds modifiers (slow, haste, no-regen, slide) keyed
+- **Status effects:** `StatusEffects` holds modifiers (slow, haste, no-regen, slide, root, silence, hidden) keyed
   by the source node. `Prune` drops any whose source was freed, so effects cannot leak the
   way Unity's additive `slow()`/`removeSlow()` did.
 - **`ProceduralFx`** is Unity's pixel generators ported (rows flipped, because Godot images
@@ -260,7 +282,7 @@ export preset, `UpdateScreen` or `tools/release/`.
 - **Meteors fall straight down.** Unity spun the meteor art, which tilted its tail.
 - **Each stage has its own cover, and Unity's decorative rocks and cacti are gone.** They
   looked solid and blocked nothing.
-- **Teams are Green and Pink**, not Red and Blue, and players have no colours of their own.
+- **Teams are Gold and Pink**, not Red and Blue, and players have no colours of their own.
 - **One player per wizard.** A locked-in wizard is taken until its player changes their mind.
 - **Frozen wizards can wiggle free**, and Tremor's stagger shakes rather than freezes.- **Not ported:** Unity's GlobalHandler/bridge split and the target-dummy AI.
 

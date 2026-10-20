@@ -1,10 +1,10 @@
 # Wizard Wars
 
-A local multiplayer arena battler for 1–4 players. Pick a wizard of fire, frost, earth or
-electricity (each wizard can be played by one player at a time) and fight to be the last one
-standing (or the one who holds the rune longest, in King of the Rune), or team up in Green vs
-Pink. Matches are best of 1, 3 or 5 rounds. Playing alone?
-You face a computer wizard on Easy, Normal or Hard.
+A local multiplayer arena battler for 1–4 players. Pick a wizard of fire, frost, earth,
+electricity, shadow, nature or wind (each wizard can be played by one player at a time) and
+fight to be the last one standing (or the one who holds the rune longest, in King of the
+Rune), or team up in Gold vs Pink. Matches are best of 1, 3 or 5 rounds. Playing alone? You
+face a computer wizard on Easy, Normal or Hard.
 
 Built with **Godot 4.5 (.NET / C#)**. It started life as a Unity game. The last Unity
 version is preserved at the git tag [`unity-final`](../../tree/unity-final).
@@ -28,7 +28,7 @@ version is preserved at the git tag [`unity-final`](../../tree/unity-final).
 | Join / start / pause | Start | Enter |
 | Confirm / lock in | A | Space |
 | Back / leave | B | Backspace |
-| Free-for-All or Teams | Back/View | Tab |
+| Free-for-All or Teams | Select (Back/View) | Tab |
 | Switch team | Y | T |
 | How to play (hold) | Right stick click | H |
 | Options (Character Select) | X | 5 |
@@ -43,6 +43,12 @@ version is preserved at the git tag [`unity-final`](../../tree/unity-final).
 | Frost | Icicle | Ice Patch | Ice Wave | Deep Freeze | Absolute Zero |
 | Earth | Mudball | Mud Patch | Rock Wall | Tremor | Earthquake |
 | Electricity | Electricity Ball | Lightning Rod | Speed Up | Chain Lightning | Overcharge |
+| Shadow | Shadow Bolt | Smoke Cloud | Shadow Step | Night Grasp | Eclipse |
+| Nature | Thorn | Bramble Patch | Regrowth | Entangle | Overgrowth |
+| Wind | Gust | Updraft | Tailwind Dash | Cyclone | Tempest |
+
+Some abilities root you (no moving), silence you (basic attack only), hide you in smoke, heal,
+or push and pull.
 
 ### The stages
 

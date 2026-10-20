@@ -4,7 +4,7 @@ using Godot;
 /// <summary>
 /// A match of one or more rounds on the same stage with the same fighters: best of 1, 3 or 5
 /// (<see cref="Session.RoundsToWin"/>). Each round is a <see cref="Battle"/>; its result (a
-/// player label like "P1" or "CPU", a team like "GREEN", or "DRAW") is recorded here. The first
+/// player label like "P1" or "CPU", a team like "GOLD", or "DRAW") is recorded here. The first
 /// side to win <see cref="RoundsToWin"/> rounds takes the match. A drawn round counts for
 /// nobody, but after <see cref="MaxRounds"/> rounds the match ends anyway: the leader wins, or
 /// it is a draw.
@@ -39,7 +39,7 @@ public sealed class Match
 			List<string> sides = new();
 			if (Setup.TeamsActive)
 			{
-				sides.Add(Teams.Name(Teams.Green).ToUpper());
+				sides.Add(Teams.Name(Teams.Gold).ToUpper());
 				sides.Add(Teams.Name(Teams.Pink).ToUpper());
 				return sides;
 			}
@@ -84,7 +84,7 @@ public sealed class Match
 	/// <summary>The colour that marks a side: its team colour, or its wizard's colour.</summary>
 	public Color ColourOf(string side)
 	{
-		if (Setup.TeamsActive) return side == Teams.Name(Teams.Green).ToUpper() ? Teams.Colour(Teams.Green) : Teams.Colour(Teams.Pink);
+		if (Setup.TeamsActive) return side == Teams.Name(Teams.Gold).ToUpper() ? Teams.Colour(Teams.Gold) : Teams.Colour(Teams.Pink);
 		foreach (Fighter fighter in Setup.Fighters) if (fighter.Label == side) return fighter.Wizard.Colour;
 		return Colors.White;
 	}

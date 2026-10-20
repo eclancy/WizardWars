@@ -13,11 +13,13 @@ using Godot;
 ///   --make-icon           rebuild icon.png and icon.ico: a "WW" from the logo above a fireball (see IconTool)
 ///   --make-stages         repaint the Frost Tundra, Scorched Canyon and Storm Plateau floors (see StageArtTool)
 ///   --make-sounds         synthesise the newer sound effects into assets/sfx (see SoundTool)
+///   --make-wizards        draw the Shadow, Nature and Wind wizards' art (see WizardArtTool)
 ///   --soak[=N]            play N computer-only matches headless (default 6) and check for leaks
 ///   --flowtest            drive every menu and a Teams match with scripted pads, asserting each step
 ///   --abilities           cast all 20 abilities at an enemy and at a teammate, checking each
 ///   --teams               with --soak, --screen=demo or --screen=select: Teams mode
 ///   --king                with --soak or --screen=demo: King of the Rune instead of knock-out
+///   --wizards=a,b,c,d     with --screen=demo: which wizards fight, by index (0 Fire .. 6 Wind)
 ///   --players=N           with --soak: 2-4 computer wizards in Free-for-All (default 4)
 ///   --screen=NAME         start on title | select | stage | battle | demo | pause | options (--stage=0-3 picks its arena)
 ///   --charged             with --screen=demo: every wizard starts with a full ultimate
@@ -51,6 +53,7 @@ public partial class GameRoot : Node2D
 		if (flags.ContainsKey("make-icon")) { GetTree().Quit(IconTool.Run()); return; }
 		if (flags.ContainsKey("make-stages")) { GetTree().Quit(StageArtTool.Run()); return; }
 		if (flags.ContainsKey("make-sounds")) { GetTree().Quit(SoundTool.Run()); return; }
+		if (flags.ContainsKey("make-wizards")) { GetTree().Quit(WizardArtTool.Run()); return; }
 		if (flags.ContainsKey("checks"))
 		{
 			int failures = RegressionChecks.RunAll();
@@ -187,10 +190,21 @@ public partial class GameRoot : Node2D
 	{
 		BattleSetup setup = new() { Stage = Content.Stages[Mathf.Clamp(stage, 0, Content.Stages.Length - 1)], TeamsActive = teams, Goal = king ? Goal.KingOfTheRune : Goal.Knockout };
 		for (int i = 0; i < 4; i++)
-			setup.Fighters.Add(new Fighter { Wizard = Content.Wizards[i], Slot = -1, Spawn = i, Label = "CPU" + (i + 1), Team = teams ? Teams.DefaultForSlot(i) : Teams.NoTeam });
+			setup.Fighters.Add(new Fighter { Wizard = Content.Wizards[DemoWizard(i)], Slot = -1, Spawn = i, Label = "CPU" + (i + 1), Team = teams ? Teams.DefaultForSlot(i) : Teams.NoTeam });
 		Battle battle = StartBattle(setup, skipCountdown: false);
 		// --charged: everyone starts with a full ultimate, to see them without a long wait.
 		if (flags.ContainsKey("charged")) foreach (Wizard wizard in battle.Wizards) wizard.AddUltimateCharge(100.0f);
+	}
+
+	/// <summary>The demo's wizards: --wizards=4,5,6,0 picks them by index (0 Fire .. 6 Wind); the first four by default.</summary>
+	int DemoWizard(int seat)
+	{
+		if (flags.TryGetValue("wizards", out string list))
+		{
+			string[] picks = list.Split(',');
+			if (seat < picks.Length && int.TryParse(picks[seat], out int index)) return Mathf.Clamp(index, 0, Content.Wizards.Length - 1);
+		}
+		return seat;
 	}
 
 	/// <summary>For --screen=pause: the pause menu, opened by player 1 once the countdown is over.</summary>

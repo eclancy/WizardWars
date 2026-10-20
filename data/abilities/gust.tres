@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/gust.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "gust"
+DisplayName = "Gust"
+Description = "A fast blast of air that knocks enemies back. Free to cast."
+Cooldown = 0.55
+Damage = 16.0
+Speed = 12.0
+Duration = 1.4
+Knockback = 2.0
+Sound = ExtResource("2_sound")

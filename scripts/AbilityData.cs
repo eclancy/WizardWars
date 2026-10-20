@@ -35,6 +35,8 @@ public partial class AbilityData : Resource
 	[Export] public float BurnPerTick { get; set; }
 	/// <summary>Energy drained per second while channelled.</summary>
 	[Export] public float Drain { get; set; }
+	/// <summary>Units a hit pushes the target (Gust, Tailwind Dash), or units a second a pull or storm moves them (Cyclone, Tempest).</summary>
+	[Export] public float Knockback { get; set; }
 
 	[Export] public AudioStream Sound { get; set; }
 }

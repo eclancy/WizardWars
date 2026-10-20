@@ -1,6 +1,6 @@
 using Godot;
 
-public enum ProjectileKind { Fireball, Icicle, Mudball, ElectricityBall }
+public enum ProjectileKind { Fireball, Icicle, Mudball, ElectricityBall, ShadowBolt, Thorn, Gust }
 
 /// <summary>
 /// A basic-attack bolt. It flies straight, and stops at the first thing it meets:
@@ -38,12 +38,16 @@ public partial class Projectile : Node2D
 		ProjectileKind.Fireball => new Look("res://assets/art/attacks/fireball-sheet.png", 4, 0.0523f, 0.30f, 0.45f),
 		ProjectileKind.Mudball => new Look("res://assets/art/attacks/mudball-sheet.png", 4, 0.0523f, 0.30f, 0.45f),
 		ProjectileKind.ElectricityBall => new Look("res://assets/art/attacks/electricity-ball-sheet.png", 4, 0.0523f, 0.30f, 0.02f),
+		// The generated sheets (WizardArtTool) are 600 px a frame, drawn about the size of the others.
+		ProjectileKind.ShadowBolt => new Look("res://assets/art/attacks/shadow-bolt-sheet.png", 4, 0.257f, 0.30f, 0.5f),
+		ProjectileKind.Thorn => new Look("res://assets/art/attacks/thorn-sheet.png", 4, 0.22f, 0.22f, 0.55f),
+		ProjectileKind.Gust => new Look("res://assets/art/attacks/gust-sheet.png", 4, 0.26f, 0.38f, 0.44f),
 		_ => new Look("res://assets/art/attacks/icicle.png", 1, 0.0291f, 0.16f, 0.5f),
 	};
 
 	public Wizard Caster { get; private set; }
 	public int CasterTeam { get; private set; }
-	float damage, speed, life, hitRadius, hitForward;
+	float damage, speed, life, hitRadius, hitForward, knockback;
 	Vector2 direction;
 	bool spent;
 
@@ -55,6 +59,7 @@ public partial class Projectile : Node2D
 			Caster = caster,
 			CasterTeam = caster.Team,
 			damage = data.Damage,
+			knockback = data.Knockback,
 			speed = Units.U(data.Speed),
 			life = data.Duration,
 			hitRadius = Units.U(look.HitRadius),
@@ -97,6 +102,8 @@ public partial class Projectile : Node2D
 		{
 			if (!Combat.CanAffect(Caster, CasterTeam, wizard) || !wizard.HitTest(point, hitRadius)) continue;
 			wizard.TakeDamage(damage);
+			// A gust knocks its target back along its flight.
+			if (knockback > 0.0f) wizard.Shove(direction * Units.U(knockback) * 2.0f / 0.25f, 0.25f);
 			Vanish();
 			return;
 		}
@@ -113,7 +120,7 @@ public partial class Projectile : Node2D
 	}
 }
 
-/// <summary>The four basic attacks: a free projectile on a short cooldown, fired while held.</summary>
+/// <summary>The basic attacks: a free projectile on a short cooldown, fired while held.</summary>
 public sealed class ProjectileAbility : Ability
 {
 	readonly ProjectileKind kind;

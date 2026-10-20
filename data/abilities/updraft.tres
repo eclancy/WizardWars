@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/gust.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "updraft"
+DisplayName = "Updraft"
+Description = "Rising air under you: you and your teammates in it run much faster."
+Cost = 25.0
+Cooldown = 5.0
+Duration = 4.0
+Radius = 1.8
+SlowPercent = 40.0
+Sound = ExtResource("2_sound")

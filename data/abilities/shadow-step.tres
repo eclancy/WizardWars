@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/blink.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "shadow-step"
+DisplayName = "Shadow Step"
+Description = "Vanish and reappear a short way off."
+Cost = 25.0
+Cooldown = 3.5
+Range = 4.5
+Sound = ExtResource("2_sound")

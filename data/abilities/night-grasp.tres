@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/shadow.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "night-grasp"
+DisplayName = "Night Grasp"
+Description = "Shadowy hands claw up at the target: enemies caught are hurt and can only use their basic attack."
+Cost = 35.0
+Cooldown = 6.0
+Duration = 0.6
+Radius = 1.8
+Damage = 18.0
+Duration2 = 2.5
+Sound = ExtResource("2_sound")

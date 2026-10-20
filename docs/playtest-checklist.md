@@ -22,8 +22,8 @@ That is what this list is for. Run the game with F5 in the editor, or from an ex
 - [ ] Each screen fades in from black; the menus' sparkles drift and the portraits bob.
 - [ ] Join with a pad's Start and with Enter. The slot shows the right device.
 - [ ] Left/right moves the cursor; A or Space locks in; B or Backspace unlocks, then leaves.
-- [ ] Tab or Back/View toggles the mode, and the mode switch at the top makes the current
-      mode obvious. In Teams, Y or T switches team (Green or Pink).
+- [ ] Tab or Select toggles the mode (its button is pictured next to the word Select), and the mode switch at the top makes the current
+      mode obvious. In Teams, Y or T switches team (Gold or Pink).
 - [ ] Once a player locks in a wizard, its card greys out ("TAKEN BY P1") and other cursors
       skip it. Player tags are plain white; no player has a colour of their own.
 - [ ] Start is blocked, with a message, while both teams are not filled.
@@ -61,6 +61,11 @@ That is what this list is for. Run the game with F5 in the editor, or from an ex
       lava and crosses on the bridges to reach you.
       Swamp: bog slows you and stops your energy, and lifts the moment you step out.
 - [ ] Easy, Normal and Hard computers feel clearly different.
+- [ ] Seven wizards fit on Character Select. Shadow, Nature and Wind look like the other four
+      and each of their abilities reads clearly: smoke hides, Shadow Step blinks, hands silence
+      (only the basic attack works), vines root, Regrowth heals, gusts knock back, the dash goes
+      through enemies, the cyclone pulls in, and Tempest hurls out.
+- [ ] The new wizards feel fair against the old four (soak hints Nature is strong, Shadow weak).
 - [ ] King of the Rune: the rune is easy to see, standing in it alone fills your bar, two sides
       in it show CONTESTED, knocked-out wizards come back, and the first to 20 wins the round.
       On the Volcano and Swamp the next spot glows before the rune moves.

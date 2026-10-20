@@ -34,6 +34,15 @@ public static class SoundTool
 		failures += Save("ground-crack", Crack());
 		failures += Save("ice-break", IceBreak());
 		failures += Save("ice-chip", IceChip());
+		// The Shadow, Nature and Wind wizards.
+		failures += Save("shadow", Shadow());
+		failures += Save("smoke", Smoke());
+		failures += Save("blink", Blink());
+		failures += Save("thorn", Thorn());
+		failures += Save("rustle", Rustle());
+		failures += Save("chime", Chime());
+		failures += Save("gust", Gust());
+		failures += Save("howl", Howl());
 		return failures;
 	}
 
@@ -116,7 +125,7 @@ public static class SoundTool
 		{
 			float t = (i - from) / (float)Rate;
 			float envelope = Mathf.Exp(-t / decay) * Mathf.Min(1.0f, t * 2000.0f);
-			if (envelope < 0.0005f) break;
+			if (t > 0.002f && envelope < 0.0005f) break; // (not at the very start, where the attack is still rising from zero)
 			samples[i] += Mathf.Sin(Mathf.Tau * frequency * t) * envelope * level;
 		}
 	}
@@ -238,6 +247,129 @@ public static class SoundTool
 		Ping(samples, 0.002f, 3900.0f, 0.03f, 0.25f);
 		Ping(samples, 0.004f, 5300.0f, 0.02f, 0.15f);
 		Fade(samples, 0.0f, 0.02f);
+		return samples;
+	}
+
+	// ---- The Shadow, Nature and Wind wizards ----
+
+	/// <summary>Noise through a low-pass filter whose cutoff follows a curve over the sound.</summary>
+	static float[] Swept(float seconds, int seed, System.Func<float, float> cutoff, System.Func<float, float> envelope, float gain)
+	{
+		float[] samples = Buffer(seconds);
+		Random rng = new(seed);
+		float low = 0.0f, low2 = 0.0f;
+		for (int i = 0; i < samples.Length; i++)
+		{
+			float t = i / (float)samples.Length;
+			float k = LowPass(cutoff(t));
+			low += ((float)(rng.NextDouble() * 2.0 - 1.0) - low) * k;
+			low2 += (low - low2) * k;
+			samples[i] = low2 * envelope(t) * gain;
+		}
+		return samples;
+	}
+
+	/// <summary>Shadow Bolt, Night Grasp, Eclipse: a dark, low whoosh with a hollow hum under it.</summary>
+	static float[] Shadow()
+	{
+		float[] samples = Swept(0.5f, 6, t => Mathf.Lerp(900.0f, 250.0f, t), t => Mathf.Min(1.0f, t * 12.0f) * (1.0f - t), 3.0f);
+		double phase = 0.0;
+		for (int i = 0; i < samples.Length; i++)
+		{
+			float t = i / (float)samples.Length;
+			phase += Mathf.Lerp(140.0f, 70.0f, t) / Rate;
+			samples[i] += Mathf.Sin((float)(Mathf.Tau * phase)) * 0.35f * Mathf.Min(1.0f, t * 10.0f) * (1.0f - t);
+		}
+		Fade(samples, 0.005f, 0.03f);
+		return samples;
+	}
+
+	/// <summary>Smoke Cloud: a soft, breathy hiss swelling and settling.</summary>
+	static float[] Smoke()
+	{
+		float[] samples = Swept(0.8f, 7, t => Mathf.Lerp(2500.0f, 1200.0f, t), t => Mathf.Sin(Mathf.Pi * Mathf.Min(1.0f, t * 1.4f)), 2.2f);
+		Fade(samples, 0.01f, 0.05f);
+		return samples;
+	}
+
+	/// <summary>Shadow Step: a quick reversed swoosh into a pop.</summary>
+	static float[] Blink()
+	{
+		float[] samples = Swept(0.3f, 8, t => Mathf.Lerp(300.0f, 4000.0f, t), t => t * t, 2.6f);
+		Random rng = new(18);
+		Snap(samples, rng, 0.27f, 0.01f, 0.6f, 600.0f);
+		Fade(samples, 0.0f, 0.01f);
+		return samples;
+	}
+
+	/// <summary>Thorn: a twangy pluck with a little rasp.</summary>
+	static float[] Thorn()
+	{
+		float[] samples = Buffer(0.4f);
+		Random rng = new(9);
+		Ping(samples, 0.0f, 620.0f, 0.12f, 0.6f);
+		Ping(samples, 0.0f, 1240.0f, 0.06f, 0.3f);
+		Ping(samples, 0.0f, 1870.0f, 0.04f, 0.15f);
+		Snap(samples, rng, 0.0f, 0.02f, 0.35f, 2000.0f);
+		Fade(samples, 0.0f, 0.03f);
+		return samples;
+	}
+
+	/// <summary>Brambles and vines: a dry rustle of many tiny crackles.</summary>
+	static float[] Rustle()
+	{
+		float[] samples = Buffer(0.6f);
+		Random rng = new(11);
+		for (int n = 0; n < 40; n++)
+		{
+			float start = (float)(rng.NextDouble() * 0.45);
+			Snap(samples, rng, start, (float)(0.003 + rng.NextDouble() * 0.008), (float)(0.15 + rng.NextDouble() * 0.35), 1500.0f);
+		}
+		float[] body = Swept(0.6f, 12, _ => 1800.0f, t => Mathf.Sin(Mathf.Pi * t), 0.8f);
+		for (int i = 0; i < samples.Length; i++) samples[i] += body[i];
+		Fade(samples, 0.005f, 0.05f);
+		return samples;
+	}
+
+	/// <summary>Regrowth: a rising, gentle three-note chime.</summary>
+	static float[] Chime()
+	{
+		float[] samples = Buffer(1.0f);
+		float[] notes = { 523.25f, 659.25f, 783.99f };
+		for (int n = 0; n < notes.Length; n++)
+		{
+			Ping(samples, n * 0.12f, notes[n], 0.45f, 0.35f);
+			Ping(samples, n * 0.12f, notes[n] * 2.0f, 0.25f, 0.12f);
+		}
+		Fade(samples, 0.0f, 0.08f);
+		return samples;
+	}
+
+	/// <summary>Gust, Updraft, Tailwind Dash: a bright rushing whoosh.</summary>
+	static float[] Gust()
+	{
+		float[] samples = Swept(0.45f, 13, t => 600.0f + 3500.0f * Mathf.Sin(Mathf.Pi * t), t => Mathf.Sin(Mathf.Pi * Mathf.Pow(t, 0.7f)), 2.4f);
+		Fade(samples, 0.005f, 0.03f);
+		return samples;
+	}
+
+	/// <summary>Cyclone, Tempest: wind howling, its pitch wavering.</summary>
+	static float[] Howl()
+	{
+		float[] samples = Buffer(1.2f);
+		Random rng = new(14);
+		float band = 0.0f, low = 0.0f;
+		for (int i = 0; i < samples.Length; i++)
+		{
+			float t = i / (float)samples.Length;
+			// A narrow band of noise, its centre swinging up and down: the howl.
+			float centre = 500.0f + 250.0f * Mathf.Sin(t * Mathf.Tau * 2.5f);
+			float white = (float)(rng.NextDouble() * 2.0 - 1.0);
+			low += (white - low) * LowPass(centre * 1.6f);
+			band += (low - band) * LowPass(centre * 0.6f);
+			samples[i] = (low - band) * 6.0f * Mathf.Sin(Mathf.Pi * Mathf.Min(1.0f, t * 1.3f));
+		}
+		Fade(samples, 0.02f, 0.08f);
 		return samples;
 	}
 }

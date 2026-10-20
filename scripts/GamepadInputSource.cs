@@ -5,7 +5,7 @@ using Godot;
 /// InputMap, so four pads never fight over shared actions.
 ///
 /// Layout, as in the Unity game: left stick move, right stick aim, RT basic, LT second,
-/// RB third, LB fourth, X ultimate; Start, A confirm, B back, Back/View mode, Y team, RS help.
+/// RB third, LB fourth, X ultimate; Start, A confirm, B back, Select (Back/View) mode, Y team, RS help.
 /// Unlike Unity, Godot reports the triggers as two separate axes.
 /// </summary>
 public class GamepadInputSource : IInputSource

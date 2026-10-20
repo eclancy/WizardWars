@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AbilityData.cs" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/rustle.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "overgrowth"
+DisplayName = "Overgrowth"
+Description = "Thorns overrun the ground around you: enemies inside are slowed and hurt, and you heal."
+Radius = 6.5
+Duration = 5.0
+SlowPercent = 40.0
+Damage = 6.0
+Damage2 = 6.0
+Sound = ExtResource("2_sound")

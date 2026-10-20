@@ -35,7 +35,7 @@ public struct InputState
 	public bool StartPressed;     // Start / Enter
 	public bool ConfirmPressed;   // A / Space
 	public bool BackPressed;      // B / Backspace
-	public bool ModePressed;      // Back-View / Tab
+	public bool ModePressed;      // Select (Back/View) / Tab
 	public bool TeamPressed;      // Y / T
 	public bool HelpHeld;         // RS click / H
 
