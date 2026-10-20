@@ -26,6 +26,7 @@ public static class RegressionChecks
 		CheckWizards();
 		CheckStages();
 		CheckStatusEffects();
+		CheckWounds();
 		CheckFriendlyFire();
 		CheckFreezeWiggle();
 		CheckOneWizardPerPlayer();
@@ -192,7 +193,45 @@ public static class RegressionChecks
 			for (int a = 0; a < stage.Cover.Length; a++)
 				for (int b = a + 1; b < stage.Cover.Length; b++) closest = Mathf.Min(closest, stage.Cover[a].DistanceTo(stage.Cover[b]));
 			Expect(closest >= 3.0f, $"{stage.Id} cover pieces are spread out", $"closest pair {closest:0.0} units apart");
+
+			if (stage.Decor.Length > 0) CheckDecor(stage);
 		}
+	}
+
+	/// <summary>
+	/// Soft plants: they have art, sit inside the arena on dry ground, and stay off the spawns, the
+	/// rune and the cover, so they never hide anything that matters.
+	/// </summary>
+	static void CheckDecor(StageData stage)
+	{
+		bool known = true;
+		try { CoverArt.For(stage.DecorKind); } catch (System.ArgumentException) { known = false; }
+		Expect(known, $"{stage.Id} decor kind '{stage.DecorKind}' has art");
+		Vector2[] runes = stage.RunePoints.Length > 0 ? stage.RunePoints : new[] { Vector2.Zero };
+		bool placed = true, clear = true;
+		foreach (Vector2 plant in stage.Decor)
+		{
+			placed &= InsideArena(plant, 0.6f) && !stage.InHazard(plant);
+			foreach (Vector2 spawn in stage.Spawns) clear &= plant.DistanceTo(spawn) > 1.5f;
+			foreach (Vector2 rune in runes) clear &= plant.DistanceTo(rune) > RuneHill.RadiusUnits + 0.5f;
+			foreach (Vector2 piece in stage.Cover) clear &= plant.DistanceTo(piece) > 1.5f;
+		}
+		Expect(placed, $"{stage.Id} decor sits inside the arena on dry ground");
+		Expect(clear, $"{stage.Id} decor keeps off spawns, the rune and cover");
+		// Nothing about a plant is solid: no collider and no shadow.
+		Node decor = Decor.Create(stage.DecorKind, Vector2.Zero);
+		bool soft = true;
+		foreach (Node child in decor.GetChildren()) soft &= child is Sprite2D;
+		decor.Free();
+		Expect(soft, $"{stage.Id} decor is only pictures");
+	}
+
+	/// <summary>Battle damage shows in four stages as health falls, and none at full health.</summary>
+	static void CheckWounds()
+	{
+		Expect(WizardWounds.StageFor(1.0f) == 0 && WizardWounds.StageFor(0.81f) == 0, "an unhurt wizard shows no damage");
+		Expect(WizardWounds.StageFor(0.7f) == 1 && WizardWounds.StageFor(0.5f) == 2 && WizardWounds.StageFor(0.3f) == 3, "damage shows in stages as health falls");
+		Expect(WizardWounds.StageFor(0.1f) == 4 && WizardWounds.StageFor(0.0f) == 4, "a nearly beaten wizard shows every rip");
 	}
 
 	/// <summary>The rules that replaced Unity's additive slow()/removeSlow().</summary>

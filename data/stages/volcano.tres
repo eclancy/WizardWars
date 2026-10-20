@@ -19,3 +19,5 @@ Bridges = PackedVector2Array(0, 3, 1.7, 0.85, 0, -3, 1.7, 0.85)
 HazardDamage = 20
 HazardSlow = 0
 RunePoints = PackedVector2Array(0, 3, 0, -3)
+DecorKind = ""
+Decor = PackedVector2Array()

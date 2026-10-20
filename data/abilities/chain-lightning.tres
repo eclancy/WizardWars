@@ -14,5 +14,5 @@ Range = 6.0
 Radius = 4.0
 Count = 3
 Interval = 0.1
-Damage = 18.0
+Damage = 22.0
 Sound = ExtResource("2_sound")

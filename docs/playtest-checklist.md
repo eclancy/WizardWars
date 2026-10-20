@@ -42,10 +42,18 @@ That is what this list is for. Run the game with F5 in the editor, or from an ex
 - [ ] Meteors fall straight down. Basic shots pass through each other.
 - [ ] Every stage's cover blocks shots and movement, and you can hide behind it (drawn in
       front of you). At a glance, cover (with its shadow) is the only thing that looks solid.
+- [ ] Cacti (Scorched Canyon) and toadstools (Swamp) never stop you or a shot; they sway as
+      you pass. The Volcano's boulders have dark cracks, nothing that looks like lightning.
 - [ ] On a 16:10 or 3:2 screen everything reaches the bottom: the title's version sits in
       the corner, and in battle the floor beyond the walls is dimmed.
-- [ ] The HUD bars, cooldown pips and red fizzle flash are readable at a glance.
-- [ ] Teams: the coloured ground discs and HUD strips make the sides obvious.
+- [ ] The HUD strip below the arena is readable at a glance: health, energy, the red fizzle
+      flash, a chip per button that fills on cooldown and dims without energy, and X filling
+      with charge. Nothing over the wizards but their labels; the arena is all on screen.
+- [ ] As a wizard loses health, scuffs and then rips appear on the robe and hat; healing
+      mends them.
+- [ ] Teams: the coloured ground discs and the team strip on each HUD panel make the sides obvious.
+- [ ] Duels last around half a minute and ultimates come once or twice a fight; no wizard
+      feels hopeless.
 - [ ] Frozen by Ice Wave or Deep Freeze: a joystick wiggles beside the ice, and wiggling the
       left stick side to side breaks out noticeably sooner.
 - [ ] Every ultimate builds up first (its name, a darkened floor, colour pouring in) and only

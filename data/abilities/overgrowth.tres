@@ -12,5 +12,5 @@ Radius = 6.5
 Duration = 5.0
 SlowPercent = 40.0
 Damage = 6.0
-Damage2 = 6.0
+Damage2 = 3.0
 Sound = ExtResource("2_sound")

@@ -6,7 +6,7 @@ using Godot;
 /// - fresh cracks split out from where he stands (<see cref="GroundCracks"/>), reaching most of
 ///   the way to the edge, and fade as the next ones open
 /// - the camera jumps
-/// - every enemy he has hold of shakes
+/// - every enemy he has hold of shakes and takes the jolt's damage
 ///
 /// The reach is marked by a ring of broken, dusty dashes at the real radius, which tremble too.
 /// Must be a child of the <see cref="Aura"/> it draws.
@@ -15,12 +15,16 @@ public partial class QuakeFx : Node2D
 {
 	static readonly Color Edge = new(0.36f, 0.24f, 0.13f);
 
-	readonly float interval;
+	readonly float interval, damagePerJolt;
 	float nextJolt, sinceJolt = 10.0f;
 
 	public QuakeFx() { }
 
-	public QuakeFx(float interval) => this.interval = Mathf.Max(0.2f, interval);
+	public QuakeFx(float interval, float damagePerJolt)
+	{
+		this.interval = Mathf.Max(0.2f, interval);
+		this.damagePerJolt = damagePerJolt;
+	}
 
 	Aura Aura => GetParent<Aura>();
 
@@ -37,7 +41,12 @@ public partial class QuakeFx : Node2D
 		battle.AddEffect(GroundCracks.Create(aura.GlobalPosition + new Vector2(0.0f, Units.U(0.55f)), aura.Radius * 0.85f, 7, 10.0f, 0.22f, interval * 0.9f, 0.5f));
 		battle.Shake(7.0f, 0.3f);
 		Sfx.Play("res://assets/sfx/ground-crack.wav", -5.0f);
-		foreach (Wizard wizard in battle.Wizards) if (aura.Holds(wizard)) wizard.Jolt(0.3f);
+		foreach (Wizard wizard in battle.Wizards)
+		{
+			if (!aura.Holds(wizard)) continue;
+			wizard.Jolt(0.3f);
+			wizard.TakeDamage(damagePerJolt);
+		}
 	}
 
 	public override void _Process(double delta) => QueueRedraw();

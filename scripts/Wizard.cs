@@ -102,6 +102,7 @@ public partial class Wizard : CharacterBody2D
 
 		body = new Sprite2D { Texture = Data.Portrait, Scale = Vector2.One * Units.SpriteScale(SpriteUnityScale) };
 		AddChild(body);
+		body.AddChild(new WizardWounds(this, Data.Portrait));
 
 		if (Team != Teams.NoTeam)
 		{

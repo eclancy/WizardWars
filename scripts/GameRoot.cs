@@ -15,6 +15,7 @@ using Godot;
 ///   --make-sounds         synthesise the newer sound effects into assets/sfx (see SoundTool)
 ///   --make-wizards        draw the Shadow, Nature and Wind wizards' art (see WizardArtTool)
 ///   --soak[=N]            play N computer-only matches headless (default 6) and check for leaks
+///   --balance[=N]         round-robin computer duels, N per pair (default 4), and print win rates (see BalanceTest)
 ///   --flowtest            drive every menu and a Teams match with scripted pads, asserting each step
 ///   --abilities           cast all 20 abilities at an enemy and at a teammate, checking each
 ///   --teams               with --soak, --screen=demo or --screen=select: Teams mode
@@ -23,6 +24,8 @@ using Godot;
 ///   --players=N           with --soak: 2-4 computer wizards in Free-for-All (default 4)
 ///   --screen=NAME         start on title | select | stage | battle | demo | pause | options (--stage=0-3 picks its arena)
 ///   --charged             with --screen=demo: every wizard starts with a full ultimate
+///   --hurt                with --screen=demo: the wizards start on 70, 50, 30 and 10 percent health,
+///                         to see each stage of their battle damage
 ///   --shot=PATH           save a screenshot to PATH after --shot-after seconds (default 3), then quit;
 ///                         --shot-size=WxH sets the window (default 1920x1080)
 ///   --no-update           an exported Windows build skips its update check (see docs/releasing.md)
@@ -62,7 +65,7 @@ public partial class GameRoot : Node2D
 		}
 
 		// A real run loads the player's options; tests and screenshots keep the defaults.
-		bool testing = flags.ContainsKey("flowtest") || flags.ContainsKey("abilities") || flags.ContainsKey("soak") || flags.ContainsKey("shot");
+		bool testing = flags.ContainsKey("flowtest") || flags.ContainsKey("abilities") || flags.ContainsKey("soak") || flags.ContainsKey("balance") || flags.ContainsKey("shot");
 		if (!testing) Settings.Load();
 		Sfx.Attach(this);
 		Settings.ApplyWindow();
@@ -78,6 +81,11 @@ public partial class GameRoot : Node2D
 
 		if (flags.ContainsKey("flowtest")) { ShowTitle(); AddChild(new FlowTest()); return; }
 		if (flags.ContainsKey("abilities")) { AddChild(new AbilityTest()); return; }
+		if (flags.ContainsKey("balance"))
+		{
+			AddChild(new BalanceTest(flags.TryGetValue("balance", out string r) && int.TryParse(r, out int rounds) ? rounds : 4));
+			return;
+		}
 		if (flags.ContainsKey("soak"))
 		{
 			int count = flags.TryGetValue("soak", out string n) && int.TryParse(n, out int parsed) ? parsed : 6;
@@ -194,6 +202,9 @@ public partial class GameRoot : Node2D
 		Battle battle = StartBattle(setup, skipCountdown: false);
 		// --charged: everyone starts with a full ultimate, to see them without a long wait.
 		if (flags.ContainsKey("charged")) foreach (Wizard wizard in battle.Wizards) wizard.AddUltimateCharge(100.0f);
+		// --hurt: each wizard starts worse off than the last, to show the stages of WizardWounds.
+		if (flags.ContainsKey("hurt"))
+			for (int i = 0; i < battle.Wizards.Count; i++) battle.Wizards[i].TakeDamage(Wizard.MaxHealth * (0.3f + 0.2f * i));
 	}
 
 	/// <summary>The demo's wizards: --wizards=4,5,6,0 picks them by index (0 Fire .. 6 Wind); the first four by default.</summary>

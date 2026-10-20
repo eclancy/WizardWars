@@ -11,5 +11,5 @@ Description = "Heal yourself over a few seconds."
 Cost = 30.0
 Cooldown = 8.0
 Duration = 3.0
-Damage = 35.0
+Damage = 30.0
 Sound = ExtResource("2_sound")

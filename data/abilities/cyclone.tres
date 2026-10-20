@@ -12,6 +12,6 @@ Cost = 35.0
 Cooldown = 6.0
 Duration = 2.5
 Radius = 2.6
-Damage = 7.0
+Damage = 10.0
 Knockback = 3.0
 Sound = ExtResource("2_sound")

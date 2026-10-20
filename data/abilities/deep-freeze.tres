@@ -13,5 +13,5 @@ Cooldown = 6.0
 Duration = 0.6
 Radius = 2.0
 Duration2 = 2.0
-Damage = 10.0
+Damage = 18.0
 Sound = ExtResource("2_sound")

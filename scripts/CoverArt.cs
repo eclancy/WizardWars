@@ -46,6 +46,8 @@ public static class CoverArt
 			"saguaro" => Saguaro(),
 			"obelisk" => Obelisk(variant),
 			"boulder" => Boulder(),
+			"sandstone" => Sandstone(),
+			"mossrock" => MossRock(),
 			"toadstool" => Toadstool(),
 			_ => throw new ArgumentException($"No cover art for '{kind}'"),
 		};
@@ -211,18 +213,16 @@ public static class CoverArt
 		return new Piece(painter.Finish(), new Vector2(72, 152), Units.U(1.4f) / w);
 	}
 
-	/// <summary>Scorched Canyon: a saguaro cactus, ribbed trunk and two raised arms, on a little sand mound.</summary>
+	/// <summary>Scorched Canyon scenery (<see cref="Decor"/>): a saguaro cactus, ribbed trunk and two raised arms.</summary>
 	static Piece Saguaro()
 	{
 		const int w = 130, h = 200;
 		Color outline = new(0.07f, 0.19f, 0.09f);
 		Color green = new(0.36f, 0.66f, 0.3f), rib = new(0.27f, 0.53f, 0.23f), shade = new(0.2f, 0.42f, 0.18f), bloom = new(1.0f, 0.5f, 0.62f);
-		Color sand = new(0.8f, 0.52f, 0.29f), sandOutline = new(0.45f, 0.24f, 0.11f);
 		Painter painter = new(w, h);
 
 		// Ribs run down every part; the right-hand edge of each part is in shade.
 		Fill Ribbed(float right) => p => p.X > right - 9 ? shade : Odd(p.X + 2, 10.0f) ? rib : green;
-		painter.Layer(p => Ellipse(p, new Vector2(65, 188), new Vector2(42, 10)), p => sand, sandOutline);
 		painter.Layer(p => Mathf.Min(RoundedBox(p, new Vector2(12, 104), new Vector2(52, 128), 12), RoundedBox(p, new Vector2(12, 56), new Vector2(38, 128), 13)), Ribbed(38), outline);
 		painter.Layer(p => Mathf.Min(RoundedBox(p, new Vector2(78, 86), new Vector2(118, 108), 11), RoundedBox(p, new Vector2(92, 40), new Vector2(118, 108), 13)), Ribbed(118), outline);
 		painter.Layer(p => RoundedBox(p, new Vector2(41, 12), new Vector2(89, 192), 24), Ribbed(89), outline);
@@ -230,13 +230,12 @@ public static class CoverArt
 		return new Piece(painter.Finish(), new Vector2(65, 188), Units.U(2.0f) / h);
 	}
 
-	/// <summary>Volcano: a lump of black basalt, lit on top, with a seam of cooling lava down one side.</summary>
+	/// <summary>Volcano: a lump of black basalt, lit on top, split by a few dark cracks.</summary>
 	static Piece Boulder()
 	{
 		const int w = 156, h = 128;
 		Color outline = new(0.06f, 0.04f, 0.05f);
 		Color top = new(0.42f, 0.38f, 0.4f), face = new(0.3f, 0.27f, 0.29f), shade = new(0.2f, 0.18f, 0.2f);
-		Color ember = new(1.0f, 0.5f, 0.1f), emberCore = new(1.0f, 0.85f, 0.4f);
 		Painter painter = new(w, h);
 		Vector2[] rock = { new(16, 104), new(10, 70), new(30, 34), new(66, 14), new(108, 20), new(138, 46), new(146, 84), new(132, 112), new(78, 120), new(36, 118) };
 		painter.Layer(p => Polygon(p, rock), p =>
@@ -245,13 +244,62 @@ public static class CoverArt
 			if (p.Y < 50 - (p.X - 70) * 0.25f) return top;
 			return p.X > 110 - (p.Y - 60) * 0.2f ? shade : face;
 		}, outline);
-		// A glowing crack down the face.
-		Vector2[][] seam = { new Vector2[] { new(62, 52), new(70, 70), new(64, 84), new(74, 104) }, new Vector2[] { new(70, 70), new(88, 76) } };
-		painter.Layer(p => Strokes(p, seam, 3.2f), p => Strokes(p, seam, 3.2f) < -1.5f ? emberCore : ember, outline, 1.5f);
+		// Fine cracks cut into the stone, running in from the edges: dark, never bright, so they read as
+		// split rock and not as lightning.
+		Vector2[][] cracks =
+		{
+			new Vector2[] { new(66, 15), new(70, 30), new(67, 42) },
+			new Vector2[] { new(17, 98), new(32, 92), new(40, 95) },
+			new Vector2[] { new(140, 60), new(128, 66), new(124, 76) },
+		};
+		painter.Carve(p => Strokes(p, cracks, 1.4f), new Color(0.03f, 0.02f, 0.03f));
 		return new Piece(painter.Finish(), new Vector2(78, 100), Units.U(1.5f) / w);
 	}
 
-	/// <summary>Swamp: a giant toadstool, a spotted purple cap on a pale stem.</summary>
+	/// <summary>Scorched Canyon: a squat red sandstone rock, banded with strata, lit on top.</summary>
+	static Piece Sandstone()
+	{
+		const int w = 152, h = 140;
+		Color outline = new(0.22f, 0.08f, 0.05f);
+		Color top = new(0.86f, 0.56f, 0.38f), face = new(0.7f, 0.36f, 0.22f), band = new(0.6f, 0.28f, 0.17f);
+		Color shade = new(0.52f, 0.24f, 0.15f), shadeBand = new(0.44f, 0.19f, 0.12f);
+		Painter painter = new(w, h);
+		Vector2[] rock = { new(14, 124), new(18, 84), new(30, 50), new(46, 30), new(72, 20), new(102, 24), new(124, 40), new(134, 72), new(138, 110), new(124, 128), new(76, 134), new(32, 132) };
+		painter.Layer(p => Polygon(p, rock), p =>
+		{
+			if (p.Y < 46 - (p.X - 76) * 0.12f) return top;
+			bool banded = Odd(p.Y + p.X * 0.06f, 15.0f);
+			if (p.X > 114 - (p.Y - 60) * 0.12f) return banded ? shadeBand : shade;
+			return banded ? band : face;
+		}, outline);
+		return new Piece(painter.Finish(), new Vector2(76, 116), Units.U(1.5f) / w);
+	}
+
+	/// <summary>Swamp: a grey boulder with a cap of moss hanging over its edges.</summary>
+	static Piece MossRock()
+	{
+		const int w = 156, h = 132;
+		Color outline = new(0.06f, 0.09f, 0.06f);
+		Color top = new(0.56f, 0.58f, 0.55f), face = new(0.44f, 0.46f, 0.43f), shade = new(0.31f, 0.33f, 0.31f);
+		Color mossLight = new(0.58f, 0.74f, 0.3f), moss = new(0.42f, 0.58f, 0.21f), mossShade = new(0.3f, 0.45f, 0.16f);
+		Painter painter = new(w, h);
+		Vector2[] rock = { new(14, 108), new(12, 72), new(28, 40), new(62, 18), new(104, 20), new(136, 44), new(146, 84), new(134, 114), new(80, 124), new(34, 120) };
+		painter.Layer(p => Polygon(p, rock), p =>
+		{
+			if (p.Y < 54 - (p.X - 70) * 0.2f) return top;
+			return p.X > 112 - (p.Y - 60) * 0.2f ? shade : face;
+		}, outline);
+		// The moss: the top of the rock down to a wavy edge with a few drips.
+		float Edge(float x) => 52 + 7 * Mathf.Sin(x * 0.11f) + 12 * Mathf.Max(0, Mathf.Sin(x * 0.29f + 1.0f) - 0.55f) * 2.2f;
+		painter.Layer(p => Mathf.Max(Polygon(p, rock) + 3.0f, p.Y - Edge(p.X)), p =>
+		{
+			if (p.X < 70 && p.Y < 40) return mossLight;
+			return p.X > 112 ? mossShade : moss;
+		}, outline, 3.0f);
+		return new Piece(painter.Finish(), new Vector2(80, 108), Units.U(1.5f) / w);
+	}
+
+	/// <summary>Swamp scenery (<see cref="Decor"/>): a toadstool, a spotted purple cap on a pale stem.</summary>
 	static Piece Toadstool()
 	{
 		const int w = 150, h = 176;

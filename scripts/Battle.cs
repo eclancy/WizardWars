@@ -157,6 +157,7 @@ public partial class Battle : Node2D
 
 		overlay = new CanvasLayer { Layer = 10 };
 		AddChild(overlay);
+		overlay.AddChild(new BattleHud(this, setup.Fighters));
 		if (setup.Goal == Goal.KingOfTheRune)
 		{
 			Rune = RuneHill.Create(this);
@@ -177,6 +178,9 @@ public partial class Battle : Node2D
 		StageData stage = setup.Stage;
 		camera = new Camera2D { Name = "Camera" };
 		AddChild(camera);
+
+		// Past the floor art (a very tall or wide screen, zoomed out) there is only darkness.
+		AddChild(new Polygon2D { Polygon = new[] { new Vector2(-1, -1), new Vector2(1, -1), new Vector2(1, 1), new Vector2(-1, 1) }, Scale = CoveredView * 2.0f, Color = new Color(0.04f, 0.03f, 0.06f), ZIndex = -101 });
 
 		// The background covers the whole view for every common screen shape: with "expand" the
 		// view is 1920 wide up to 1440 tall (4:3), or 1080 tall up to 2560 wide (21:9). The
@@ -212,6 +216,8 @@ public partial class Battle : Node2D
 		// The floors are only ground; each stage's cover is the one thing that blocks wizards and shots.
 		// Each piece gets its own variant (on Storm Plateau, its own rune).
 		for (int i = 0; i < stage.Cover.Length; i++) AddChild(Cover.Create(stage.CoverKind, Units.U(stage.Cover[i]), i));
+		// Soft plants that nothing stops on.
+		for (int i = 0; i < stage.Decor.Length; i++) AddChild(Decor.Create(stage.DecorKind, Units.U(stage.Decor[i]), i));
 	}
 
 	/// <summary>The view the background must cover, in pixels: 21:9 wide and 4:3 tall at once.</summary>
@@ -267,6 +273,14 @@ public partial class Battle : Node2D
 	readonly List<(Fighter fighter, double at)> respawns = new();
 	/// <summary>Seconds a knocked-out wizard waits to come back, in King of the Rune.</summary>
 	public const double RespawnSeconds = 3.0;
+
+	/// <summary>Seconds until a knocked-out fighter comes back, or -1 when they are not coming back.</summary>
+	public double RespawnIn(Fighter fighter)
+	{
+		foreach ((Fighter waiting, double at) in respawns)
+			if (waiting == fighter) return Mathf.Max(0.0, at - Time);
+		return -1.0;
+	}
 
 	Wizard Spawn(Fighter fighter)
 	{
@@ -474,6 +488,12 @@ public partial class Battle : Node2D
 	public override void _Process(double delta)
 	{
 		if (camera == null) return;
+		// The whole arena sits just above the HUD strip. On 16:9 the arena alone almost fills the
+		// screen, so the camera stands back a little; a taller screen has room to spare.
+		Vector2 view = GetViewportRect().Size, arena = new Vector2(Units.U(ArenaHalf.X), Units.U(ArenaHalf.Y)) * 2.0f;
+		float zoom = Mathf.Min(1.0f, Mathf.Min((view.Y - BattleHud.Height - 16.0f) / arena.Y, (view.X - 32.0f) / arena.X));
+		camera.Zoom = Vector2.One * zoom;
+		camera.Position = new Vector2(0.0f, arena.Y * 0.5f + (BattleHud.Height + 6.0f) / zoom - view.Y / zoom * 0.5f);
 		shakeLeft = Mathf.Max(0.0f, shakeLeft - (float)delta);
 		float amount = shakeLeft > 0.0f ? shakeStrength * shakeLeft / shakeLength : 0.0f;
 		camera.Offset = new Vector2((float)GD.RandRange(-1.0, 1.0), (float)GD.RandRange(-1.0, 1.0)) * amount;

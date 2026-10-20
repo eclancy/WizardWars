@@ -11,4 +11,5 @@ Description = "Enemies near you are slowed and their energy stops recharging."
 Radius = 8.0
 SlowPercent = 35.0
 Duration = 5.0
+Damage = 6.0
 Sound = ExtResource("2_sound")

@@ -18,6 +18,20 @@ public partial class FrostFx : Node2D
 
 	readonly List<(float angle, float distance, float speed, float size)> flakes = new();
 
+	readonly float damagePerSecond;
+
+	public FrostFx() { }
+
+	/// <summary>Enemies the frost has hold of lose this much health a second.</summary>
+	public FrostFx(float damagePerSecond) => this.damagePerSecond = damagePerSecond;
+
+	public override void _PhysicsProcess(double delta)
+	{
+		Aura aura = GetParent<Aura>();
+		if (aura == null || damagePerSecond <= 0.0f) return;
+		foreach (Wizard wizard in Battle.Current.Wizards) if (aura.Holds(wizard)) wizard.TakeDamage(damagePerSecond * (float)delta);
+	}
+
 	public override void _Ready()
 	{
 		for (int i = 0; i < Flakes; i++)

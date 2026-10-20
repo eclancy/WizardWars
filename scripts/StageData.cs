@@ -20,11 +20,18 @@ public partial class StageData : Resource
 
 	/// <summary>
 	/// This stage's cover: solid pieces that stop wizards and shots, and that a wizard can hide
-	/// behind. One kind per stage (see <see cref="Cover"/>): stump, crystal, saguaro, obelisk, boulder
-	/// or toadstool.
+	/// behind. One kind per stage (see <see cref="Cover"/>): stump, crystal, sandstone, obelisk, boulder
+	/// or mossrock.
 	/// </summary>
 	[Export] public string CoverKind { get; set; } = "";
 	[Export] public Vector2[] Cover { get; set; } = System.Array.Empty<Vector2>();
+
+	/// <summary>
+	/// Soft scenery that wizards and shots pass straight through (see <see cref="Decor"/>): small
+	/// cacti or toadstools. It casts no shadow and sways when brushed, so it never reads as cover.
+	/// </summary>
+	[Export] public string DecorKind { get; set; } = "";
+	[Export] public Vector2[] Decor { get; set; } = System.Array.Empty<Vector2>();
 
 	/// <summary>
 	/// The stage's hazard, if any (see <see cref="StageHazard"/>):

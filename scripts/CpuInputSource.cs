@@ -363,7 +363,8 @@ public class CpuInputSource : IInputSource
 
 		if (second.IsReady && distance < U(TargeterRange + 1.5f) && self.Energy > 45.0f && GD.Randf() < 0.45f * Eagerness)
 		{
-			aimPoint = target.GlobalPosition + targetVelocity * 0.5f;
+			// Smoke Cloud goes at its own feet: hidden, it is hard to hit, and chasers are slowed.
+			aimPoint = id == "ShadowWizard" ? self.GlobalPosition : target.GlobalPosition + targetVelocity * 0.5f;
 			state.Aim = AimToward(aimPoint);
 			state.SecondHeld = true;
 			return;

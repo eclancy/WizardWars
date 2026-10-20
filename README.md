@@ -58,12 +58,16 @@ Every stage has its own cover to hide behind, and two have a hazard:
 |---|---|---|
 | Woodland | Tree stumps | |
 | Frost Tundra | Ice crystals | |
-| Scorched Canyon | Saguaro cacti | |
+| Scorched Canyon | Sandstone rocks | |
 | Storm Plateau | Rune stones | |
 | Volcano | Basalt boulders | A lava river down the middle: it burns. Cross on the bridges. |
-| Swamp | Toadstools | Bog pools: they slow you and stop your energy recharging. |
+| Swamp | Mossy rocks | Bog pools: they slow you and stop your energy recharging. |
 
-Cover stops shots. Anything that casts a shadow is solid; the rest is floor.
+Cover stops shots. Anything that casts a shadow is solid; the rest is floor. Cacti and toadstools
+are only plants: walk and shoot straight through them.
+
+Each player's health, energy, cooldowns and ultimate charge sit in a strip below the arena, and
+wizards' robes and hats get scuffed and torn as they are hurt.
 
 **King of the Rune** (RB on Stage Select): stand alone in the glowing rune circle to score; the
 first to 20 seconds takes the round. Two sides in it contest it, and knocked-out wizards come

@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1_script")
-MaxHealth = 250.0
+MaxHealth = 350.0
 MaxEnergy = 100.0
 EnergyRegen = 20.0
 MoveSpeed = 4.0
-UltimateChargeRate = 2.5
-UltimateChargePerEnergy = 0.4
-UltimateChargePerDamageTaken = 0.4
+UltimateChargeRate = 2.0
+UltimateChargePerEnergy = 0.32
+UltimateChargePerDamageTaken = 0.3

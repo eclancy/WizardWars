@@ -13,4 +13,5 @@ SlowPercent = 55.0
 Duration = 5.0
 Duration2 = 2.0
 Interval = 0.6
+Damage = 8.0
 Sound = ExtResource("2_sound")
