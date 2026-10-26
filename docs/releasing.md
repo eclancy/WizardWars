@@ -36,7 +36,39 @@ makes a fourth:
   C#). These are the only files that change when the game changes and Godot does not. The rest
   of the full zip is the Godot engine and the .NET runtime.
 - **`version.json`**: the version, the Godot version it was built with, and the URLs of both
-  zips and of the installer (`installer`; the game itself does not use it).
+  zips and of the installer (`installer`; the game itself does not use it) - and, under `linux`,
+  the Linux pair below.
+
+## Linux
+
+Added 2026-10-26, on Eric's call, for every game on ecec.dev (the same design as DrawFight's).
+`release.sh` exports the `Linux` preset to `build/linux/` too, and `package.py` makes two more
+files from it:
+
+- **`WizardWars-linux.tar.gz`**: the game in a `WizardWars/` folder - the `WizardWars.x86_64`
+  binary, the `.pck`, and `data_WizardWars_linuxbsd_x86_64/` with the .NET runtime, so nothing
+  has to be installed first - plus `install.sh`, `icon.png` and `How to play.txt`. A tarball
+  rather than a zip, because a tarball carries the "can be run" permission on the binary and the
+  script; `package.py` sets it, which it can do from Windows.
+- **`WizardWars-linux-patch.zip`**: the Linux export's `.pck` and the game's DLL - the same idea
+  as the Windows patch, from the Linux export.
+
+**`install.sh`** (`tools/release/install.sh`) is the Linux installer. It copies the game to
+`~/.local/share/WizardWars` and puts a `wizardwars.desktop` in `~/.local/share/applications`, so
+it is on the app menu. No sudo and nothing outside the home folder, for the same reason the
+Windows installer installs per user: the game updates itself, so its folder has to stay writable
+by the player. `./install.sh --uninstall` takes it out again; saves (in
+`~/.local/share/godot/app_userdata/Wizard Wars`) are never touched. Running `./WizardWars.x86_64`
+straight from the unpacked folder works too.
+
+**Updating** works as on Windows, from `version.json`'s `linux` pair: the patch on the same
+engine, the tarball otherwise (unpacked with `System.Formats.Tar`, so the binary stays
+runnable). The game writes `apply.sh`, starts it with `/bin/sh` and quits; it waits for the game
+to close, copies the new files over, `chmod +x`es the binary and starts it again. A release from
+before Linux has no `linux` pair, and a Linux copy just goes on to the title.
+
+**Tested so far:** the export, the packaging and the permissions in the tarball, on Windows. It
+has not yet been run on Linux - Eric is testing it on a Linux machine.
 
 The export preset keeps the `.pck` next to the exe (`binary_format/embed_pck=false`) so the
 patch can replace it on its own.
@@ -104,8 +136,9 @@ wizard, ability or stage.
 
 **One-time setup on a new machine:** install Godot's export templates for the exact editor
 version. They come from the `godotengine/godot-builds` GitHub release, file
-`Godot_v<version>-stable_mono_export_templates.tpz`, about 1.2 GB. Only the `windows_*` files are
-needed, unpacked into `%APPDATA%\Godot\export_templates\<version>.stable.mono\`. The export
+`Godot_v<version>-stable_mono_export_templates.tpz`, about 1.2 GB. Only the `windows_*` files and
+`linux_release.x86_64` / `linux_debug.x86_64` are needed, unpacked into
+`%APPDATA%\Godot\export_templates\<version>.stable.mono\`. The export
 fails with "No export template found" until they are there. `package.py` reads the engine version
 from the name of `$GODOT_BIN` (default: the path in `CLAUDE.md`), and runs on Python 2.7 or 3.
 
@@ -147,5 +180,5 @@ Run a build with `-- --no-update` to skip the check entirely.
   `How to play.txt` says to keep it in Documents or on the Desktop.
 - **The download page** (`ecec.dev/wizard-wars/download`) offers the installer
   (`releases/latest/download/WizardWars-Setup.exe`) first, and the zip as the portable fallback.
-- **Only Windows is exported.** A Mac build needs Apple notarization to open without a fight.
+- **Windows and Linux are exported.** A Mac build needs Apple notarization to open without a fight.
 - **The repo is public**, so a release is public too.

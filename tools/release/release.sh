@@ -7,8 +7,9 @@
 # under "What's new". The download instructions are always appended below it, and must start
 # with "Download **" - that is how the site recognises and strips them.
 #
-# Commits the version bump, tags it, exports the Windows build, and makes a GitHub Release with
-# the installer (WizardWars-Setup.exe), the full zip (the portable version), the small patch zip
+# Commits the version bump, tags it, exports the Windows and Linux builds, and makes a GitHub
+# Release with the installer (WizardWars-Setup.exe), the full zip (the portable version), the
+# small patch zip, the Linux download (WizardWars-linux.tar.gz, with an install.sh) and its patch,
 # and version.json. ecec.dev/wizard-wars/version.json
 # redirects to the newest release's version.json, so nothing on ecec.dev needs deploying. See
 # docs/releasing.md.
@@ -16,7 +17,7 @@ set -euo pipefail
 
 VERSION="${1:-}"
 CHANGES="${2:-}"
-HOW_TO="Download **WizardWars-Setup.exe** and run it, then play from the Start menu or desktop. It keeps itself up to date from then on. No installer wanted? WizardWars-windows.zip is the portable version: unzip it and run WizardWars.exe. Download page: https://ecec.dev/wizard-wars/download"
+HOW_TO="Download **WizardWars-Setup.exe** and run it, then play from the Start menu or desktop. It keeps itself up to date from then on. No installer wanted? WizardWars-windows.zip is the portable version: unzip it and run WizardWars.exe. On Linux, download WizardWars-linux.tar.gz, unpack it and run ./install.sh - it adds Wizard Wars to your app menu and keeps itself up to date too. Download page: https://ecec.dev/wizard-wars/download"
 if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 	echo "usage: bash tools/release/release.sh X.Y.Z [\"what changed\"]" >&2
 	exit 1
@@ -50,13 +51,17 @@ echo "Wizard Wars $CURRENT -> $VERSION"
 sed -i "s/^config\/version=\".*\"$/config\/version=\"$VERSION\"/" project.godot
 
 dotnet build WizardWars.sln -nologo -v q
-rm -rf build/windows build/release
-mkdir -p build/windows
+rm -rf build/windows build/linux build/release
+mkdir -p build/windows build/linux
 # Godot does not create the export folder itself, and on an export error it can sit there
 # instead of exiting - hence the timeout.
 timeout 900 "$GODOT_BIN" --headless --path . --export-release "Windows Desktop" build/windows/WizardWars.exe \
 	> build/export.log 2>&1 || { tail -20 build/export.log; echo "export failed - see build/export.log" >&2; git checkout project.godot; exit 1; }
 [ -f build/windows/WizardWars.pck ] || { echo "export produced no .pck - see build/export.log" >&2; git checkout project.godot; exit 1; }
+# The same game for Linux. Needs the linux_* export templates (see docs/releasing.md).
+timeout 900 "$GODOT_BIN" --headless --path . --export-release "Linux" build/linux/WizardWars.x86_64 \
+	> build/export-linux.log 2>&1 || { tail -20 build/export-linux.log; echo "Linux export failed - see build/export-linux.log" >&2; git checkout project.godot; exit 1; }
+[ -f build/linux/WizardWars.pck ] || { echo "Linux export produced no .pck - see build/export-linux.log" >&2; git checkout project.godot; exit 1; }
 
 python tools/release/package.py "$VERSION"
 MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "$ISCC" /Q "/DAppVersion=$VERSION" tools/release/installer.iss \
@@ -70,6 +75,7 @@ git push -q origin master "v$VERSION"
 gh release create "v$VERSION" --repo eclancy/WizardWars \
 	build/release/WizardWars-Setup.exe build/release/WizardWars-windows.zip \
 	build/release/WizardWars-patch.zip build/release/version.json \
+	build/release/WizardWars-linux.tar.gz build/release/WizardWars-linux-patch.zip \
 	--title "Wizard Wars $VERSION" \
 	--notes "${CHANGES:+$CHANGES
 

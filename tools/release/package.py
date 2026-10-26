@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Turn an export in build/windows/ into the three files a GitHub Release carries.
+"""Turn the exports in build/windows/ and build/linux/ into the files a GitHub Release carries.
 
     python tools/release/package.py 0.2.0
 
@@ -9,6 +9,9 @@ Writes build/release/:
   WizardWars-patch.zip    just the game: the .pck and the game's own assembly. A few MB, against
                           tens of MB for the full zip, because the engine and the .NET runtime
                           only change when Godot is upgraded.
+  WizardWars-linux.tar.gz the Linux version, in a WizardWars/ folder with install.sh (which puts
+                          it in ~/.local/share and on the app menu) - from build/linux/
+  WizardWars-linux-patch.zip  the Linux patch: its .pck and the game's assembly
   version.json            what the game's update check reads (see scripts/UpdateScreen.cs),
                           plus the URL of WizardWars-Setup.exe, which release.sh builds next
 
@@ -21,10 +24,14 @@ import io
 import json
 import os
 import sys
+import tarfile
+import time
 import zipfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 EXPORT = os.path.join(ROOT, "build", "windows")
+LINUX = os.path.join(ROOT, "build", "linux")
+LINUX_DATA = "data_WizardWars_linuxbsd_x86_64"
 OUT = os.path.join(ROOT, "build", "release")
 REPO = "eclancy/WizardWars"
 DATA = "data_WizardWars_windows_x86_64"
@@ -78,6 +85,51 @@ Made at https://ecec.dev - https://ecec.dev/wizard-wars/download
 """
 
 
+HOW_TO_PLAY_LINUX = HOW_TO_PLAY.replace(u"""1. Double-click WizardWars.exe.
+
+2. The first time, Windows may say "Windows protected your PC". That is because this game
+   is not from a big company that paid for a signature. Click "More info", then "Run anyway".
+""", u"""1. Open a terminal in this folder and run:  ./install.sh
+   That puts the game in ~/.local/share/WizardWars and adds it to your app menu.
+   (Or just run ./WizardWars.x86_64 from here - keep the folder somewhere you can write to.)
+
+2. To remove it later: ~/.local/share/WizardWars/install.sh --uninstall  (saves are kept)
+""")
+
+
+def add_tar_file(t, data, name, executable=False):
+    info = tarfile.TarInfo(name)
+    info.size = len(data)
+    info.mode = 0o755 if executable else 0o644
+    info.mtime = int(time.time())
+    t.addfile(info, io.BytesIO(data))
+
+
+def linux_package(version):
+    """The Linux download and patch. Every file gets its permissions set here, on Windows: the
+    game binary and install.sh executable, the rest readable."""
+    t = tarfile.open(os.path.join(OUT, "WizardWars-linux.tar.gz"), "w:gz")
+    for dirpath, _dirs, files in os.walk(LINUX):
+        for f in sorted(files):
+            full = os.path.join(dirpath, f)
+            rel = os.path.relpath(full, LINUX).replace(os.sep, "/")
+            with open(full, "rb") as fh:
+                data = fh.read()
+            add_tar_file(t, data, "WizardWars/" + rel, executable=rel == "WizardWars.x86_64")
+    with open(os.path.join(ROOT, "tools", "release", "install.sh"), "rb") as fh:
+        add_tar_file(t, fh.read().replace(b"\r\n", b"\n"), "WizardWars/install.sh", executable=True)
+    with open(os.path.join(ROOT, "icon.png"), "rb") as fh:
+        add_tar_file(t, fh.read(), "WizardWars/icon.png")
+    add_tar_file(t, HOW_TO_PLAY_LINUX.encode("utf-8"), "WizardWars/How to play.txt")
+    t.close()
+
+    z = zipfile.ZipFile(os.path.join(OUT, "WizardWars-linux-patch.zip"), "w", zipfile.ZIP_DEFLATED)
+    for rel in ["WizardWars.pck", LINUX_DATA + "/WizardWars.dll", LINUX_DATA + "/WizardWars.deps.json",
+                LINUX_DATA + "/WizardWars.runtimeconfig.json"]:
+        z.write(os.path.join(LINUX, rel.replace("/", os.sep)), rel)
+    z.close()
+
+
 def engine_version():
     name = os.path.basename(GODOT)
     # Godot_v4.5.1-stable_mono_win64_console.exe -> 4.5.1
@@ -116,6 +168,10 @@ def main(argv):
         z.write(os.path.join(EXPORT, rel.replace("/", os.sep)), rel)
     z.close()
 
+    linux = os.path.isfile(os.path.join(LINUX, "WizardWars.pck"))
+    if linux:
+        linux_package(version)
+
     base = "https://github.com/%s/releases/download/v%s/" % (REPO, version)
     info = {
         "version": version,
@@ -125,14 +181,20 @@ def main(argv):
         # The installer, built afterwards by release.sh from tools/release/installer.iss.
         "installer": base + "WizardWars-Setup.exe",
     }
+    # A Linux copy reads its own pair; Windows copies never look at it.
+    if linux:
+        info["linux"] = {"patch": base + "WizardWars-linux-patch.zip", "full": base + "WizardWars-linux.tar.gz"}
     text = json.dumps(info, indent=2, sort_keys=True, separators=(",", ": ")) + "\n"
     if not isinstance(text, type(u"")):
         text = text.decode("utf-8")
     with io.open(os.path.join(OUT, "version.json"), "w", encoding="utf-8", newline="\n") as f:
         f.write(text)
 
-    for name in ("WizardWars-windows.zip", "WizardWars-patch.zip", "version.json"):
-        print("%-24s %6.1f MB" % (name, os.path.getsize(os.path.join(OUT, name)) / 1048576.0))
+    names = ["WizardWars-windows.zip", "WizardWars-patch.zip", "version.json"]
+    if linux:
+        names += ["WizardWars-linux.tar.gz", "WizardWars-linux-patch.zip"]
+    for name in names:
+        print("%-27s %6.1f MB" % (name, os.path.getsize(os.path.join(OUT, name)) / 1048576.0))
     return 0
 
 
